@@ -342,7 +342,7 @@ Therefore this specification establishes no package-level compression or encrypt
 
 ## Comparison with audited Unreal II source
 
-Section 4C established that the actual Unreal-II-specific authority is the v69 `Unreal2_old` tree, while this Warfare tree is later generic UE2/package-v126 evidence.
+Unreal II has two independent complete game-source authorities: the December 2000 v69 `Unreal2_old` tree and the January 2003 v126/licensee-0 `Unreal II The Awakening [01-07-2003]` tree. This later Warfare tree remains a separate, generic UE2/package-v126 source reference; its behaviour is not substituted for the Unreal II game-specific loader merely because the package version matches.
 
 The two sources independently share the core summary/import/export layout, licensee splitting, FString representation, context-filtered NameMap, fixed-width PackageIndex fields, compact class/super/size/offset fields, and fatal `Preload` SerialSize mismatch handling.
 

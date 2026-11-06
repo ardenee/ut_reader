@@ -2,18 +2,14 @@
 
 ## Scope and authority
 
-This specification documents only the latest **complete local Unreal II UE2 `VerifyImport` implementation** available during the Section 3A2 audit.
+This specification distinguishes **two complete local Unreal II game-specific UE2 import-verification sources**, independently of generic Warfare/UE2, UT2003 or UT2004:
 
-- Source tree: `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old`
-- Primary implementation: `Core\Src\UnLinker.cpp`
-- Package-version authority: `Core\Inc\UnObjVer.h`
-- `PACKAGE_FILE_VERSION = 69`
-- `PACKAGE_MIN_VERSION = 60`
-- `PACKAGE_FILE_VERSION_LICENSEE = 0x7F`
+- **9 December 2000:** `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old\Core\Src\UnLinker.cpp`; `Core/Inc/UnObjVer.h` declares package version **69**, minimum loadable **60**, and licensee **0x7F**. The first set of sections below records this branch's behaviour.
+- **7 January 2003:** `L:\Source\Games\Unreal II\Unreal II The Awakening [01-07-2003]\Core\Src\UnLinker.cpp`; `Core/Inc/UnObjVer.h` declares package version **126**, minimum loadable **60**, and licensee **0**. This is a complete UE2 `ULinkerLoad::VerifyImport` source, not UE4 code. Its differences are specified in the separate January 2003 section below.
 
-The newer local `Unreal II The Awakening [01-07-2003]` tree does not contain a usable complete UE2 linker implementation and is **not** accepted as `VerifyImport` authority. Consequently, UnrealDB applies this source contract only to Unreal II package versions **60-69**. Unreal II package versions 70 and later must not inherit these rules without a complete later implementation.
+The version-69 source supports older packages through its documented loadable range; the January 2003 source proves its own game-specific loader. The existence of a later engine does **not** automatically make every intermediate package/licensee combination source-proven. Unmatched combinations remain unverified for exact game-specific import resolution.
 
-This is an Unreal-II-specific dependency contract. UT2003 and UT2004/UE2.5 are separate profiles.
+UT2003 and UT2004 have distinct game-specific source addenda; neither is used to fill missing Unreal II branches.
 
 ## Authoritative source references
 
@@ -161,7 +157,7 @@ Because these outcomes depend on load flags and runtime object state, UnrealDB p
 
 ## UnrealDB conformance requirements
 
-For the Unreal II v69 profile, UnrealDB must:
+For the December 2000 Unreal II v69 source branch, the reader must:
 
 1. apply this profile only to package versions 60-69;
 2. derive provider identity from the serialized import hierarchy;
@@ -175,8 +171,24 @@ For the Unreal II v69 profile, UnrealDB must:
 10. distinguish deterministic file-backed matches from runtime native/transient/SafeReplace behavior;
 11. preserve the active depth-specific UnrealShare reparenting boundary;
 12. not consume administrator ClassRemap as authoritative source behavior;
-13. fail closed for later Unreal II package versions until their own complete VerifyImport implementation is available.
+13. keep the v69-specific retries and private-export rejection confined to the December 2000 branch, without extending them to January 2003 v126.
 
-## Migration consequence
+## January 2003 game-source branch — package v126, licensee 0
 
-Existing UEDB5 Unreal II package versions 60-69 that were staged under the older generic Unreal II source policy require an **exact-file Pass-1 restage** so the snapshot records `ue2-unreal2-2000-12-09-package-v69`. Dependency Pass 2 then rebuilds only impacted files under policy v6. This does not require a full Unreal II game reparse.
+The complete local January 2003 Unreal II `Core/Src/UnLinker.cpp` defines `ULinkerLoad::Verify`, `VerifyImport`, `FindExportIndex`, `CreateImport`, and the export-hash/class-identity helpers. Its `Core/Inc/UnObjVer.h` declares engine version `1226+DEMO_VERSION_OFFSET`, package version `126`, licensee `0`, and minimum loadable package version `60`. The executable source rules are:
+
+1. `VerifyImport` exits early for an import already associated with a source linker/index or having `NAME_None` in the class package, class name or object name. This is a direct-import exemption, **not** an ancestor-import exemption.
+2. A root `Core.Package` import calls `GetPackageLinker` for the named package root. A nested import recursively verifies its negative `PackageIndex` parent and inherits that parent's `SourceLinker`. If a parent linker is absent, the January 2003 implementation can continue without the December 2000-only parent-linker assertion; this does not establish a file-backed provider.
+3. The export lookup hashes `ObjectName`, `ClassName`, `ClassPackage`, walks the selected linker's export-hash chain, and checks exact class/name identity. With a nested import, it compares the parent source export index to `Source.PackageIndex`, allowing a source-root `PackageIndex==0` fallback. The export hash prepends entries, so later matching export indices are visited first.
+4. **Private-export difference:** a matching export without `RF_Public` causes a forgiving load to flag/log a broken link and return. In an ordinary **non-forgiving** load the `FailedImportPrivate` throw is inside an inactive `#if 0` block, so the code can still retain that source export index. This is **not** the December 2000 v69 private-export policy.
+5. If the import class name is `Mesh`, the code changes it to `LodMesh` and re-enters the hash lookup unconditionally, even if the Mesh pass had previously matched. A LodMesh result may replace it; if there is no LodMesh match, an earlier source index remains.
+6. `ClassRemap` and `PackageRemap` configuration retries are inside inactive `#if 0 //!!MERGE` blocks; they do **not** create active alias or package-root behaviour. The December 2000 `UnrealI` / `UnrealShare` retry must not be imported into this source branch.
+7. File-backed lookup failure can fall through to an active runtime search for public/native/transient objects. Finding a class but not a matching runtime object may set `SafeReplace`. The final forgiving/error outcome depends on runtime flags/state. A metadata-only file reader cannot assert that these runtime-only fallbacks succeeded.
+8. `FindExportIndex` and `CreateImport` are separate runtime operations; their subclass or materialization behaviour must not be substituted for `VerifyImport`'s exact selected-linker matching.
+9. No multiple-physical-provider export-superset search is performed by this branch. It verifies imports in the already chosen `SourceLinker` rather than searching every same-name package in a catalogue.
+
+These are game-specific facts from the January 2003 Unreal II source, not inferred from the generic Warfare version-126 tree. They establish the precise v126/licensee-0 source-specific verification branch. Other version/licensee combinations without a matching verified game branch remain explicitly unproven for identical import-verification behaviour.
+
+## Source-version boundary
+
+The December 2000 source proves a minimum loadable version of 60 and exact emitted version 69/licensee `0x7F`, with earlier licensee-zero packages loadable through the same linker. The January 2003 source proves an emitted package version of 126/licensee zero. Original older/custom packages may be structurally valid without an independent, exact game-specific import-verification claim. In all cases a physical package's on-disk metadata alone cannot recreate the original runtime mount/search context.

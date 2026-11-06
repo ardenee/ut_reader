@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 6 November 2026 — UE2 source-spec parity review: two source-snapshot files require scoped PRD restage
+
+The actual January 2003 Unreal II UE2 game source (package v126/licensee0) was incorrectly labelled UE4 4.0.2 in older specifications. Its complete game-specific VerifyImport is real; its game-specific v126 branch was already independently tested and implemented on 5 November. The Unreal II and UE2 source-spec documentation is now corrected. Generic Warfare v126 remains a separate source, never a substitute for game-specific behaviour.
+
+New confirmed dispatch defect: the December 2000 Unreal II source emits v69/licensee0x7F but explicitly loads **v60–69**. UnrealDB previously selected the December 2000 game-source policy only at exactly v69. The reader's version/policy dispatcher is now corrected for supported earlier licensee-zero files, preserving fail-closed treatment of other licensee values. SHA-256-pinned original PRD Detail.utx **#149492 v61/0** and ShaneChurch.utx **#1295446 v68/0** parse correctly and require a scoped UEDB5 source-policy Pass 1 resnapshot and targeted Pass 2. Tests: 15 source/version cases plus 8 metadata gates PASS; actual original bytes plus on-the-fly new source snapshots PASS. Their two persisted PRD snapshots still have the previous generic policy until PRD publication runs.
+
+**Exact game-specific VerifyImport coverage (not file parsing success):** Unreal II 326/808 after the scoped two-file publication (previous 324/808), UT2003 889/5,082, UT2004 65,581/72,883. The other version/licensee populations cannot be called fully game-source-certified without further matching first-party evidence. UE2 v15 Pass 2 has already completed for all three games and the existing dashboard statistics are fresh; do not do a full resync. To repair only the two affected source snapshots and refresh game #2 statistics/coverage on PRD Lelly-pc, run the separately deployed scoped publisher in catalog/bin/publish-ue2-unreal2-legacy-v69-scoped.ps1 with -Apply. No UEDB5 backup files are created. **This PRD two-file restage is pending, not falsely marked complete.**
+
+Full source/version ledger and exact SHA evidence: [UE2 spec audit and two-file remediation](ue2-spec-source-compliance-and-scoped-v69-remediation-2026-11-06.md). Older UE2 v14 and early v15 statements later in this chronological file are historical.
+
+---
+
 ## 5 November 2026 — Unreal II wrong-game ownership repaired in PRD (409 files)
 
 The earlier UE2 Full Sync faithfully regenerated original packages but did not audit source game ownership, leaving Unreal II with UT2003/UT2004 content and 219 false common `GamePlay` dependencies. **Actual PRD repair completed:** 391 wrong-game files with original UT2003/UT2004 directory provenance and exact byte-identical verified counterparts removed; a second provenance/UE2-version check identified 15 more exact UT2004 duplicates removed and **3 distinct UT2004 originals imported/verified into game #5 first**, then retired from game #2. Overall **406 canonical duplicate deletions + 3 canonical verified moves** = **409 wrong-game records removed**. A total of 391+18 original source UEDB5 containers were SHA-256 backed up to PRD `L:\\UnrealDB\\maintenance-audit\\ue2-owner-fix-20261105`, together with complete preflight manifests, a backup of the old game2 coverage cache and durable action logs; three unique moved package bytes have a separate backup. Queued mirror jobs #88 and #453 were redirected to their valid surviving game5 files and retained.

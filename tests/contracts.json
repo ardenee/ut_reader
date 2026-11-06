@@ -1145,7 +1145,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
+      "production_rollout_status": "PRD_UE2_78773_VERIFIED_V15_PASS2_CURRENT_2026_11_06_TWO_UNREAL2_V61_V68_SOURCE_SNAPSHOTS_REQUIRE_SCOPED_RESTAGE",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1219,7 +1219,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
+      "production_rollout_status": "PRD_UE2_78773_VERIFIED_V15_PASS2_CURRENT_2026_11_06_TWO_UNREAL2_V61_V68_SOURCE_SNAPSHOTS_REQUIRE_SCOPED_RESTAGE",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1274,7 +1274,7 @@
       "out_of_scope_native_payload_loading": true,
       "scope_revised_at": "2026-11-02",
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
+      "production_rollout_status": "PRD_UE2_78773_VERIFIED_V15_PASS2_CURRENT_2026_11_06_TWO_UNREAL2_V61_V68_SOURCE_SNAPSHOTS_REQUIRE_SCOPED_RESTAGE",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1331,7 +1331,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
+      "production_rollout_status": "PRD_UE2_78773_VERIFIED_V15_PASS2_CURRENT_2026_11_06_TWO_UNREAL2_V61_V68_SOURCE_SNAPSHOTS_REQUIRE_SCOPED_RESTAGE",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1392,7 +1392,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
+      "production_rollout_status": "PRD_UE2_78773_VERIFIED_V15_PASS2_CURRENT_2026_11_06_TWO_UNREAL2_V61_V68_SOURCE_SNAPSHOTS_REQUIRE_SCOPED_RESTAGE",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1468,7 +1468,7 @@
         }
       ],
       "reviewed_at": "2026-11-05",
-      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
+      "production_rollout_status": "PRD_UE2_78773_VERIFIED_V15_PASS2_CURRENT_2026_11_06_TWO_UNREAL2_V61_V68_SOURCE_SNAPSHOTS_REQUIRE_SCOPED_RESTAGE",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -2713,7 +2713,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
+      "production_rollout_status": "PRD_UE2_78773_VERIFIED_V15_PASS2_CURRENT_2026_11_06_TWO_UNREAL2_V61_V68_SOURCE_SNAPSHOTS_REQUIRE_SCOPED_RESTAGE",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",

@@ -2,29 +2,15 @@
 
 ## Scope
 
-Section 4C re-audited this format from first principles using **two separate authorities**:
+This source-based specification distinguishes **three complete, independently inspected UE2 source authorities**:
 
-1. **Unreal-II-specific source:** `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old`
-   - `ENGINE_VERSION = 411`
-   - `PACKAGE_FILE_VERSION = 69`
-   - `PACKAGE_FILE_VERSION_LICENSEE = 0x7F`
-   - `PACKAGE_MIN_VERSION = 60`
-2. **Later generic UE2/Warfare source:** `L:\Source\Engine\UE2\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]`
-   - `ENGINE_VERSION = 1226 + DEMO_VERSION_OFFSET`
-   - `PACKAGE_FILE_VERSION = 126`
-   - `PACKAGE_FILE_VERSION_LICENSEE = 0`
-   - `PACKAGE_MIN_VERSION = 60`
+1. **Unreal II, 9 December 2000:** `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old`. `ENGINE_VERSION=411`, `PACKAGE_FILE_VERSION=69`, licensee `0x7F`, minimum loadable version `60`. Its loader handles earlier versions within its explicit supported range.
+2. **Unreal II, 7 January 2003:** `L:\Source\Games\Unreal II\Unreal II The Awakening [01-07-2003]`. Its real `Core/Inc/UnObjVer.h` declares `ENGINE_VERSION=1226+DEMO_VERSION_OFFSET`, `PACKAGE_FILE_VERSION=126`, licensee `0`, and minimum loadable version `60`. Its `Core/Src/UnLinker.cpp` includes the complete `ULinkerLoad::VerifyImport` implementation. This is **Unreal II game source**, not UE4 source.
+3. **Generic UE2 / Unreal Warfare, 29 September 2007:** `L:\Source\Engine\UE2\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]`. Also package version `126` and licensee `0`, but retained as **separate generic-engine evidence**. Identical version constants alone do not prove identical game-specific behaviour.
 
-The directory labelled `L:\Source\Games\Unreal II\Unreal II The Awakening [01-07-2003]` is **not UE2 source** in the current source archive: it is UE4 4.0.2 and contains no `U2XMP_all` subtree. The old path previously cited by this document is therefore withdrawn as an authority.
+The v69 loader supplies a game-specific source path for loadable v60–69 packages (where the source's licensee conditions apply). Exact v126/licensee-0 Unreal II packages have their own January 2003 game-source rules, including distinct `VerifyImport` behaviour. Intermediate versions and different licensee branches can remain structurally readable without receiving an unsupported game-specific `VerifyImport` conclusion. Versions after 126 do not inherit the v126 source policy without evidence.
 
-For UnrealDB attribution:
-
-- package versions 60-69 use the complete Unreal-II-specific v69 source;
-- package versions 70-126 may use the generic UE2/Warfare source for serialization and pre-dependency preprocessing only;
-- Warfare v126 does **not** prove Unreal-II-specific `VerifyImport` behavior for versions 70-126;
-- admitted versions above 126 remain source-unresolved rather than inheriting v126 behavior.
-
-UT2003 and UT2004 remain independently audited game profiles. Generic UE2 evidence is not silently promoted into their game-specific dependency semantics.
+UT2003 and UT2004 are independent game profiles; neither supplies missing Unreal II behaviour.
 
 ## Authoritative source references
 
@@ -236,11 +222,11 @@ The source-common load order is:
 13. add the linker to the global loader set;
 14. verify imports unless `LOAD_NoVerify`.
 
-Warfare v126 inserts one additional non-transforming operation between steps 11 and 12: it computes `QuickMD5`. Unreal-II v69 has no corresponding QuickMD5 block.
+The January 2003 Unreal II v126 and generic Warfare v126 sources compute `QuickMD5` between table loading and export-hash construction. Unreal II v69 has no corresponding QuickMD5 block.
 
-## QuickMD5 — generic UE2/Warfare v126 only
+## QuickMD5 — January 2003 Unreal II and generic Warfare v126
 
-Warfare v126 hashes two raw structural byte ranges:
+The January 2003 Unreal II loader hashes two raw structural byte ranges:
 
 1. file offset 0 through the position immediately after the Name table;
 2. `Summary.ImportOffset` through the position immediately after the Export table.
@@ -249,9 +235,9 @@ The ranges are fed sequentially into one MD5 context. The resulting 16-byte dige
 
 This is a cheat-protection/structural hash. It does not mutate the parsed Name/Import/Export tables and does not participate in the audited static dependency identity. UnrealDB therefore documents it but does not need to synthesize it for dependency conformance. If a future feature requires source-compatible QuickMD5 identity, it must reproduce these exact raw ranges rather than substitute the package GUID, whole-file MD5, or UEDB5 payload hash.
 
-## Code indication — generic UE2/Warfare v126 only
+## Code indication — January 2003 Unreal II and generic Warfare v126
 
-Warfare's `ULinker::LinksToCode()` returns false when there are no exports and otherwise reports code when any export has nonzero `SuperIndex`. This is runtime/package classification, not serialized package identity, and is not attributed to Unreal-II v69 unless separately proven there.
+The January 2003 source's `ULinker::LinksToCode()` returns false when there are no exports and otherwise reports code when any export has nonzero `SuperIndex`. This is runtime/package classification, not serialized package identity, and is not attributed to Unreal-II v69 unless separately proven there.
 
 ## Compression and encryption
 
@@ -282,7 +268,7 @@ Package bytes provide the serialized summary, tables, names, object references, 
 
 Runtime context determines such things as edit/client/server name filtering, object/class availability, object construction, and import verification.
 
-Configuration-driven class remapping is not serialized package identity. Unreal-II dependency verification remains governed by `unreal2-ue2-dependency-resolution.md` and the complete Unreal-II v69 source. Warfare's complete generic v126 `VerifyImport` body is useful generic UE2 evidence but is not promoted to Unreal-II-specific behavior for package versions 70-126.
+Configuration-driven class remapping is not serialized package identity. Unreal II has distinct complete game-specific `VerifyImport` bodies for December 2000 v69 and January 2003 v126. The generic Warfare v126 implementation is independent evidence and is not silently substituted for the Unreal II body on unverified version/licensee combinations.
 
 ## UnrealDB conformance requirements
 
@@ -302,39 +288,40 @@ For this Unreal II / UE2 boundary, UnrealDB must:
 12. preserve signed Import/Export object-reference semantics;
 13. expose exact payload spans;
 14. keep payload-size mismatch fatal when modeling engine object loading;
-15. keep Unreal-II-specific VerifyImport bounded to versions 60-69 unless matching later game source is obtained;
-16. attribute versions 70-126 to generic UE2/Warfare serialization/preprocessing, not to an invented Unreal-II v126 source;
+15. apply the December 2000 Unreal II game-specific verification branch only within its supported v60–69 loader range and compatible licensee cases;
+16. use the actual January 2003 Unreal II v126/licensee-0 game source, rather than inventing game-specific semantics for unrelated versions or using the generic Warfare implementation as its substitute;
 17. leave versions above 126 source-unresolved rather than calling them forward-compatible;
 18. keep UT2003 and UT2004 dependency semantics independent;
 19. treat Warfare QuickMD5 as optional structural identity, not as a dependency transformation.
 
 ## Source-reference matrix
 
-| Rule | Unreal-II v69 authority | generic UE2/Warfare v126 authority |
-|---|---|---|
-| tag/version/minimum | `Core/Inc/UnObjVer.h` | `Core/Inc/UnObjVer.h` |
-| Epic/licensee split | `Core/Inc/UnLinker.h: FPackageFileSummary` | `Core/Inc/UnLinker.h: FPackageFileSummary` |
-| compact index | `Core/Src/UnObj.cpp: FCompactIndex operator<<` | same |
-| FString representation | `Core/Src/UnMisc.cpp` | `Core/Src/UnMisc.cpp` |
-| summary | inline `Core/Inc/UnLinker.h` serializer | `Core/Src/UnLinker.cpp` |
-| Imports | inline `FObjectImport operator<<` | `Core/Src/UnLinker.cpp` |
-| Exports | inline `FObjectExport operator<<` | `Core/Src/UnLinker.cpp` |
-| Name entry | `Core/Src/UnName.cpp` | `Core/Src/UnName.cpp` |
-| context NameMap | `ULinker::ULinker`, `ULinkerLoad::LoadNames` | same |
-| load sequence/export hash | `ULinkerLoad::ULinkerLoad` | same |
-| QuickMD5 | absent from audited constructor | `ULinkerLoad::ULinkerLoad`, `ULinker::QuickMD5` |
-| payload mismatch | `ULinkerLoad::Preload` fatal `appErrorf` | same |
-| missing-class/export skips | `ULinkerLoad::CreateExport` | same symbol, later behavior |
-| Unreal-II VerifyImport | authoritative through v69 | **not Unreal-II authority** |
+| Rule | Unreal II Dec 2000 v69 | Unreal II Jan 2003 v126 | Generic UE2/Warfare v126 |
+|---|---|---|---|
+| tag/version/minimum | `Core/Inc/UnObjVer.h` | `Core/Inc/UnObjVer.h` | `Core/Inc/UnObjVer.h` |
+| Epic/licensee split | `Core/Inc/UnLinker.h: FPackageFileSummary` | `Core/Inc/UnLinker.h: FPackageFileSummary` | `Core/Inc/UnLinker.h: FPackageFileSummary` |
+| compact index | `Core/Src/UnObj.cpp: FCompactIndex operator<<` | `Core/Src/UnObj.cpp` | `Core/Src/UnObj.cpp` |
+| FString representation | `Core/Src/UnMisc.cpp` | `Core/Src/UnMisc.cpp` | `Core/Src/UnMisc.cpp` |
+| summary serializer | inline `Core/Inc/UnLinker.h` | `Core/Src/UnLinker.cpp` | `Core/Src/UnLinker.cpp` |
+| Import serialization | inline `FObjectImport operator<<` | `Core/Src/UnLinker.cpp` | `Core/Src/UnLinker.cpp` |
+| Export serialization | inline `FObjectExport operator<<` | `Core/Src/UnLinker.cpp` | `Core/Src/UnLinker.cpp` |
+| Name entry | `Core/Src/UnName.cpp` | `Core/Src/UnName.cpp` | `Core/Src/UnName.cpp` |
+| context NameMap | `ULinker::ULinker`, `ULinkerLoad::LoadNames` | same-named functions in Jan 2003 Core | independently defined in Warfare Core |
+| load sequence/export hash | `ULinkerLoad::ULinkerLoad` | `ULinkerLoad::ULinkerLoad`, `HashNames` | `ULinkerLoad::ULinkerLoad`, `HashNames` |
+| QuickMD5 | absent from audited constructor | `ULinkerLoad::ULinkerLoad`, `ULinker::QuickMD5` | `ULinkerLoad::ULinkerLoad`, `ULinker::QuickMD5` |
+| payload-size mismatch | `ULinkerLoad::Preload` | `ULinkerLoad::Preload` | `ULinkerLoad::Preload` |
+| export construction | `ULinkerLoad::CreateExport` | `ULinkerLoad::CreateExport` | `ULinkerLoad::CreateExport` |
+| game-specific VerifyImport | `ULinkerLoad::VerifyImport`; includes v69 aliases and public checks | `ULinkerLoad::VerifyImport`; distinct non-forgiving private-export and inactive remap paths | **Separate generic-engine body, not an Unreal II game source substitute** |
 
 ## UEDB5 source policies
 
 - versions 60-69: `ue2-unreal2-2000-12-09-package-v69`;
-- versions 70-126: `ue2-warfare-v126-serialization`;
+- exact version 126/licensee 0: `ue2-unreal2-2003-01-07-package-v126`;
+- other versions 70-126 without matching game-version evidence: `ue2-warfare-v126-serialization` (structural fallback only);
 - versions above 126: `ue2-unreal2-post-v126-profile-admitted-unresolved`.
 
-The generic v126 policy certifies serialization/preprocessing only. It does not activate the Unreal-II v69 VerifyImport profile.
+The January 2003 game-specific v126 policy includes its own import-verification behaviour. The generic Warfare policy covers only source-supported structural serialization/preprocessing; it does not grant a game-specific `VerifyImport` conclusion.
 
 ## Deferred
 
-Unreal-II-specific dependency/import verification after package v69 remains unresolved until matching game-branch source is available. It is deliberately not inferred from Warfare v126, UT2003, or UT2004.
+The January 2003 v126/licensee-0 game-specific source is available and separately documented. Other version/licensee combinations without a proven game loader remain source-unresolved for exact static `VerifyImport`; they are not automatically assigned the v126, UT2003 or UT2004 rules.

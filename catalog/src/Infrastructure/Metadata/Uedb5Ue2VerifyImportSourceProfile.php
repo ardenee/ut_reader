@@ -16,7 +16,7 @@ final class Uedb5Ue2VerifyImportSourceProfile
         return match (true) {
             // The December 2000 game loader accepts both older licensee-0
             // packages and its emitted 0x7F form through this VerifyImport path.
-            $gameId === 2 && $version === 69 && in_array($licensee, [0, 0x7F], true)
+            $gameId === 2 && $version >= 60 && $version <= 69 && in_array($licensee, [0, 0x7F], true)
                 => PdoUe2VerifyImportProjectionResolver::PROFILE_UNREAL2_V69_2000,
             // The corrected January 2003 Unreal II source has distinct
             // public/private export handling and no active package-remap alias.
@@ -51,7 +51,8 @@ final class Uedb5Ue2VerifyImportSourceProfile
         $schema = strtolower(trim((string)(((array)($snapshot['section_schemas'] ?? []))['imports'] ?? '')));
         $authorized = match ($gameId) {
             2 => str_starts_with($schema, 'ue2.unreal2.')
-                && (($version === 69 && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000))
+                && (($version >= 60 && $version <= 69
+                        && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000))
                     || ($version === 126 && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V126_GAME))),
             4 => $policy === strtolower(Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY)
                 && str_starts_with($schema, 'ue2.ut2003.'),

@@ -1,0 +1,136 @@
+{
+  "schema": "ue2-source-spec-version-profile-coverage-v1",
+  "date": "2026-11-06",
+  "scope": "Source-backed UE2 game-specific static VerifyImport eligibility and original UEDB5 profile attribution. Does not claim native object loading or runtime linker mount context.",
+  "origin": "read-only PRD ue_files grouped package_version/licensee_version; pinned local Epic/game source; DEV source-gate regression",
+  "game_source_sha256": {
+    "unreal2_2000_12_v69": "bf306975bab6819ef50b23e4b6b3ece44c1d5001295a935e45b7180d0dc8994f",
+    "unreal2_2003_01_v126": "1934e3ef1c4042e33d3af82d68cd593dba7635a173ba8435d3d9aee18fd69a0b",
+    "ut2003_2107_v120": "41df04b157a79219e37a9ac48e1f292ba352642c28b6cea2a1bd753576f53fee",
+    "ut2004_v127": "8211e91df606390cea9e3758e17884c3b41238c6f0195f90a40c55c5ec7252d7",
+    "ut2004_v129": "171b005d96292a420b64d746ae1669e35e6ac6c953d700a7688bf5cf560fc22f"
+  },
+  "original_unreal2_v60_v69_legacy_branch": {
+    "source_minimum_loadable_version": 60,
+    "previously_wrong_source_policy": "ue2-warfare-v126-serialization",
+    "corrected_source_policy": "ue2-unreal2-2000-12-09-package-v69",
+    "originals": [
+      {
+        "id": 149492,
+        "package": "Detail.utx",
+        "game_id": 2,
+        "version": 61,
+        "licensee": 0,
+        "source_name_count": 90,
+        "source_import_count": 5,
+        "source_export_count": 51,
+        "sha256": "42c79438778910108f46a40db91f0d1cb177555075da516031d2e46f00a7d837"
+      },
+      {
+        "id": 1295446,
+        "package": "ShaneChurch.utx",
+        "game_id": 2,
+        "version": 68,
+        "licensee": 0,
+        "source_name_count": 158,
+        "source_import_count": 7,
+        "source_export_count": 134,
+        "sha256": "315a191cad1ec6a2f747bd8f1be390f806804d65c2987e842e8ba5d129d9ef98"
+      }
+    ],
+    "control_retained_correct": {
+      "id": 149508,
+      "version": 69,
+      "licensee": 0,
+      "sha256": "3f456b6b0a2065244e39221a97e4776cfa2ee8e00dea855a72d1beabb491aebf"
+    },
+    "foreign_licensee_excluded": {
+      "id": 1363207,
+      "version": 69,
+      "licensee": 63,
+      "sha256": "3b6e9b9f2dd69ea0bf48f909171e477b3aa81fba2b3d2dfacfdad00abb3abc81"
+    },
+    "regression": {
+      "script": "tests/tools/verify_ue2_unreal2_legacy_v60_v69_profile.php",
+      "version_cases": 15,
+      "metadata_policy_gates": 8,
+      "result": "PASS"
+    },
+    "original_read_only_snapshot_build": "PASS; all four genuine packages validated; two affected originals create correct v69 source_policy and authorize correct static import profile; existing PRD snapshots still require two-file restage",
+    "operational_state": "DEV source change only until PRD targeted two-file Pass1 and Pass2 executed"
+  },
+  "source_coverage_before_fix": {
+    "2": {
+      "game": "Unreal II",
+      "verified": 808,
+      "explicit": 324,
+      "unmapped": 484,
+      "known_exact_profiles": {
+        "v126_licensee0": 323,
+        "v69_licensee0": 1
+      },
+      "other_notably": {
+        "v110_licensee2481": 289,
+        "v110_licensee2609": 142
+      }
+    },
+    "4": {
+      "game": "UT2003",
+      "verified": 5082,
+      "explicit": 889,
+      "unmapped": 4193,
+      "largest_unmapped": {
+        "v121_licensee29": 3409
+      }
+    },
+    "5": {
+      "game": "UT2004",
+      "verified": 72883,
+      "explicit": 65581,
+      "unmapped": 7302,
+      "largest_unmapped": {
+        "v121_licensee29": 3855,
+        "v118_licensee2": 2060
+      }
+    }
+  },
+  "source_coverage_after_fix_if_two_originals_restaged": {
+    "2": {
+      "verified": 808,
+      "explicit": 326,
+      "unmapped": 482
+    },
+    "4": {
+      "verified": 5082,
+      "explicit": 889,
+      "unmapped": 4193
+    },
+    "5": {
+      "verified": 72883,
+      "explicit": 65581,
+      "unmapped": 7302
+    }
+  },
+  "source_v126_correction": {
+    "status": "Already source-backed and implemented in UnrealDB; specification and source-conformance ledger previously incorrect.",
+    "game_source": "L:/Source/Games/Unreal II/Unreal II The Awakening [01-07-2003]/Core/Src/UnLinker.cpp",
+    "observed_game_version": 126,
+    "observed_licensee": 0,
+    "prdfiles": 323,
+    "private_export": "January 2003 non-forgiving selected-linker import may retain matching non-public source export (FailedImportPrivate exception disabled by #if 0); forgiving branch logs broken link",
+    "disabled_remap": "ClassRemap and PackageRemap inactive under #if 0",
+    "source_already_accepted": "tests/evidence/ue2/ue2-source-conformance-code-review-20261105.json"
+  },
+  "explicit_exclusions": [
+    "UE2 v15 source-policy publication and fresh game statistics do not establish native runtime package mount order.",
+    "Exact source-specific VerifyImport cannot be claimed for unsupported version/licensee groups, even when their static tables parse.",
+    "Do not borrow a UT2004 VerifyImport profile for UT2003 v121 or Unreal II v110 without independent matching game-source evidence.",
+    "No PRD metadata or MySQL modified during the read-only source/version audit. Scoped repair is a separate production operation."
+  ],
+  "full_resync_required": false,
+  "targeted_restage_file_ids": [
+    149492,
+    1295446
+  ],
+  "affected_game_id": 2
+}

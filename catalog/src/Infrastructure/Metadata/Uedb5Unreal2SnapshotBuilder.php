@@ -18,7 +18,9 @@ final class Uedb5Unreal2SnapshotBuilder
         $version = (int)($reader->getHeader()['version'] ?? -1);
         $licensee = (int)($reader->getHeader()['licenseeVersion'] ?? -1);
         $policy = match (true) {
-            $version === 69 && in_array($licensee, [0, 0x7F], true) => self::POLICY_V69_2000,
+            // The December 2000 Unreal II source has PACKAGE_MIN_VERSION=60;
+            // legacy licensee-0 packages v60-69 use this same game loader.
+            $version >= 60 && $version <= 69 && in_array($licensee, [0, 0x7F], true) => self::POLICY_V69_2000,
             $version === 126 && $licensee === 0 => self::POLICY_V126_GAME,
             $version > 126 => self::POLICY_POST_V126_UNRESOLVED,
             default => self::POLICY_V126_GENERIC,
