@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "authority": "Original Epic UT2004 v3186/v3369/v129 game Core UnLinker.cpp source files",
+  "source_only": true,
+  "source_paths": {
+    "v127": "Unreal Tournament 2004 - v3186/Core/Src/UnLinker.cpp",
+    "v128": "Unreal Tournament 2004 [v3369] [03-16-2004]/Core/Src/UnLinker.cpp",
+    "v129": "UT2004Src/UT2004SrcCmake/Core/Src/UnLinker.cpp"
+  },
+  "source_file_sha256": {
+    "v127": "8211e91df606390cea9e3758e17884c3b41238c6f0195f90a40c55c5ec7252d7",
+    "v128": "127927aef72aba2f405f9756069b2992c2c5bd2d42ca768d5913fcb60996d0a5",
+    "v129": "171b005d96292a420b64d746ae1669e35e6ac6c953d700a7688bf5cf560fc22f"
+  },
+  "v127_v128_exact_verifyimport_token_equivalence": true,
+  "v127_v128_token_count": 999,
+  "verifyimport_explicit_version_or_licensee_branches": false,
+  "v129_semantic_delta": "Two unary * dereferences of LocalizeError results before appThrowf; no import matching change",
+  "v127_stored_with_v128_loader_policy_is_source_compatible": true,
+  "v118_v121_native_loader_acceptance_established": false
+}

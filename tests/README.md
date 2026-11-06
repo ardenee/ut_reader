@@ -1,5 +1,11 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## UT2004 Epic v127/v128 source-loader equivalence (6 November 2026)
+
+Source-only independent verification pins actual v3186/v127, v3369/v128 and later v129 original `Core/Src/UnLinker.cpp` SHA-256 files. The exact v127 and v128 `ULinkerLoad::VerifyImport` token streams are identical (999 tokens), and v129 changes only two error-string dereference operators. `tests/tools/verify_ut2004_v127_v128_core_verifyimport_source.py`; evidence `tests/evidence/ue2/ut2004-v127-v128-loader-source-equivalence-20261106.json`.
+
+New actual PRD original UEDB5 gate `tests/tools/verify_ut2004_v127_snapshot_v128_loader_parity.php` verifies the source-compatible original UT2004 v127/lic29 file #111461, its complete SHA-256 and existing v128 source policy; **14/14 tests pass** with negative wrong game/licensee/schema/unsupported versions. This corrects an old profile-selector mismatch affecting 10,312 other v127/lic29 UT2004 records staged under v128. Exact writer identity and selected later loader remain distinct. PRD dependency Pass2 correction is **not yet published**: scoped resumable PRD-only publisher `catalog/bin/publish-ue2-ut2004-v127-v128-loader-compat.php` processes only those 10,312 existing UEDB5 sources, with no original package rescan, no backup copies and no other engine changes. Native acceptance of v118/lic2 and v121/lic29 still requires separate evidence; initial compiled UCC commandlet attempt failed at argument processing before loading and is **not** a pass.
+
 ## UE2 binary-format/source-policy distinction — 6 November 2026
 
 Format-only and language-independent source-derived specifications now live in `specs/ue2-package-binary-format.md` with Unreal II/UT2003/UT2004 and Warfare addenda. Previous mixed implementation/format documents are archived and redirected. Separate audit: `docs/ue2-format-and-runtime-compliance-gap-register-2026-11-06.md`.

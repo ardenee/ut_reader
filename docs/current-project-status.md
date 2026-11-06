@@ -1,5 +1,13 @@
 # UnrealDB current project status
 
+## 6 November 2026 — Epic UT2004 v127/v128 VerifyImport source equivalence: 10,312 production snapshots now eligible for scoped Pass2
+
+An original UE2 source-to-implementation mismatch was confirmed: **10,312 UT2004 game #5 v127/licensee29 files** are already staged with the **v128 loader source policy**, but the prior UnrealDB source-profile gate rejected them because the stored producer version was v127. The complete source-authored UT2004 v127 and v128 `ULinkerLoad::VerifyImport` bodies are **token-identical**; v129 differs only in two error-string argument dereferences and does not introduce version/licensee matching changes. Epic source rules therefore authorize a v127 package to be statically import-verified using the v128 loader's source profile, without claiming that the v128 engine originally wrote it. Corrected **only** `Uedb5Ue2VerifyImportSourceProfile::fromSnapshot` for UT2004 v127/lic29; wrong game, mismatched schemas, unsupported licensees and v118/v121 remain fail-closed. Focused 14-case regression PASS, with the actual original `2K4Fonts.utx` #111461 verified via SHA-256 and its unchanged UEDB5 snapshot. Source difference tool and evidence under `tests/tools/verify_ut2004_v127_v128_core_verifyimport_source.py` and `tests/evidence/ue2/ut2004-v127-v128-loader-source-equivalence-20261106.json`.
+
+**PRD Pass2 publication for the 10,312 restored static source eligibility rows remains pending** until the new bounded `catalog/bin/publish-ue2-ut2004-v127-v128-loader-compat.php --apply` runs locally on Lelly-pc; preview with no flag is read-only. This Pass2-only job does **not** reread original package bytes, perform a full game resync, or back up any UEDB5 containers. Use resumable `--after-id=LAST_SUCCESSFUL_ID` and optionally `--limit=500`; rebuild game #5 stats after the full publish. Other engines/readers remain unchanged. The older v118/v121 payload/runtime acceptance is not claimed from failed native commandlet parameter parsing. Evidence/limitations in [UE2 format and runtime compliance gap register](ue2-format-and-runtime-compliance-gap-register-2026-11-06.md).
+
+---
+
 ## 6 November 2026 — UE2 binary-format documents split from loader/UnrealDB workflows; original bytes and reader differential verified
 
 The user completed the PRD two-file Unreal II v61/v68 repair. A fresh DEV read-only check of actual PRD originals and UEDB5 metadata returned **current=2, needs_resnapshot=0, dependency_published_current=true, dashboard_stats_current=true**. Unreal II 808 verified files, with 74,556 dependency rows; package-coverage cache 84 packages (70 cached, 14 pruned). No full resync or further source-policy publication is needed for that defect.

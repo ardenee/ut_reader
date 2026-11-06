@@ -56,12 +56,22 @@ final class Uedb5Ue2VerifyImportSourceProfile
                     || ($version === 126 && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V126_GAME))),
             4 => $policy === strtolower(Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY)
                 && str_starts_with($schema, 'ue2.ut2003.'),
+            // The v127/v128 UT2004 loader's VerifyImport implementations are
+            // source-identical. A v127 package may have been read/staged by
+            // the v128 loader (already true for production copies); its
+            // source_policy identifies the READER, not the historical writer.
+            // Do not extend this claim to v118/v121: those still lack an
+            // accepted end-to-end loader-compatibility differential.
             5 => str_starts_with($schema, 'ue2.ut2004.')
-                && $policy === strtolower(match ($version) {
-                    127 => Uedb5Ut2004SnapshotBuilder::POLICY_V127,
-                    128 => Uedb5Ut2004SnapshotBuilder::POLICY_V128,
-                    default => Uedb5Ut2004SnapshotBuilder::POLICY_V129,
-                }),
+                && ($version === 127
+                    ? in_array($policy, [
+                        strtolower(Uedb5Ut2004SnapshotBuilder::POLICY_V127),
+                        strtolower(Uedb5Ut2004SnapshotBuilder::POLICY_V128),
+                    ], true)
+                    : $policy === strtolower(match ($version) {
+                        128 => Uedb5Ut2004SnapshotBuilder::POLICY_V128,
+                        default => Uedb5Ut2004SnapshotBuilder::POLICY_V129,
+                    })),
             default => false,
         };
         return $authorized ? $profile : null;
