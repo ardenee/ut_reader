@@ -1,5 +1,13 @@
 # UnrealDB current project status
 
+## 6 November 2026 — UT4 historical binaries preserved, but downloaded distribution is mod-bearing
+
+**DEV-only UE4/UT4 debugging evidence:** `D:\Temp\UnrealDB\UE4\native-version-archive\` now preserves **96 selectively recovered files / 263.64 MiB**, independently rehashed with zero errors, from 4 strictly separated sources: packaged UT4 client **25 files**, packaged UT4 WindowsServer **25**, installed UT4 Editor **24**, and separate **UT4UU v10.1.6 mod overlay 22**. Original source ZIP hashes and per-file SHA-256, locations, build metadata and a differential comparison are in `manifest.json` / `comparison-audit.json`. Reproducible scripts and a README are in `D:\Temp\UnrealDB\UE4`. No original game PAKs, maps, other content, full installations, source files or production UEDB5/DB files were copied or modified; no installer executed or Sandbox session disturbed.
+
+**Important provenance constraint:** `M:\iso\UT4 Installer - v1.1.0\Files\UnrealTournament (installer_v1.1.0).zip` **already includes UT4UU client/server plugins**, so **its packaged binaries are NOT certified pristine Epic native references**. The separate `L:\Source\Updates\ut4\UT4UU-v10_1_6.zip` overlay has **15 byte-identical** file names against the packaged or installed binaries, **4 differing installed-editor networking DLLs**, and **3 additional editor plugin names**. Native builds identify **UE4 4.15.0/CL3525360/++UT+Release-Next**, whereas the locally available UT4 source README names **UE4 4.12 preview**. Exact matching source/native parity remains open; do not infer original Epic file-format or VerifyImport behaviour from third-party modified modules. [Detailed native evidence and remaining gap](ue4-ut4-historical-native-binary-evidence-2026-11-06.md).
+
+---
+
 ## 6 November 2026 — UT3 original update binaries statically archived for UE3 source parity
 
 **DEV-only native evidence archive:** `D:\Temp\UnrealDB\UE3\native-version-archive\` contains the directly extracted original UE3/UT3 patch-binary sets from **12 patches (beta builds through patch 5)**: **22 EXE/DLL files and 152 cooked UnrealScript `.u` packages**, **174 files / 802.24 MiB**, preserving every source-archive and extracted-file SHA-256 in `manifest.json`. Original patch installers were never executed, all original L: files are unchanged, and no maps, textures, sounds, `.upk` or full game installs were copied. An independent full-source rehash with `D:\Temp\UnrealDB\UE3\verify-ut3-native-archive.py --full-source-hashes` passed with **zero mismatches**. Extraction is repeatable from `D:\Temp\UnrealDB\UE3\extract-ut3-native-updates.py`. No new live UE3 reader/UEDB5/code/DB operations were performed.
