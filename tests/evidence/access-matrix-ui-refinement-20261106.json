@@ -1,0 +1,128 @@
+{
+  "date": "2026-11-06",
+  "status": "PASS",
+  "prd_games_source": "User-edited PRD file; preserved reordered native-script column ahead of Packages Found, compact Files headings; cleaned whitespace only",
+  "file_list": "All classic coverage badges show numerical values only; separate title tooltips retained",
+  "file_examine_export": "Original classic and Zen Exports markup restored from before prior highlight change; reverse lookup removed",
+  "file_examine_meta": "New coverage metrics paired horizontally: met/missing then script source present/absent",
+  "access_matrix_estimated_table_rows": 4961082,
+  "access_matrix_data_mib": 1897,
+  "access_matrix_index_mib": 964,
+  "baseline_read_only_query_ms": {
+    "raw_100_events": 1.8,
+    "count": 476.7,
+    "overview": 1171.2,
+    "top_pages": 1500.8,
+    "top_ips": 1725
+  },
+  "aggregate_cache": "5 minutes, system temp directory outside webroot, filter-specific, admin POST invalidated; raw event data remain live",
+  "access_matrix_benchmark": {
+    "summary": {
+      "cold_ms": 844.23,
+      "warm_ms": 6.11,
+      "row_count": 1
+    },
+    "top_pages": {
+      "cold_ms": 1695.79,
+      "warm_ms": 7.2,
+      "row_count": 10
+    }
+  },
+  "access_matrix_acceptance": {
+    "pass": true,
+    "cache_ttl_seconds": 300,
+    "cold_warm_isolation_and_invalidation": true,
+    "query_specific_identity": true,
+    "raw_events_not_cached": true,
+    "source_db_mutations": 0,
+    "live_benchmark": {
+      "summary": {
+        "cold_ms": 844.23,
+        "warm_ms": 6.11,
+        "row_count": 1
+      },
+      "top_pages": {
+        "cold_ms": 1695.79,
+        "warm_ms": 7.2,
+        "row_count": 10
+      }
+    }
+  },
+  "file_examine_acceptance": {
+    "pass": true,
+    "read_only": true,
+    "original_package_headers": [
+      {
+        "source_file": "storage/games/ut99/verified/2aa9a951613309c83ffbe0f90a08aea7.utx",
+        "sha256": "50edfe60fcf99c61f369cf8100079351bd75eb0a23febc77aa891142086dbbc0",
+        "raw_fields": 12
+      },
+      {
+        "source_file": "storage/games/unreal2/verified/05a4c4138b95620f110abb60d8e6e3fd.un2",
+        "sha256": "9e944f8c30da071b7d3b29e7154e4882036651d227d45a7c384c7160a7f8695f",
+        "raw_fields": 11
+      }
+    ],
+    "blocked_unsafe_paths": 4,
+    "field_search_matches": [
+      {
+        "table": "imports",
+        "needle": "-1",
+        "matches": 1
+      },
+      {
+        "table": "imports",
+        "needle": "Engine",
+        "matches": 2
+      },
+      {
+        "table": "exports",
+        "needle": "504",
+        "matches": 1
+      },
+      {
+        "table": "exports",
+        "needle": "00070000",
+        "matches": 3
+      },
+      {
+        "table": "zen_exports",
+        "needle": "712438030E5C1A50",
+        "matches": 1
+      },
+      {
+        "table": "zen_imports",
+        "needle": "49159F3AC1005A8F",
+        "matches": 1
+      }
+    ],
+    "unreal2_missing_file_filter_count": 2,
+    "ui_columns_header_collapse_and_source_semantics_checked": true,
+    "native_runtime_verifyimport_inferred": false
+  },
+  "ut4_source_check": {
+    "pass": true,
+    "source_matched": 413651,
+    "source_unmatched": 32
+  },
+  "eight_game_regression": {
+    "pass": true,
+    "games": 8,
+    "filters": 7
+  },
+  "files_sha256": {
+    "catalog/access-matrix.php": "2d6ad6d79d3bf28d79bc14a29473c7c08da50b6d793aa10827a6d90201b311b4",
+    "catalog/game-files.php": "d75bdf45ee57c66aac13dbf0d0ad8d60b16a8d63a83e8923bc19ccfada2028ac",
+    "catalog/games.php": "49ca6bb26d59a01fc138f5d2211eb4e6787a504bdb4b7d2a7821dc13125ad55e",
+    "catalog/file-examine-paged-core.php": "9632b430a0632614a6fd74fc1c3542de0da1fce8bad5304ac9b7c53eacc9b5d7",
+    "catalog/file-examine-zen-exports.php": "2a947dc9fc5d751b30f6b6727f0edc8b38e33283832c7029c4b4293d3c1c60e1",
+    "catalog/src/Infrastructure/Telemetry/CatalogAccessMatrixAggregateCache.php": "8778d7f6bcc0f03e9bf169aa892cc7893f0690c9b9f1d38459109cf63862f803",
+    "tests/tools/verify_access_matrix_aggregate_cache_20261106.php": "d60f19bc53c4166a1b273bb6fb75e60abd977e70efa0bab94f6b202db3176fd0",
+    "tests/tools/verify_file_examine_coverage_ui_20261106.php": "1bb960108721a1552b8208add20256acd6fe6e6193da98ef9baef1128f783fc1",
+    "tests/tools/verify_ut4_native_script_source_module_coverage.php": "28a51643d44759344632a5d6389b4072651e2803d81053bd8257e6c7cee5798b"
+  },
+  "sql_writes": 0,
+  "uedb5_rewrites": 0,
+  "browser_render_verified": false,
+  "cold_start_caveat": "First uncached visit or Refresh summary now still runs full historical grouped queries."
+}

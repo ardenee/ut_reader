@@ -105,8 +105,8 @@ try {
     $filesUi = (string)file_get_contents(dirname(__DIR__, 2) . '/catalog/game-files.php');
     if (!str_contains($gamesUi, '>Missing</th>')
         || !str_contains($gamesUi, 'Native Script')
-        || !str_contains($filesUi, "'missing: '")
-        || !str_contains($filesUi, "'script not in source: '")
+        || !str_contains($filesUi, 'number_format($notIndexed)')
+        || !str_contains($filesUi, 'number_format($nativeSourceUnmatched)')
         || str_contains($gamesUi, '>Not Indexed</th>')) {
         throw new RuntimeException('User-visible Missing/Native Script labels regressed.');
     }

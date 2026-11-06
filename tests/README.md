@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Access Matrix speed and UI refinements — 6 November 2026
+
+Run php tests/tools/verify_access_matrix_aggregate_cache_20261106.php --db for read-only live query and cache benchmark, and php tests/tools/verify_file_examine_coverage_ui_20261106.php for original-header/search and restored exports. Access Matrix caches grouped results for five minutes only in system temp; the event list is live, and admin moderation invalidates aggregates. The production Games column reorder is retained and game-files coverage badge labels are hover-only. Evidence: tests/evidence/access-matrix-ui-refinement-20261106.json.
+
+---
+
+
 ## File-examine UI and raw-header acceptance — 6 November 2026
 
 Run php tests/tools/verify_file_examine_coverage_ui_20261106.php with original DEV fixtures and read-only PRD database access. SHA-verified original raw headers, secure path resolution, full-field classic and Zen searches, indexed cross-file export usage, missing filter, UI column order, subtle tints, and placement were tested. Evidence: tests/evidence/file-examine-games-ui-coverage-20261106.json. No original UEDB5 writes and no native runtime mount selected.

@@ -148,7 +148,14 @@ try {
                     . $unresolvedFileBadge . '</a>'
                 : $unresolvedFileBadge
         );
-        $rows .= $numberCell(
+
+
+		$rows .= $numberCell($nativeScriptRefs, $nativeSourceDisplay);
+
+
+
+
+		$rows .= $numberCell(
             $resolved,
             $resolved !== null
                 ? '<a href="' . catalog_h($resolvedUrl)
@@ -156,7 +163,11 @@ try {
                     . $resolvedBadge . '</a>'
                 : $resolvedBadge
         );
-        $rows .= $numberCell($nativeScriptRefs, $nativeSourceDisplay);
+
+
+
+
+
         $rows .= $numberCell(
             $resolvedFiles,
             $resolvedFiles !== null
@@ -180,10 +191,10 @@ try {
         . '<th scope="col">Game</th><th scope="col">Profile engine</th>'
         . '<th scope="col">Files</th>'
         . '<th scope="col" title="Dependency packages missing from this game&#039;s catalogue. Not proof that an original installation lacks them.">Missing</th>'
-        . '<th scope="col" title="Files referring to one or more packages missing from this game&#039;s catalogue">Files With Gaps</th>'
-        . '<th scope="col" title="Dependencies with matching verified package-name candidates in the game catalogue; not a claim of matching exports or native runtime resolution">Packages Found</th>'
+        . '<th scope="col" title="Files referring to one or more packages missing from this game&#039;s catalogue">Files</th>'
         . '<th scope="col" title="UT4 native script reference counts: not in source / in source. Hover each number for its meaning. Source presence does not prove runtime loading.">Native Script</th>'
-        . '<th scope="col" title="Files with no missing physical dependency packages; UT4 native script source matches are reported separately">Files Without Gaps</th>'
+        . '<th scope="col" title="Dependencies with matching verified package-name candidates in the game catalogue; not a claim of matching exports or native runtime resolution">Packages Found</th>'
+        . '<th scope="col" title="Files with no missing physical dependency packages; UT4 native script source matches are reported separately">Files</th>'
         . '<th scope="col">Total size</th><th scope="col">Open</th>'
         . '</tr></thead><tbody>' . $rows . '</tbody></table>';
 

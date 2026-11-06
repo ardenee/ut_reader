@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## 6 November 2026 — Production Games changes, numeric badges and Access Matrix performance
+
+User-edited PRD Games layout was copied to DEV: the Native Script column now precedes Packages Found, and the compact repeated Files headings replace longer captions. Only whitespace-only cleanup was applied for Git. In the game-files table, the visible prefixes found:, script in source:, script not in source: and missing: were removed, retaining separate numeric badges and their detailed tooltip titles.
+
+The file-examine Exports-table changes from commit 3c710ec4 were reverted for both classic and Zen packages, removing blue unmatched-export shading and the extra indexed reverse lookup. Imports missing-package shading remains. Four added metadata values now occupy two evenly spaced column tables, paired across rows rather than four rows in one column. Other file-examine repairs remain in place.
+
+Access Matrix slowness is attributable to several independent seven-day grouped SQL scans over an approximately 4,961,082-row telemetry table (about 1,897 MiB data and 964 MiB indexes). The raw 100-event query took 1.8 ms but the GROUP BY and COUNT DISTINCT reports took hundreds to thousands of milliseconds each. The new CatalogAccessMatrixAggregateCache preserves 5-minute filter-specific grouped results in PHP system temp outside webroot, keeps the raw event list live, invalidates on moderation POST and provides a Refresh summary now link. The first cold visit or explicit refresh still runs the heavy grouped SQL, so this fixes repeat dashboard latency rather than guaranteeing instant first loads.
+
+Read-only acceptance: verify_access_matrix_aggregate_cache_20261106.php with --db, verify_file_examine_coverage_ui_20261106.php, verify_ut4_native_script_source_module_coverage.php and verify_games_indexed_package_coverage.php. Evidence: tests/evidence/access-matrix-ui-refinement-20261106.json. No raw packages, original UEDB5 data or SQL event rows were mutated.
+
+---
+
+
+
 ## 6 November 2026 — Games page and file examination coverage updates
 
 Restored compact Files With Gaps and Files Without Gaps headings. Native Script shows not in source / in source numbers (UT4 32 / 413,651), with individual hover explanations and file-list links. Public dependency-filter URL is dep_filter=missing instead of unindexed. The containing files are already indexed; what is missing are their required same-game catalogue dependency package candidates. No source runtime mount is asserted.

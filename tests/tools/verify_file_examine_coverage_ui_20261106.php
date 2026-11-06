@@ -8,7 +8,6 @@ require_once dirname(__DIR__, 2) . '/catalog/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector as Inspector;
 use UnrealDb\Catalog\Infrastructure\Persistence\CatalogStoredPackageFileResolver as Resolver;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoFileExamineExportUsageQuery as Exports;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeMetadataReader as Reader;
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoZenExamProjection as Zen;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameIndexedPackageCoverageQuery as Coverage;
@@ -49,7 +48,7 @@ $ui=(string)file_get_contents($repository.'/catalog/file-examine-paged-core.php'
 $outer=(string)file_get_contents($repository.'/catalog/file-examine.php');
 $zenImports=(string)file_get_contents($repository.'/catalog/file-examine-zen-tables.php');
 $zenExports=(string)file_get_contents($repository.'/catalog/file-examine-zen-exports.php');
-ensure(str_contains($games,'>Files With Gaps</th>')
+ensure(str_contains($games,'>Files</th>')
     && str_contains($games,'>Native Script</th>')
     && str_contains($games,"'dep_filter' => 'missing'")
     && str_contains($games,'not in source') && str_contains($games,'in source'),
@@ -60,16 +59,16 @@ ensure(!str_contains($games,'>Files Missing Dependencies</th>')
     'Obsolete public missing-dependency filter or header');
 ensure(str_contains($ui,'<th>Class</th><th>Outer ref</th><th>Root</th><th>Object</th><th>Full path</th>')
     && str_contains($ui,'examine-import-missing')
-    && str_contains($ui,'examine-export-unreferenced')
+    && !str_contains($ui,'examine-export-unreferenced')
     && str_contains($zenImports,'examine-import-missing')
-    && str_contains($zenExports,'examine-export-unreferenced'),
-    'Row highlighting or required import column order absent');
+    && !str_contains($zenExports,'examine-export-unreferenced'),
+    'Original export table reverted or import highlighting/column order absent');
 ensure(str_contains($ui,'<div id="examine-header-slot"></div>')
     && str_contains($outer,"'<div id=\"examine-header-slot\"></div>'")
     && str_contains($ui,'<details class="examine-scanner-notes">')
     && !str_contains($ui,'<details class="examine-scanner-notes" open')
-    && str_contains($ui,'Dependencies met (catalogue)')
-    && str_contains($ui,'Missing dependencies (catalogue)'),
+    && str_contains($ui,'Dependencies met')
+    && str_contains($ui,'Dependencies missing'),
     'Metadata/header/scanner placement or dependency count missing');
 
 $config=catalog_config();
@@ -98,19 +97,6 @@ try {
         ensure((int)$r['total']===1,'Zen search value not found');
         $search[]=['table'=>'zen_'.$section,'needle'=>$needle,'matches'=>$r['total']];
     }
-    $lookup=new Exports($db);
-    $usages=[];
-    foreach([[113253,[0,1,2,3,4,5]],[113526,[0]],[1390232,[0,1,2]]] as [$id,$indices]) {
-        $result=$lookup->forExportPage($id,$indices);
-        ensure(count($result)===count($indices),'Export incoming coverage page drift');
-        $usages[(string)$id]=$result;
-    }
-    ensure($usages['113253'][0]===false && $usages['113253'][1]===true,
-        'UT99 original export incoming coverage drift');
-    ensure($usages['113526'][0]===true,'UT4 original export incoming coverage drift');
-    ensure($usages['1390232'][0]===null
-        && $usages['1390232'][2]===true,
-        'Zen export non-public coverage must remain unknown');
     $filter=Coverage::fileFilterPredicate('missing',false);
     $query=$db->prepare('SELECT COUNT(*) FROM ue_files f '
         .'WHERE f.game_id=? AND f.scan_status="verified" AND '.$filter);
@@ -122,7 +108,6 @@ try {
         'original_package_headers'=>$inspections,
         'blocked_unsafe_paths'=>4,
         'field_search_matches'=>$search,
-        'indexed_cross_file_import_coverage'=>$usages,
         'unreal2_missing_file_filter_count'=>2,
         'ui_columns_header_collapse_and_source_semantics_checked'=>true,
         'native_runtime_verifyimport_inferred'=>false,

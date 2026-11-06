@@ -13,6 +13,7 @@ require_once __DIR__ . '/lib/CatalogCountryFlag.php';
 
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpLocationResolver;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogAccessMatrixAggregateCache;
 
 function access_matrix_choice(string $value, array $allowed, string $fallback): string
 {
@@ -111,6 +112,13 @@ try {
 
     $siteBlocklist = $siteBlockAvailable ? new CatalogSiteBlocklist($db, $config) : null;
     $message = '';
+    // Cache only expensive grouped telemetry aggregates (never the live
+    // event list). Storage is private OS temp, outside the webroot.
+    $matrixCache = new CatalogAccessMatrixAggregateCache($config);
+    if (isset($_GET['refresh'])) {
+        $matrixCache->invalidate();
+        unset($_GET['refresh']);
+    }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('access_matrix_admin');
@@ -255,6 +263,9 @@ try {
         } else {
             throw new RuntimeException('Choose a valid Access Matrix action.');
         }
+        // A delete, block or feedback moderation action must never leave
+        // misleading dashboard aggregates behind.
+        $matrixCache->invalidate();
     }
 
     $eventType = access_matrix_choice(
@@ -534,7 +545,7 @@ try {
     $matchingIps = [];
 
     if ($eventsAvailable) {
-        $summaryRow = catalog_one(
+        $summaryRow = $matrixCache->remember('summary', [$whereSql,$args], static fn(): array => catalog_one(
             $db,
             'SELECT SUM(a.event_type IN ("page_view","server_page")) page_activity,'
             . 'SUM(a.event_type="page_view") page_views,'
@@ -545,7 +556,7 @@ try {
             . 'COUNT(DISTINCT CASE WHEN a.event_type IN ("page_view","server_page") THEN a.session_hash END) sessions '
             . 'FROM ue_access_events a' . $whereSql,
             $args
-        ) ?: [];
+        ) ?: []);
         $summary = [
             'page_activity' => (int)($summaryRow['page_activity'] ?? 0),
             'page_views' => (int)($summaryRow['page_views'] ?? 0),
@@ -556,11 +567,11 @@ try {
             'sessions' => (int)($summaryRow['sessions'] ?? 0),
         ];
 
-        $totalRow = catalog_one(
+        $totalRow = $matrixCache->remember('raw_count', [$rawWhereSql,$rawArgs], static fn(): array => catalog_one(
             $db,
             'SELECT COUNT(*) c FROM ue_access_events a' . $rawWhereSql,
             $rawArgs
-        ) ?: [];
+        ) ?: []);
         $total = (int)($totalRow['c'] ?? 0);
         $pages = max(1, (int)ceil($total / $perPage));
         $page = min($page, $pages);
@@ -575,15 +586,15 @@ try {
         $statement->execute($rawArgs);
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-        $topPages = catalog_all(
+        $topPages = $matrixCache->remember('top_pages', [$whereSql,$args], static fn(): array => catalog_all(
             $db,
             'SELECT a.page_key,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type IN ("page_view","server_page") GROUP BY a.page_key ORDER BY hits DESC,a.page_key LIMIT 10',
             $args
-        );
-        $topLinks = catalog_all(
+        ));
+        $topLinks = $matrixCache->remember('top_links', [$whereSql,$args], static fn(): array => catalog_all(
             $db,
             'SELECT a.request_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
@@ -591,8 +602,8 @@ try {
             . 'a.event_type IN ("page_view","server_page") AND a.request_path<>"" '
             . 'GROUP BY a.request_path ORDER BY hits DESC,a.request_path LIMIT 10',
             $args
-        );
-        $topSections = catalog_all(
+        ));
+        $topSections = $matrixCache->remember('top_sections', [$whereSql,$args], static fn(): array => catalog_all(
             $db,
             'SELECT a.page_key,a.section_key,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
@@ -600,8 +611,8 @@ try {
             . 'a.event_type="section" AND a.section_key IS NOT NULL '
             . 'GROUP BY a.page_key,a.section_key ORDER BY hits DESC,a.page_key LIMIT 10',
             $args
-        );
-        $topActions = catalog_all(
+        ));
+        $topActions = $matrixCache->remember('top_actions', [$whereSql,$args], static fn(): array => catalog_all(
             $db,
             'SELECT a.page_key,a.action_key,a.target_path,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
@@ -609,8 +620,8 @@ try {
             . 'a.event_type="interaction" AND a.action_key IS NOT NULL '
             . 'GROUP BY a.page_key,a.action_key,a.target_path ORDER BY hits DESC,a.page_key LIMIT 10',
             $args
-        );
-        $transitions = catalog_all(
+        ));
+        $transitions = $matrixCache->remember('transitions', [$whereSql,$args], static fn(): array => catalog_all(
             $db,
             'SELECT a.referrer_path source_path,a.request_path destination_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
@@ -618,8 +629,8 @@ try {
             . 'a.event_type IN ("page_view","server_page") AND a.referrer_path IS NOT NULL AND a.referrer_path<>"" '
             . 'GROUP BY a.referrer_path,a.request_path ORDER BY hits DESC LIMIT 10',
             $args
-        );
-        $topIps = catalog_all(
+        ));
+        $topIps = $matrixCache->remember('top_ips', [$whereSql,$args], static fn(): array => catalog_all(
             $db,
             'SELECT INET6_NTOA(a.ip_address) ip,COUNT(*) events,COUNT(DISTINCT a.session_hash) sessions,'
             . 'SUM(a.event_type="page_view") page_views,'
@@ -630,9 +641,9 @@ try {
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.ip_address IS NOT NULL GROUP BY a.ip_address ORDER BY events DESC LIMIT 30',
             $args
-        );
+        ));
         if ($showIps) {
-            $matchingIps = catalog_all(
+            $matchingIps = $matrixCache->remember('matching_ips', [$rawWhereSql,$rawArgs], static fn(): array => catalog_all(
                 $db,
                 'SELECT INET6_NTOA(a.ip_address) ip,COUNT(*) hits,COUNT(DISTINCT a.session_hash) sessions,'
                 . 'MIN(a.occurred_at) first_seen,MAX(a.occurred_at) last_seen '
@@ -640,7 +651,7 @@ try {
                 . ($rawWhereSql === '' ? ' WHERE ' : $rawWhereSql . ' AND ')
                 . 'a.ip_address IS NOT NULL GROUP BY a.ip_address ORDER BY hits DESC,a.ip_address LIMIT 500',
                 $rawArgs
-            );
+            ));
         }
     }
 
@@ -663,6 +674,13 @@ try {
         : [];
 
     catalog_head('Access Matrix');
+    echo '<p class="muted small">Grouped activity summaries are cached for up to '
+        . CatalogAccessMatrixAggregateCache::TTL_SECONDS
+        . ' seconds to reduce repeated full-history queries. '
+        . 'The raw event list and moderation controls remain live. '
+        . '<a href="access-matrix.php?' . catalog_h(access_matrix_query(['refresh'=>'1']))
+        . '">Refresh summary now</a>.</p>';
+
     echo '<style>'
         . '.access-matrix-stats{grid-template-columns:repeat(5,minmax(140px,1fr));margin-bottom:14px}'
         . '.access-matrix-filter{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin-bottom:14px}'

@@ -735,22 +735,22 @@ try {
                     if ($indexed > 0) {
                         $coverageBadges[] = '<div><span class="dep resolved" '
                             . 'title="Indexed package candidate, not native VerifyImport or a proven runtime mount">'
-                            . 'found: ' . number_format($indexed) . '</span></div>';
+                            . number_format($indexed) . '</span></div>';
                     }
                     if ($nativeSourceMatched > 0) {
                         $coverageBadges[] = '<div><span class="dep package_only" '
                             . 'title="UT4 /Script/ module name has a corresponding declaration in retained game/engine source; imported class or runtime loading not verified">'
-                            . 'script in source: ' . number_format($nativeSourceMatched) . '</span></div>';
+                            . number_format($nativeSourceMatched) . '</span></div>';
                     }
                     if ($nativeSourceUnmatched > 0) {
                         $coverageBadges[] = '<div><span class="dep unresolved" '
                             . 'title="No matching UT4 module declaration in the retained source snapshot; an external compiled module may still exist">'
-                            . 'script not in source: ' . number_format($nativeSourceUnmatched) . '</span></div>';
+                            . number_format($nativeSourceUnmatched) . '</span></div>';
                     }
                     if ($notIndexed > 0) {
                         $coverageBadges[] = '<div><span class="dep unresolved" '
                             . 'title="Dependency package missing from this game&#039;s catalogue; it may be present under a different game or outside this catalogue">'
-                            . 'missing: ' . number_format($notIndexed) . '</span></div>';
+                            . number_format($notIndexed) . '</span></div>';
                     }
                     $deps = $coverageBadges !== []
                         ? '<div class="game-files-dependency-list">' . implode('', $coverageBadges) . '</div>'
