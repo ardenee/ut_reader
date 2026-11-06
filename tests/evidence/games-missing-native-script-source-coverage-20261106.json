@@ -1,0 +1,211 @@
+{
+  "schema": "games-page-friendly-missing-and-ut4-source-module-coverage-v1",
+  "date": "2026-11-06",
+  "scope": "Public game listing and per-game file lists, all UE1-UE5 games",
+  "user_semantics": {
+    "Missing": "Required dependency package is not found among verified same-game catalogue files. The referencing file may be correctly scanned and indexed.",
+    "Packages Found": "Verified same-game package-name candidate exists; does not certify imported object, class or selected runtime mount.",
+    "Native Script (Source)": "UT4 /Script/ module name comparison against retained UT4 game + bundled engine Build.cs names; source declaration is NOT compiled/runtime registration, class or VerifyImport parity.",
+    "Files Without Missing Packages": "No absent *physical package-name candidate*; source module declarations displayed separately; no runtime closure claim."
+  },
+  "unreal2_originals": {
+    "files": [
+      {
+        "id": 1253000,
+        "package": "pshuttleworthlevelfinal.un2",
+        "missing_names": [
+          {
+            "name": "MyStuff",
+            "references": 3
+          }
+        ]
+      },
+      {
+        "id": 1265641,
+        "package": "XMP-COGCityWIP.unr",
+        "missing_names": [
+          {
+            "name": "CliffTest",
+            "references": 3
+          },
+          {
+            "name": "CubeMaps",
+            "references": 4
+          }
+        ]
+      }
+    ],
+    "missing_files": 2,
+    "missing_package_references": 10
+  },
+  "ut4_source_reference": {
+    "module_manifest": "catalog/data/ut4-native-script-source-index.json",
+    "manifest_sha256": "a8319a29ed969ac4462bf1d58a1c0b926c0d843ca2d44df66e78e53f7b1bf603",
+    "retained_source_root": "L:/Source/Games/UT4/UnrealTournament",
+    "distinct_source_names": 38,
+    "with_source_declaration": 35,
+    "without_source_declaration": [
+      "BlueprintHttp",
+      "CookedLog",
+      "McpProfileSys"
+    ],
+    "source_matched_references": 413651,
+    "source_unmatched_references": 32,
+    "source_unmatched_files": 8,
+    "source_module_declarations_hash_verified": true,
+    "runtime_module_registration_proven": false,
+    "imported_symbol_match_proven": false,
+    "full_native_verifyimport_proven": false,
+    "source_unmatched_file_ids": [
+      1230213,
+      1230214,
+      1230278,
+      1230280,
+      1238330,
+      1238417,
+      1238681,
+      1241356
+    ]
+  },
+  "read_only_acceptance": "tests/tools/verify_ut4_native_script_source_module_coverage.php",
+  "read_only_acceptance_sha256": "7c56e39d209696593994c67aac28e6799c76e4f1ee2656ac97b0d6555cfc4017",
+  "results": {
+    "pass": true,
+    "read_only": true,
+    "ut4_source_module_names": 38,
+    "matched_declared_module_names": 35,
+    "not_declared_module_names": [
+      "BlueprintHttp",
+      "CookedLog",
+      "McpProfileSys"
+    ],
+    "original_build_cs_sha256_verified": true,
+    "ut4_counts": {
+      "files_with_dependencies": 64238,
+      "indexed_files": 43590,
+      "no_gaps_files": 63717,
+      "unindexed_files": 521,
+      "native_script_files": 64238,
+      "source_matched_script_files": 64238,
+      "source_unmatched_script_files": 8,
+      "total_references": 748145,
+      "indexed_references": 332434,
+      "native_script_references": 413683,
+      "source_matched_script_references": 413651,
+      "source_unmatched_script_references": 32,
+      "unindexed_references": 2028
+    },
+    "filter_file_counts": {
+      "script_source_matched": 64238,
+      "script_source_unmatched": 8,
+      "unindexed": 521
+    },
+    "source_unmatched_module_references": [
+      {
+        "required_package_name": "/Script/BlueprintHttp",
+        "reference_count": "14"
+      },
+      {
+        "required_package_name": "/Script/CookedLog",
+        "reference_count": "12"
+      },
+      {
+        "required_package_name": "/Script/McpProfileSys",
+        "reference_count": "6"
+      }
+    ],
+    "source_unmatched_original_file_ids": [
+      1230213,
+      1230214,
+      1230278,
+      1230280,
+      1238330,
+      1238417,
+      1238681,
+      1241356
+    ],
+    "source_unmatched_original_file_counts": {
+      "1230213": {
+        "total": 98,
+        "indexed": 0,
+        "native_script": 98,
+        "source_matched_script": 94,
+        "source_unmatched_script": 4,
+        "unindexed": 0
+      },
+      "1230214": {
+        "total": 93,
+        "indexed": 0,
+        "native_script": 93,
+        "source_matched_script": 89,
+        "source_unmatched_script": 4,
+        "unindexed": 0
+      },
+      "1230278": {
+        "total": 48,
+        "indexed": 0,
+        "native_script": 48,
+        "source_matched_script": 42,
+        "source_unmatched_script": 6,
+        "unindexed": 0
+      },
+      "1230280": {
+        "total": 193,
+        "indexed": 8,
+        "native_script": 185,
+        "source_matched_script": 177,
+        "source_unmatched_script": 8,
+        "unindexed": 0
+      },
+      "1238330": {
+        "total": 47,
+        "indexed": 8,
+        "native_script": 39,
+        "source_matched_script": 37,
+        "source_unmatched_script": 2,
+        "unindexed": 0
+      },
+      "1238417": {
+        "total": 114,
+        "indexed": 19,
+        "native_script": 95,
+        "source_matched_script": 93,
+        "source_unmatched_script": 2,
+        "unindexed": 0
+      },
+      "1238681": {
+        "total": 141,
+        "indexed": 4,
+        "native_script": 137,
+        "source_matched_script": 133,
+        "source_unmatched_script": 4,
+        "unindexed": 0
+      },
+      "1241356": {
+        "total": 152,
+        "indexed": 46,
+        "native_script": 106,
+        "source_matched_script": 104,
+        "source_unmatched_script": 2,
+        "unindexed": 0
+      }
+    },
+    "public_labels_verified": true,
+    "unreal2_missing_package_files": 2,
+    "unreal2_missing_package_references": 10,
+    "meaning": "source-name match only; NOT loaded module/class or VerifyImport"
+  },
+  "production_sql_writes": 0,
+  "uedb5_files_reprocessed": 0,
+  "original_game_source_modified": false,
+  "all_eight_games_regression": {
+    "test": "tests/tools/verify_games_indexed_package_coverage.php",
+    "test_sha256": "73e0bbd542e3e966848f42485f5e27481b5a768eb9688c100cce0af95ccf4367",
+    "passed": true,
+    "games": 8,
+    "filter_counts": 7,
+    "original_files": 4
+  },
+  "actual_web_output_verified": false,
+  "expected_ui_labels_static_check_passed": true
+}

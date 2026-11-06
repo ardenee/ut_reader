@@ -35,19 +35,29 @@ final class PdoGameIndexedPackageCoverageQuery
         $available = self::hasIndexedCandidateSql('s');
         $script = $ue4ScriptModules
             ? "s.required_package_name LIKE '/Script/%'" : '0=1';
+        $sourceMatched = $ue4ScriptModules && $gameId === 7
+            ? CatalogUt4NativeScriptSourceIndex::sourceMatchSql('s') : '0=1';
         $sql = 'SELECT COUNT(*) files_with_dependencies,'
             . 'COALESCE(SUM(x.indexed_refs>0),0) indexed_files,'
             . 'COALESCE(SUM(x.indexed_refs+x.native_refs=x.total_refs),0) no_gaps_files,'
             . 'COALESCE(SUM(x.indexed_refs+x.native_refs<x.total_refs),0) unindexed_files,'
             . 'COALESCE(SUM(x.native_refs>0),0) native_script_files,'
+            . 'COALESCE(SUM(x.source_matched_refs>0),0) source_matched_script_files,'
+            . 'COALESCE(SUM(x.source_unmatched_refs>0),0) source_unmatched_script_files,'
             . 'COALESCE(SUM(x.total_refs),0) total_references,'
             . 'COALESCE(SUM(x.indexed_refs),0) indexed_references,'
-            . 'COALESCE(SUM(x.native_refs),0) native_script_references '
+            . 'COALESCE(SUM(x.native_refs),0) native_script_references,'
+            . 'COALESCE(SUM(x.source_matched_refs),0) source_matched_script_references,'
+            . 'COALESCE(SUM(x.source_unmatched_refs),0) source_unmatched_script_references '
             . 'FROM (SELECT s.file_id,SUM(s.dependency_count) total_refs,'
             . 'SUM(CASE WHEN NOT (' . $script . ') AND ' . $available
             . ' THEN s.dependency_count ELSE 0 END) indexed_refs,'
             . 'SUM(CASE WHEN ' . $script
-            . ' THEN s.dependency_count ELSE 0 END) native_refs '
+            . ' THEN s.dependency_count ELSE 0 END) native_refs,'
+            . 'SUM(CASE WHEN ' . $script . ' AND (' . $sourceMatched . ')'
+            . ' THEN s.dependency_count ELSE 0 END) source_matched_refs,'
+            . 'SUM(CASE WHEN ' . $script . ' AND NOT (' . $sourceMatched . ')'
+            . ' THEN s.dependency_count ELSE 0 END) source_unmatched_refs '
             . 'FROM ue_uedb5_dependency_packages s '
             . 'JOIN ue_files consumer ON consumer.id=s.file_id '
             . 'AND consumer.game_id=s.game_id AND consumer.scan_status="verified" '
@@ -57,8 +67,10 @@ final class PdoGameIndexedPackageCoverageQuery
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
         $result = [];
         foreach (['files_with_dependencies','indexed_files','no_gaps_files',
-            'unindexed_files','native_script_files','total_references',
-            'indexed_references','native_script_references'] as $field) {
+            'unindexed_files','native_script_files','source_matched_script_files',
+            'source_unmatched_script_files','total_references',
+            'indexed_references','native_script_references',
+            'source_matched_script_references','source_unmatched_script_references'] as $field) {
             $result[$field] = max(0, (int)($row[$field] ?? 0));
         }
         $result['unindexed_references'] =
@@ -66,7 +78,9 @@ final class PdoGameIndexedPackageCoverageQuery
                 - $result['native_script_references']);
         if ($result['indexed_references'] + $result['native_script_references']
                 + $result['unindexed_references'] !== $result['total_references']
-            || $result['no_gaps_files'] + $result['unindexed_files'] !== $result['files_with_dependencies']) {
+            || $result['no_gaps_files'] + $result['unindexed_files'] !== $result['files_with_dependencies']
+            || $result['source_matched_script_references']
+                + $result['source_unmatched_script_references'] !== $result['native_script_references']) {
             throw new RuntimeException('Invalid classic catalogue-coverage cardinality.');
         }
         return $result;
@@ -76,7 +90,7 @@ final class PdoGameIndexedPackageCoverageQuery
      * Read only the currently visible files; do not materialise another
      * projection or accidentally claim these candidates are mounted.
      * @param list<int> $fileIds
-     * @return array<int,array{total:int,indexed:int,native_script:int,unindexed:int}>
+     * @return array<int,array{total:int,indexed:int,native_script:int,source_matched_script:int,source_unmatched_script:int,unindexed:int}>
      */
     public function forFiles(int $gameId, array $fileIds, bool $ue4ScriptModules = false): array
     {
@@ -87,11 +101,17 @@ final class PdoGameIndexedPackageCoverageQuery
         $available = self::hasIndexedCandidateSql('s');
         $script = $ue4ScriptModules
             ? "s.required_package_name LIKE '/Script/%'" : '0=1';
+        $sourceMatched = $ue4ScriptModules && $gameId === 7
+            ? CatalogUt4NativeScriptSourceIndex::sourceMatchSql('s') : '0=1';
         $sql = 'SELECT s.file_id,SUM(s.dependency_count) total,'
             . 'SUM(CASE WHEN NOT (' . $script . ') AND ' . $available
             . ' THEN s.dependency_count ELSE 0 END) indexed,'
             . 'SUM(CASE WHEN ' . $script
-            . ' THEN s.dependency_count ELSE 0 END) native_script '
+            . ' THEN s.dependency_count ELSE 0 END) native_script,'
+            . 'SUM(CASE WHEN ' . $script . ' AND (' . $sourceMatched . ')'
+            . ' THEN s.dependency_count ELSE 0 END) source_matched_script,'
+            . 'SUM(CASE WHEN ' . $script . ' AND NOT (' . $sourceMatched . ')'
+            . ' THEN s.dependency_count ELSE 0 END) source_unmatched_script '
             . 'FROM ue_uedb5_dependency_packages s '
             . 'JOIN ue_files consumer ON consumer.id=s.file_id '
             . 'AND consumer.game_id=s.game_id AND consumer.scan_status="verified" '
@@ -103,12 +123,16 @@ final class PdoGameIndexedPackageCoverageQuery
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
             $total=(int)$row['total'];$indexed=(int)$row['indexed'];
             $native=(int)$row['native_script'];
+            $sourceKnown=(int)$row['source_matched_script'];
+            $sourceUnknown=(int)$row['source_unmatched_script'];
             if ($total < 0 || $indexed < 0 || $native < 0
-                || $indexed+$native > $total) {
+                || $indexed+$native > $total || $sourceKnown+$sourceUnknown !== $native) {
                 throw new RuntimeException('Invalid indexed-package file counts.');
             }
             $rows[(int)$row['file_id']] = [
                 'total'=>$total,'indexed'=>$indexed,'native_script'=>$native,
+                'source_matched_script'=>$sourceKnown,
+                'source_unmatched_script'=>$sourceUnknown,
                 'unindexed'=>$total-$indexed-$native,
             ];
         }
@@ -120,6 +144,8 @@ final class PdoGameIndexedPackageCoverageQuery
         $indexed = self::hasIndexedCandidateSql('s');
         $script = $ue4ScriptModules
             ? "s.required_package_name LIKE '/Script/%'" : '0=1';
+        $sourceMatched = $ue4ScriptModules
+            ? CatalogUt4NativeScriptSourceIndex::sourceMatchSql('s') : '0=1';
         $packageIndexed = 'NOT (' . $script . ') AND ' . $indexed;
         $gap = 'NOT (' . $script . ') AND NOT ' . $indexed;
         $prefix='SELECT 1 FROM ue_uedb5_dependency_packages s WHERE s.file_id=f.id '
@@ -128,6 +154,10 @@ final class PdoGameIndexedPackageCoverageQuery
             'indexed' => 'EXISTS (' . $prefix . $packageIndexed . ')',
             'unindexed' => 'EXISTS (' . $prefix . $gap . ')',
             'native_script' => 'EXISTS (' . $prefix . $script . ')',
+            'script_source_matched' => 'EXISTS (' . $prefix
+                . $script . ' AND (' . $sourceMatched . '))',
+            'script_source_unmatched' => 'EXISTS (' . $prefix
+                . $script . ' AND NOT (' . $sourceMatched . '))',
             'no_gaps', 'fully_indexed' => 'EXISTS (' . $prefix . '1=1) AND NOT EXISTS ('
                 . $prefix . $gap . ')',
             default => throw new RuntimeException('Unknown indexed package coverage filter.'),

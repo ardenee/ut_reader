@@ -73,6 +73,12 @@ try {
             ? (int)$fileCounts['no_gaps_files'] : null;
         $nativeScriptRefs = $current && isset($fileCounts['native_script_references'])
             ? (int)$fileCounts['native_script_references'] : null;
+        $nativeSourceMatched = $current && $gameId === 7
+            && isset($fileCounts['source_matched_script_references'])
+                ? (int)$fileCounts['source_matched_script_references'] : null;
+        $nativeSourceUnmatched = $current && $gameId === 7
+            && isset($fileCounts['source_unmatched_script_references'])
+                ? (int)$fileCounts['source_unmatched_script_references'] : null;
 
         $unresolvedUrl = 'game-files.php?' . http_build_query([
             'id' => $gameId,
@@ -103,11 +109,21 @@ try {
         $unresolvedFileBadge = $badge($unresolvedFiles, 'warning');
         $resolvedBadge = $badge($resolved);
         $resolvedFileBadge = $badge($resolvedFiles);
-        $nativeScriptBadge = $badge($nativeScriptRefs, 'warning');
-        $nativeScriptUrl = 'game-files.php?' . http_build_query([
-            'id' => $gameId,
-            'dep_filter' => 'native_script',
+        $nativeSourceMatchedUrl = 'game-files.php?' . http_build_query([
+            'id' => $gameId, 'dep_filter' => 'script_source_matched',
         ]);
+        $nativeSourceUnmatchedUrl = 'game-files.php?' . http_build_query([
+            'id' => $gameId, 'dep_filter' => 'script_source_unmatched',
+        ]);
+        $nativeSourceDisplay = '&mdash;';
+        if ($nativeSourceMatched !== null && $nativeSourceUnmatched !== null) {
+            $nativeSourceDisplay = '<a href="' . catalog_h($nativeSourceMatchedUrl)
+                . '" title="Native /Script/ module names declared in the retained UT4 game/engine source; not proof of runtime module registration or matching imported class">'
+                . 'in source: ' . number_format($nativeSourceMatched) . '</a>'
+                . '<br><a href="' . catalog_h($nativeSourceUnmatchedUrl)
+                . '" title="Module names without a corresponding declaration in the retained UT4 source snapshot; may be supplied by an external build/plugin">'
+                . 'not in source: ' . number_format($nativeSourceUnmatched) . '</a>';
+        }
 
         $rows .= '<tr>';
         $rows .= '<td><strong>' . catalog_h((string)$game['name'])
@@ -120,7 +136,7 @@ try {
             $unresolved,
             $unresolved !== null
                 ? '<a href="' . catalog_h($unresolvedUrl)
-                    . '" title="References without a verified same-game indexed candidate for the required package identity; not confirmed missing">'
+                    . '" title="Required dependency packages missing from this game&#039;s indexed catalogue; may exist in other games or installations">'
                     . $unresolvedBadge . '</a>'
                 : $unresolvedBadge
         );
@@ -128,7 +144,7 @@ try {
             $unresolvedFiles,
             $unresolvedFiles !== null
                 ? '<a href="' . catalog_h($unresolvedUrl)
-                    . '" title="Distinct files with at least one required package identity not indexed in this catalogue">'
+                    . '" title="Files with one or more missing dependency packages in this game&#039;s catalogue">'
                     . $unresolvedFileBadge . '</a>'
                 : $unresolvedFileBadge
         );
@@ -136,23 +152,16 @@ try {
             $resolved,
             $resolved !== null
                 ? '<a href="' . catalog_h($resolvedUrl)
-                    . '" title="Browse files with at least one indexed package candidate (' . number_format($resolved) . ' references game-wide; native mount not asserted)">'
+                    . '" title="Browse files with available package-name candidates (' . number_format($resolved) . ' references game-wide; imported objects and native mount not yet verified)">'
                     . $resolvedBadge . '</a>'
                 : $resolvedBadge
         );
-        $rows .= $numberCell(
-            $nativeScriptRefs,
-            $nativeScriptRefs !== null && $nativeScriptRefs > 0
-                ? '<a href="' . catalog_h($nativeScriptUrl)
-                    . '" title="References to native /Script/ module identities; compiled/runtime registration not proven">'
-                    . $nativeScriptBadge . '</a>'
-                : $nativeScriptBadge
-        );
+        $rows .= $numberCell($nativeScriptRefs, $nativeSourceDisplay);
         $rows .= $numberCell(
             $resolvedFiles,
             $resolvedFiles !== null
                 ? '<a href="' . catalog_h($completeUrl)
-                    . '" title="Browse ' . number_format($resolvedFiles) . ' files without unidentified package dependencies (physical candidates or native script module identities); runtime load not asserted">'
+                    . '" title="Browse ' . number_format($resolvedFiles) . ' files with no missing physical dependency packages in the catalogue; runtime load and source-only native modules are assessed separately">'
                     . $resolvedFileBadge . '</a>'
                 : $resolvedFileBadge
         );
@@ -170,11 +179,11 @@ try {
         . '<thead><tr>'
         . '<th scope="col">Game</th><th scope="col">Profile engine</th>'
         . '<th scope="col">Files</th>'
-        . '<th scope="col" title="Required package identities with no indexed verified same-game candidate. Not confirmed missing from a runtime installation.">Not Indexed</th>'
-        . '<th scope="col" title="Files with at least one required package identity absent from this indexed catalogue">Files With Gaps</th>'
-        . '<th scope="col" title="References to package identities having a verified same-game catalogue candidate; not a claim of native VerifyImport, mounted provider or matching export">Indexed Packages</th>'
-        . '<th scope="col" title="Native /Script/ module references, which are not ordinary physical package files; no claim of runtime registration">Native Script</th>'
-        . '<th scope="col" title="Files with every required package identity either indexed or recognised as a native script-module reference; no claim of successful native loading">Files Without Gaps</th>'
+        . '<th scope="col" title="Dependency packages missing from this game&#039;s catalogue. Not proof that an original installation lacks them.">Missing</th>'
+        . '<th scope="col" title="Files referring to one or more packages missing from this game&#039;s catalogue">Files Missing Dependencies</th>'
+        . '<th scope="col" title="Dependencies with matching verified package-name candidates in the game catalogue; not a claim of matching exports or native runtime resolution">Packages Found</th>'
+        . '<th scope="col" title="UT4 native script-module references with and without matching declarations in retained source. Neither status proves a module is compiled or loaded.">Native Script (Source)</th>'
+        . '<th scope="col" title="Files with no missing physical dependency packages; UT4 native script source matches are reported separately">Files Without Missing Packages</th>'
         . '<th scope="col">Total size</th><th scope="col">Open</th>'
         . '</tr></thead><tbody>' . $rows . '</tbody></table>';
 
@@ -184,11 +193,12 @@ try {
             'title' => 'Catalog games',
             'description' => number_format(count($games)) . ' configured game'
                 . (count($games) === 1 ? '' : 's') . '. '
-                . 'Indexed Packages means a matching physical package identity '
-                . 'is present in the catalogue. Native Script identifies UE4 '
-                . '/Script/ module references (not physical packages). '
-                . 'Neither proves successful runtime import verification. '
-                . 'Not Indexed is not confirmed missing from the game.',
+                . 'Missing means a required package is absent from this game&#039;s catalogue, '
+                . 'even if that package is indexed under another game. '
+                . 'Packages Found counts names with a verified catalogue candidate, '
+                . 'not proven loaded objects. UT4 native /Script/ modules are matched '
+                . 'against retained UT4 game/engine source declarations; '
+                . 'that check does not prove a compiled module or imported symbol.',
         ]
     );
     // Maintenance -> Update All Game Dependencies is in the global admin navigation.

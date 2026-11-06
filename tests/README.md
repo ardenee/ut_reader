@@ -1,5 +1,14 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Public Missing status and UT4 script-source verification — 6 November 2026
+
+Missing means required dependency package absent from the **same-game** verified catalogue, not that the file containing the import was unindexed. Do not silently resolve missing same-name packages from UT99/UT2003/UT2004 against Unreal II: exact imported export and native mount rules still need evidence.
+
+For UE4 UT4, native /Script/ module names are measured separately from physical package availability. A game+engine original source declaration inventory under catalog/data/ut4-native-script-source-index.json has 35 matching names of 38; 413,651 matched-source-name references and 32 references to three undeclared names. No compiled runtime or per-import native registration proof is implied. Acceptance: tests/tools/verify_ut4_native_script_source_module_coverage.php. The driver checks all 35 Build.cs SHA-256 original-source anchors, all three undetected names, UT4 source-matched/unmatched file-filter cardinality, and Unreal II's two missing-file/10 missing-reference cases against read-only production data. Evidence: tests/evidence/games-missing-native-script-source-coverage-20261106.json.
+
+---
+
+
 ## Games-page indexed-package coverage — 6 November 2026
 
 Classic source-only dependency publication cannot select the original mounted linker without original mount evidence. Its zero runtime-resolved count is not a useful measure of available catalogue packages. The Games page now counts verified same-game indexed package identities independently of native VerifyImport outcomes, with a separate UE4 /Script/ intrinsic-module classification. No native loads are invented.

@@ -19,7 +19,7 @@ use Throwable;
 
 final class PdoGameDependencyFileCountQuery
 {
-    private const CACHE_VERSION = 7;
+    private const CACHE_VERSION = 8;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -43,6 +43,8 @@ final class PdoGameDependencyFileCountQuery
         $signature = hash('sha256', implode('|', [
             (string)self::CACHE_VERSION, (string)$gameId, $engine, $statsUpdatedAt,
             (string)($zenContext['epoch'] ?? ''),
+            $engine === 'UE4' && $gameId === 7
+                ? CatalogUt4NativeScriptSourceIndex::signature() : '',
         ]));
         $directory = $this->cacheDirectory();
         if ($directory === null) {
@@ -52,7 +54,9 @@ final class PdoGameDependencyFileCountQuery
         $path = $directory . DIRECTORY_SEPARATOR . 'game-' . $gameId . '.json';
         $cached = $this->readCache($path, $signature);
         if ($cached !== null
-            && ($engine === 'UE5' || isset($cached['indexed_references'], $cached['no_gaps_files']))) {
+            && ($engine === 'UE5' || isset($cached['indexed_references'], $cached['no_gaps_files'],
+                $cached['source_matched_script_references'],
+                $cached['source_unmatched_script_references']))) {
             return $cached;
         }
 
@@ -66,7 +70,9 @@ final class PdoGameDependencyFileCountQuery
             }
             $cached = $this->readCache($path, $signature);
             if ($cached !== null
-                && ($engine === 'UE5' || isset($cached['indexed_references'], $cached['no_gaps_files']))) {
+                && ($engine === 'UE5' || isset($cached['indexed_references'], $cached['no_gaps_files'],
+                $cached['source_matched_script_references'],
+                $cached['source_unmatched_script_references']))) {
                 return $cached;
             }
             $counts = $this->aggregate($gameId, $engine, $zenContext);
@@ -235,6 +241,10 @@ final class PdoGameDependencyFileCountQuery
         $counts['no_gaps_files'] = (int)($zen['resolved_files'] ?? 0);
         $counts['native_script_references'] = 0;
         $counts['native_script_files'] = 0;
+        $counts['source_matched_script_references'] = 0;
+        $counts['source_unmatched_script_references'] = 0;
+        $counts['source_matched_script_files'] = 0;
+        $counts['source_unmatched_script_files'] = 0;
         $counts['unindexed_files'] = (int)($zen['unresolved_files'] ?? 0);
         $counts['files_with_dependencies'] =
             (int)($zen['unresolved_files'] ?? 0) + (int)($zen['resolved_files'] ?? 0);
@@ -371,7 +381,9 @@ final class PdoGameDependencyFileCountQuery
         // warm reads. Older versions silently dropped extra fields, which
         // previously caused all available counts to disappear after refresh.
         foreach (['indexed_references','unindexed_references','indexed_files',
-            'no_gaps_files','unindexed_files','native_script_references','native_script_files','files_with_dependencies',
+            'no_gaps_files','unindexed_files','native_script_references','native_script_files',
+            'source_matched_script_references','source_unmatched_script_references',
+            'source_matched_script_files','source_unmatched_script_files','files_with_dependencies',
             'total_references'] as $field) {
             if (array_key_exists($field, $counts)) {
                 if (!is_int($counts[$field]) || $counts[$field] < 0) return null;

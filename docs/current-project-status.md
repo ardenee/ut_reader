@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 6 November 2026 — dependency labels now say Missing; UT4 /Script/ source matches distinguished
+
+The Games page and per-game file lists now use **Missing** for references to required physical packages absent from that *same game's* verified catalogue, rather than the misleading phrase Not Indexed (the referring file itself remains verified/indexed). Original Unreal II examples: #1253000 needs MyStuff (3), #1265641 needs CliffTest (3) and CubeMaps (4): **2 files / 10 missing package references**. Those package names are indexed under other games, but same-name cross-game files are not automatically valid Unreal II native providers. A rescan cannot create an absent dependency.
+
+UT4 native /Script/ package names are not ordinary physical package files. Previously the UI displayed a total of 413,683 without any match breakdown. A pinned inventory from original UT4 game+bundled UE4 source under L:/Source/Games/UT4/UnrealTournament now compares exact 38 distinct /Script/ module names to ModuleName.Build.cs declarations (all retained with SHA-256). **35 source declarations / 413,651 references** matched; **BlueprintHttp (14), CookedLog (12), McpProfileSys (6)** were not declared in that source snapshot: **3 names, 32 references across 8 UT4 files**. The Games page shows linked *in source* and *not in source* counts, and game-files.php offers corresponding filters and per-file badges. **Source presence is not runtime registration or proof the imported class/export is compiled**; absent Build.cs is not proof a separate plugin or external build cannot provide it.
+
+The physical-package Missing, Files Missing Dependencies, Packages Found and Files Without Missing Packages columns are separate from UT4 native script source-name coverage. The old dep_filter=unindexed URL is preserved for backwards compatibility. No original UEDB5 bytes, source assets or production dependency publication was altered. Acceptance and source hashes: tests/evidence/games-missing-native-script-source-coverage-20261106.json; read-only driver tests/tools/verify_ut4_native_script_source_module_coverage.php. Existing all-game indexed catalogue coverage remains enforced independently.
+
+---
+
+
+
 ## 6 November 2026 — Games catalogue coverage counts repaired across UE1–UE5
 
 The Games page previously showed zero resolved references for UE1–UE4 because no authoritative native runtime mount was supplied. Earlier inflated totals came from the disproved common-name bypass. Neither extreme tells users how many package identities are indexed in the catalogue.

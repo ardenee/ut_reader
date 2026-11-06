@@ -308,7 +308,7 @@ try {
         $db, (int)$gameId, (string)($game['profile_engine'] ?? '')
     );
     $dependencySelectionUnavailable = !$gameDependencyCurrent
-        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','unresolved','any','indexed','unindexed','no_gaps','native_script'], true);
+        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','unresolved','any','indexed','unindexed','no_gaps','native_script','script_source_matched','script_source_unmatched'], true);
     // The Games page uses current catalogue target coverage for UE5 Zen
     // (package/export ID and pinned global ScriptObjects). The file filter
     // must consume the identical cached exception-set, not the source-only
@@ -369,11 +369,12 @@ try {
         array_push($args, $like, $like, $like, $like, $like);
     }
     if ($engineMajor !== 5 && in_array($depFilter,
-        ['indexed','unindexed','no_gaps','native_script'], true)) {
+        ['indexed','unindexed','no_gaps','native_script',
+         'script_source_matched','script_source_unmatched'], true)) {
         // Catalogue package availability is separate from runtime VerifyImport.
         $where .= ' AND f.scan_status="verified" AND '
             . PdoGameIndexedPackageCoverageQuery::fileFilterPredicate(
-                $depFilter, $engineMajor === 4);
+                $depFilter, $engineMajor === 4 && $gameId === 7);
     } elseif ($engineMajor === 5 && $zenCoverage !== null
         && in_array($depFilter, ['unresolved','resolved','fully_resolved'], true)) {
         // All ID lists are internal integers generated from verified/current
@@ -509,7 +510,7 @@ try {
     $pagePackageCoverage = $gameDependencyCurrent && $engineMajor !== 5 && $files !== []
         ? (new PdoGameIndexedPackageCoverageQuery($db))->forFiles(
             $gameId, array_map(static fn(array $f): int => (int)$f['id'], $files),
-            $engineMajor === 4)
+            $engineMajor === 4 && $gameId === 7)
         : [];
 
     $previousCursor = is_array($page['first_cursor'])
@@ -556,11 +557,30 @@ try {
         'unresolved' => 'runtime-unverified dependency references',
         'resolved' => 'native-verified dependency references',
         'fully_resolved' => 'files with all native-verified references',
+        'unindexed' => 'missing package dependencies',
+        'indexed' => 'dependency packages found',
+        'script_source_matched' => 'native script references with a matching module declaration in source',
+        'script_source_unmatched' => 'native script references without a matching module declaration in source',
     ];
     $countDescription = '';
     if (isset($filterDescriptions[$depFilter]) && $filter === '' && $typeFilter === ''
         && $compressionFilter === '' && $gameDependencyCurrent) {
-        if ($engineMajor === 5 && $zenCoverage !== null
+        if ($engineMajor !== 5 && in_array($depFilter,
+            ['unindexed','indexed','script_source_matched','script_source_unmatched'], true)) {
+            $updated = catalog_one($db,
+                'SELECT updated_at FROM ue_game_catalog_stats WHERE game_id=?', [$gameId]);
+            $coverage = $updated === null ? null
+                : (new PdoGameDependencyFileCountQuery($db, $config))->forCurrentGame(
+                    $gameId, (string)($game['profile_engine'] ?? ''),
+                    (string)$updated['updated_at']);
+            $counter = match ($depFilter) {
+                'unindexed' => 'unindexed_references',
+                'indexed' => 'indexed_references',
+                'script_source_matched' => 'source_matched_script_references',
+                'script_source_unmatched' => 'source_unmatched_script_references',
+            };
+            $references = isset($coverage[$counter]) ? (int)$coverage[$counter] : null;
+        } elseif ($engineMajor === 5 && $zenCoverage !== null
             && isset($zenCoverage['dependency_count'], $zenCoverage['unresolved_references'])) {
             $references = $depFilter === 'unresolved'
                 ? (int)$zenCoverage['unresolved_references']
@@ -603,16 +623,20 @@ try {
     echo '<label for="dependency-filter">Dependencies <select id="dependency-filter" name="dep_filter">';
     $dependencyOptions = $engineMajor === 5
         ? ['' => 'All', 'any' => 'Has dependencies',
-            'unresolved' => 'Not indexed', 'resolved' => 'Indexed',
+            'unresolved' => 'Missing', 'resolved' => 'Found',
             'fully_resolved' => 'Fully indexed files',
             'missing' => 'Missing (confirmed)']
         : ['' => 'All', 'any' => 'Has dependencies',
-            'indexed' => 'Has indexed package', 'unindexed' => 'Package not indexed',
-            'native_script' => 'Native script-module references',
-            'no_gaps' => 'No unindexed package identities',
+            'indexed' => 'Packages found', 'unindexed' => 'Missing dependencies',
+            'no_gaps' => 'No missing packages',
             'unresolved' => 'Runtime unresolved',
-            'resolved' => 'Native confirmed', 'fully_resolved' => 'Native complete',
-            'missing' => 'Missing (confirmed)'];
+            'resolved' => 'Native confirmed', 'fully_resolved' => 'Native complete'];
+    if ($engineMajor === 4 && $gameId === 7) {
+        $dependencyOptions['script_source_matched'] = 'Native scripts in source';
+        $dependencyOptions['script_source_unmatched'] = 'Native scripts not in source';
+    }
+    // Historic bookmarks to dep_filter=native_script / dep_filter=missing
+    // continue to work even though the user-facing filter no longer conflates them.
     foreach ($dependencyOptions as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
@@ -638,12 +662,13 @@ try {
     echo '<span id="file-filter-help" class="ui-sr-only">Changing filters reloads this file list.</span></form>';
     echo '<p class="muted small">'
         . ($engineMajor === 5
-            ? 'UE5 filters use exact catalogue-indexed package, export and ScriptObject identities. '
-                . 'Unindexed references may be in another, not-yet-imported container and are not confirmed missing.'
-            : 'Indexed package means an exact same-game package identity exists in the catalogue, '
-                . 'not that its imported object or original runtime mount was verified. '
-                . 'UE4 /Script/ modules are marked native script rather than missing disk packages. '
-                . 'Not indexed does not prove a game dependency is missing.')
+            ? 'UE5 Missing means the required package/object identity was not found among current indexed targets; '
+                . 'it may still exist in a container not imported into this catalogue.'
+            : 'Missing means a required dependency package is absent from this game&#039;s verified catalogue, '
+                . 'even if the referencing file itself was successfully indexed. '
+                . 'Packages Found identifies matching package names, not verified imported objects or runtime mounts. '
+                . 'UT4 native script-module names are checked against source declarations only; '
+                . 'a source match does not prove runtime module registration.')
         . '</p>';
 
     echo $pagination;
@@ -707,22 +732,28 @@ try {
                 if (is_array($availability)) {
                     $indexed = (int)$availability['indexed'];
                     $notIndexed = (int)$availability['unindexed'];
-                    $nativeScript = (int)$availability['native_script'];
+                    $nativeSourceMatched = (int)$availability['source_matched_script'];
+                    $nativeSourceUnmatched = (int)$availability['source_unmatched_script'];
                     $coverageBadges = [];
                     if ($indexed > 0) {
                         $coverageBadges[] = '<div><span class="dep resolved" '
                             . 'title="Indexed package candidate, not native VerifyImport or a proven runtime mount">'
-                            . 'indexed: ' . number_format($indexed) . '</span></div>';
+                            . 'found: ' . number_format($indexed) . '</span></div>';
                     }
-                    if ($nativeScript > 0) {
+                    if ($nativeSourceMatched > 0) {
                         $coverageBadges[] = '<div><span class="dep package_only" '
-                            . 'title="UE4 native /Script/ module identity, not a physical package; runtime registration unverified">'
-                            . 'native script: ' . number_format($nativeScript) . '</span></div>';
+                            . 'title="UT4 /Script/ module name has a corresponding declaration in retained game/engine source; imported class or runtime loading not verified">'
+                            . 'script in source: ' . number_format($nativeSourceMatched) . '</span></div>';
+                    }
+                    if ($nativeSourceUnmatched > 0) {
+                        $coverageBadges[] = '<div><span class="dep unresolved" '
+                            . 'title="No matching UT4 module declaration in the retained source snapshot; an external compiled module may still exist">'
+                            . 'script not in source: ' . number_format($nativeSourceUnmatched) . '</span></div>';
                     }
                     if ($notIndexed > 0) {
                         $coverageBadges[] = '<div><span class="dep unresolved" '
-                            . 'title="No verified candidate for the required package identity in this catalogue; not confirmed missing">'
-                            . 'not indexed: ' . number_format($notIndexed) . '</span></div>';
+                            . 'title="Dependency package missing from this game&#039;s catalogue; it may be present under a different game or outside this catalogue">'
+                            . 'missing: ' . number_format($notIndexed) . '</span></div>';
                     }
                     $deps = $coverageBadges !== []
                         ? '<div class="game-files-dependency-list">' . implode('', $coverageBadges) . '</div>'

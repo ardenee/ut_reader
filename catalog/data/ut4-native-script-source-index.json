@@ -1,0 +1,505 @@
+{
+  "schema": "ut4-native-script-module-source-declarations-v1",
+  "verified_against": "L:/Source/Games/UT4/UnrealTournament (exact Epic/UT4 game and engine source tree retained on DEV)",
+  "scope": "UT4 game id 7 only. Other UE4 games must generate their own source module inventory.",
+  "method": "ModuleName.Build.cs under bundled game Source/Plugins or engine Source/Plugins; exact module name checked and declaration SHA-256 retained",
+  "source_match_means": "A module with this name is declared in the retained UT4 source tree. This does not establish native compiled module presence, runtime registration, a loaded UClass, or a matching imported symbol.",
+  "source_unmatched_means": "No corresponding ModuleName.Build.cs declaration exists in this particular source snapshot. It does not prove an original game installation lacks the module.",
+  "runtime_verified": false,
+  "import_class_symbols_verified": false,
+  "db_reference_counts_are_not_source_authority": true,
+  "original_game_indexed_script_ref_totals_at_creation": {
+    "source_module_names": 38,
+    "source_matched_names": 35,
+    "source_unmatched_names": 3,
+    "source_matched_references": 413651,
+    "source_unmatched_references": 32
+  },
+  "modules": [
+    {
+      "module": "AIModule",
+      "package": "/Script/AIModule",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/AIModule/AIModule.Build.cs",
+          "sha256": "e6e09dc05beef231a569f5eec4dd01fffd17979a0d9ab302dec1013981212592",
+          "bytes": 2240
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "AnimGraph",
+      "package": "/Script/AnimGraph",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/AnimGraph/AnimGraph.Build.cs",
+          "sha256": "15a623515a4f4f8140da3eeb37c2671d483d6e9853c804b90b860b2647b7727a",
+          "bytes": 1010
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "AnimGraphRuntime",
+      "package": "/Script/AnimGraphRuntime",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/AnimGraphRuntime/AnimGraphRuntime.Build.cs",
+          "sha256": "a24c63173d2322de42b6fa30d3e84f76e9f67e5af29a551471c5cc4cc3ac9b2b",
+          "bytes": 400
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "AudioEditor",
+      "package": "/Script/AudioEditor",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/AudioEditor/AudioEditor.Build.cs",
+          "sha256": "05cb7b4975685e230caaf9aa6689771c6cd8339cb88c78e31b4649b73dee3f5f",
+          "bytes": 1148
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "BlueprintGraph",
+      "package": "/Script/BlueprintGraph",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/BlueprintGraph/BlueprintGraph.Build.cs",
+          "sha256": "6e507d08be17f65ea57dd2e3ea3dc5131e4b8998baaa2defd7c9d833adb0bb59",
+          "bytes": 1109
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "BlueprintHttp",
+      "package": "/Script/BlueprintHttp",
+      "source_matches": [],
+      "source_match": false
+    },
+    {
+      "module": "Blutility",
+      "package": "/Script/Blutility",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/Blutility/Blutility.Build.cs",
+          "sha256": "feed17515597201def5b5ef9f59f20156275d2ccc5563dbd1e38eb6c9c514469",
+          "bytes": 715
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "CableComponent",
+      "package": "/Script/CableComponent",
+      "source_matches": [
+        {
+          "kind": "ENGINE_PLUGIN",
+          "path": "Engine/Plugins/Runtime/CableComponent/Source/CableComponent/CableComponent.Build.cs",
+          "sha256": "31b47719ea916b54b19d829c2fed6699cbb49eb3a9b99400931af7b528521851",
+          "bytes": 517
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "CinematicCamera",
+      "package": "/Script/CinematicCamera",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/CinematicCamera/CinematicCamera.Build.cs",
+          "sha256": "97ce01260d7235751f4a35419ca6154579ae84960fd3fac0c9192cd3bf789311",
+          "bytes": 466
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "CookedLog",
+      "package": "/Script/CookedLog",
+      "source_matches": [],
+      "source_match": false
+    },
+    {
+      "module": "CoreUObject",
+      "package": "/Script/CoreUObject",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/CoreUObject/CoreUObject.Build.cs",
+          "sha256": "056da688d96b826c730eb26a0b044da01273b54e6f04d40fcb94de5e246452c8",
+          "bytes": 612
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "Engine",
+      "package": "/Script/Engine",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/Engine/Engine.Build.cs",
+          "sha256": "bc8c9bacab836e8388f7971250b7af77d87408d1dfcc5738ac20d5a3b38c3a70",
+          "bytes": 12232
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "Foliage",
+      "package": "/Script/Foliage",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/Foliage/Foliage.Build.cs",
+          "sha256": "21cc58f9f081f6bb5299fd7561e289acdb935eb271ca932bd8737d041f959425",
+          "bytes": 471
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "FunctionalTesting",
+      "package": "/Script/FunctionalTesting",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Developer/FunctionalTesting/FunctionalTesting.Build.cs",
+          "sha256": "cdb9c419570c27bb070c929b94afef8014e97416899bebcb33bd0a5e5634e9f6",
+          "bytes": 654
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "GameplayTags",
+      "package": "/Script/GameplayTags",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/GameplayTags/GameplayTags.Build.cs",
+          "sha256": "461d265c23541bdb333e422152f8e0b415b908e88115b8bea2fb5a247d0361aa",
+          "bytes": 444
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "GameplayTasks",
+      "package": "/Script/GameplayTasks",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/GameplayTasks/GameplayTasks.Build.cs",
+          "sha256": "02fa42bb094734a8f34f0af3ff5f2f39f3a3cb54c5e06bc45680c91667c57a7e",
+          "bytes": 1380
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "InputCore",
+      "package": "/Script/InputCore",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/InputCore/InputCore.Build.cs",
+          "sha256": "4d94d20deb54111c044dea25238f7480039f1ca2190429f5e53d31934f53a6a2",
+          "bytes": 261
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "IntroTutorials",
+      "package": "/Script/IntroTutorials",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/IntroTutorials/IntroTutorials.Build.cs",
+          "sha256": "0185213c01cec500c97dfd194ad333289a30665af5ec11e0e7648e9e88916715",
+          "bytes": 1488
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "Kismet",
+      "package": "/Script/Kismet",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/Kismet/Kismet.Build.cs",
+          "sha256": "9abac57e24aa8644e6d1ee38171a823c6d61e556565980f93b00b0b37605660c",
+          "bytes": 1830
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "Landscape",
+      "package": "/Script/Landscape",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/Landscape/Landscape.Build.cs",
+          "sha256": "ccebb2c7bcec8ea65e23ac104b146980e0376df9ebde8f112a3d503212360fd8",
+          "bytes": 1663
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "LeapMotion",
+      "package": "/Script/LeapMotion",
+      "source_matches": [
+        {
+          "kind": "ENGINE_PLUGIN",
+          "path": "Engine/Plugins/Runtime/LeapMotion/Source/LeapMotion/LeapMotion.Build.cs",
+          "sha256": "3edd955aeaf4f01226dcee1bb111d21d9c44bf98dd68c8481d5bbbe9d79d45bf",
+          "bytes": 3043
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "LevelSequence",
+      "package": "/Script/LevelSequence",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/LevelSequence/LevelSequence.Build.cs",
+          "sha256": "9f4f6a059707b431d3a6bcd1f0bb74899705552d842277a1ca7055af68c8c7b1",
+          "bytes": 487
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "McpProfileSys",
+      "package": "/Script/McpProfileSys",
+      "source_matches": [],
+      "source_match": false
+    },
+    {
+      "module": "MediaAssets",
+      "package": "/Script/MediaAssets",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/MediaAssets/MediaAssets.Build.cs",
+          "sha256": "3d6426efd1789ca647e4d97593123e39f8991b2cca07c9507d676e061ca7e592",
+          "bytes": 904
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "MovieScene",
+      "package": "/Script/MovieScene",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/MovieScene/MovieScene.Build.cs",
+          "sha256": "c76741d0b053e402587bafbbd0dc7e93d9d061af614a8a66537e7e76366c5363",
+          "bytes": 361
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "MovieSceneTracks",
+      "package": "/Script/MovieSceneTracks",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/MovieSceneTracks/MovieSceneTracks.Build.cs",
+          "sha256": "3f376737d03f1172af135d6e87e45a274ff3c307c63ace0be164a3e8c989202a",
+          "bytes": 707
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "OnlineSubsystem",
+      "package": "/Script/OnlineSubsystem",
+      "source_matches": [
+        {
+          "kind": "GAME_PLUGIN",
+          "path": "UnrealTournament/Plugins/Online/OnlineSubsystem/Source/OnlineSubsystem.Build.cs",
+          "sha256": "86a877f4f234ccc746caf9e732714bbff1f13cfd0ce706a711b96e1f6ce5c6b9",
+          "bytes": 644
+        },
+        {
+          "kind": "ENGINE_PLUGIN",
+          "path": "Engine/Plugins/Online/OnlineSubsystem/Source/OnlineSubsystem.Build.cs",
+          "sha256": "86a877f4f234ccc746caf9e732714bbff1f13cfd0ce706a711b96e1f6ce5c6b9",
+          "bytes": 644
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "OnlineSubsystemUtils",
+      "package": "/Script/OnlineSubsystemUtils",
+      "source_matches": [
+        {
+          "kind": "GAME_PLUGIN",
+          "path": "UnrealTournament/Plugins/Online/OnlineSubsystemUtils/Source/OnlineSubsystemUtils/OnlineSubsystemUtils.Build.cs",
+          "sha256": "2ee6fa8fa50f85ef13a0575ca7e02c1f606b8f1f1fe776c7b855cb96de818efb",
+          "bytes": 648
+        },
+        {
+          "kind": "ENGINE_PLUGIN",
+          "path": "Engine/Plugins/Online/OnlineSubsystemUtils/Source/OnlineSubsystemUtils/OnlineSubsystemUtils.Build.cs",
+          "sha256": "2ee6fa8fa50f85ef13a0575ca7e02c1f606b8f1f1fe776c7b855cb96de818efb",
+          "bytes": 648
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "Paper2D",
+      "package": "/Script/Paper2D",
+      "source_matches": [
+        {
+          "kind": "ENGINE_PLUGIN",
+          "path": "Engine/Plugins/2D/Paper2D/Source/Paper2D/Paper2D.Build.cs",
+          "sha256": "34c57ac524d15f90b2d3c1f3d884a6ccb566bcc8d55ee31ed934da209a456018",
+          "bytes": 837
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "SampleGameMode",
+      "package": "/Script/SampleGameMode",
+      "source_matches": [
+        {
+          "kind": "GAME_PLUGIN",
+          "path": "UnrealTournament/Plugins/SampleGameMode/Source/SampleGameMode.Build.cs",
+          "sha256": "0aa2ec29a11a5b6e1f8e40f7669f33db6b4ae098ea57436260ea97480b48216d",
+          "bytes": 506
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "Slate",
+      "package": "/Script/Slate",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/Slate/Slate.Build.cs",
+          "sha256": "d6613e6796296117fba3c45f7f861ebdec7fc31b2257e8711f7a33dffb4c1d3a",
+          "bytes": 1848
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "SlateCore",
+      "package": "/Script/SlateCore",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/SlateCore/SlateCore.Build.cs",
+          "sha256": "e6efcbb2254d1f9f5c37b6148a67ccd2d6d83b5fbba8e2a3180db449d6dc5180",
+          "bytes": 1794
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "StereoPanorama",
+      "package": "/Script/StereoPanorama",
+      "source_matches": [
+        {
+          "kind": "ENGINE_PLUGIN",
+          "path": "Engine/Plugins/Experimental/StereoPanorama/Source/StereoPanorama/StereoPanorama.Build.cs",
+          "sha256": "923c60116f0a8114366e45074cde12e2d618f758e71101a490d4f59468d9df52",
+          "bytes": 669
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "UMG",
+      "package": "/Script/UMG",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Runtime/UMG/UMG.Build.cs",
+          "sha256": "56190ee369158579401a9d66ba5386d53e31e093efb0501bd64c10cb789192e3",
+          "bytes": 1243
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "UMGEditor",
+      "package": "/Script/UMGEditor",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/UMGEditor/UMGEditor.Build.cs",
+          "sha256": "f58d37b152ebc6490acd6b18474f581c1ae992c2397236e2c07a7dcec560cdec",
+          "bytes": 1575
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "UnrealEd",
+      "package": "/Script/UnrealEd",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/UnrealEd/UnrealEd.Build.cs",
+          "sha256": "f413ab2277d4548f18cce5e9a51f4b2bea41c259bd19cff7bff90bb39c1ea15c",
+          "bytes": 7351
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "UnrealTournament",
+      "package": "/Script/UnrealTournament",
+      "source_matches": [
+        {
+          "kind": "GAME_SOURCE",
+          "path": "UnrealTournament/Source/UnrealTournament/UnrealTournament.Build.cs",
+          "sha256": "5ad3b7abf2bc982fb432c2991f1d833aa130e535d57dac3d8051ad7c9f9041ad",
+          "bytes": 4568
+        }
+      ],
+      "source_match": true
+    },
+    {
+      "module": "VREditor",
+      "package": "/Script/VREditor",
+      "source_matches": [
+        {
+          "kind": "ENGINE_SOURCE",
+          "path": "Engine/Source/Editor/VREditor/VREditor.Build.cs",
+          "sha256": "7be012a2055cccee70e9b0b86e1ee9afd009a5e7bad1c949dc5aa22b4d1172bd",
+          "bytes": 1139
+        }
+      ],
+      "source_match": true
+    }
+  ]
+}
