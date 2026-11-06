@@ -48,7 +48,21 @@ The v2107 loader calculates a QuickMD5 from two structural byte ranges:
 
 Both ranges feed the same MD5 context. The resulting digest is computed by the loader; it is not appended to the summary, Name table or Export records. Raw package-level MD5 of the entire file is **not** interchangeable with this QuickMD5 procedure.
 
-## 6. Proven scope and residual unknowns
+## 6. Export property and script-structure body formats
+
+Beyond the package's generic export table, a tagged property stream has the concrete Name/Info/optional-struct-name/size/optional-array-index/value layout in [UE2 tagged export-property streams](ue2-export-property-stream-format.md). This stream begins at a class-determined position **inside** a positive export payload; it is not guaranteed to begin at the Export table's SerialOffset.
+
+In this game's v2107 class serializer, a `UStruct` segment follows inherited `UField` bytes. Its serialized fields occur in the following order: `ScriptText` object reference, `Children` object reference, `FriendlyName` (FName), optional `StructFlags` (**u32, present when package licensee version is at least 26 / `0x1A`**), then `Line` (i32), `TextPos` (i32), `ScriptSize` (i32), and script expressions in native token-serialization order. `ScriptSize` is a logical code count, not a guaranteed flat physical byte count for those token expressions.
+
+The **struct property value** format changes on the **licensee version**, not the engine version. When licensee version is **below 28 (`0x1C`)**, a `StructProperty` uses **binary member** serialization. When licensee version is **28 or higher**, it uses **tagged member** serialization. In both cases `Vector`, `Rotator` and `Color` remain binary-serialized exceptions. The tag's declared struct-name FName and byte Size still appear in the enclosing property header where applicable; no new field is added to the package summary.
+
+**Legacy tagged-property load compatibility (v2107 loader):** a stored fixed-array element can be converted into the matching element of a current dynamic-array property when the tag type matches its inner type. A saved `ByteProperty` targeting a current `FloatProperty` is converted from one unsigned byte to floating point. Unknown, mismatched, out-of-bounds and nonserializable properties are skipped by the tag's stored `Size`. A declaration/type disagreement therefore does not, by itself, prove malformed package bytes. These are game-loader conversion rules, not additions to the package tables.
+
+The recovered early patch **2111 Beta 2** illustrates why versions must be checked **per package**: its actual `Core.u` header is **v121/licensee28**, while its `Engine.u` header is **v121/licensee29**. Patches **2136, 2166, 2186, 2199 and 2225** contain `Core.u` and `Engine.u` with **v121/licensee29**. These authentic distribution files match the shared Name/Import/Export table schema, including every decoded field and record byte offset; neither this observation nor the v2107 v120 source proves every v121 native export-body serializer or runtime import verifier is identical.
+
+**Original-byte class-default observation (not native-certified):** original patch 2136 and 2225 `Engine.u` archives contain candidate `None`-terminated tagged-property suffixes for `Actor`, `Pawn` and `Texture` (197 tags in six candidate streams; 193 agree with exported property type declarations). `Material` does not yield a chain meeting this probe's three-tag minimum. The start of each stream was inferred from its export boundary, not traced through the compiled native `UClass` loader. This supports the property header layout, not complete class-body or patch-loader equivalence.
+
+## 7. Proven scope and residual unknowns
 
 The source proves the v120/licensee28 writer and its complete summary, name and import/export table serializers. Native class-specific serialization can vary independently from the stable table format, including later third-party licensee versions. The standard binary schema is independently readable in original UT2003 **v121/licensee29** files that contain nonzero Names, Imports and Exports; that fact does **not** establish the exact later binary's `VerifyImport`, object instantiation or native payload serialization rules.
 

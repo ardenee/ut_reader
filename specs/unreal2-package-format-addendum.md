@@ -56,7 +56,28 @@ Original packages have been independently observed with **engine version 110** a
 
 A full binary reader can truthfully report their decoded table fields and class-specific export spans. A comprehensive reader of the **inside of every export body** would require the original revision's native class serializers, compiler/archive flags, or comparative compiled-game evidence. Until then the class payload is a typed, length-bounded but **opaque** byte region.
 
-## 7. Decoding agreement
+## 7. Export property and script-structure serialization
+
+The common **tagged property record**, including the `None` sentinel, compact NameMap references, packed type/size/array-index header, Boolean flag and typed values, is specified in [UE2 tagged export-property streams](ue2-export-property-stream-format.md). This is a real serialized **subformat of export object bodies**, not an additional package summary or Import/Export table field.
+
+In the **January 2003 v126 game serializer**, a `StructProperty` uses **tagged** member properties when the **package engine version is 118 or later**, but uses the struct's **binary member serialization** for earlier versions. Vector, Rotator and Color retain binary struct serialization regardless of that gate. This is an **engine-version** test, not a licensee-version test: it must not be replaced with UT2003/UT2004's different switch. For an original Unreal II v110 file read by this v126 serializer, the older **binary** branch is selected; this alone does not prove that every earlier compiled producer's native class serializer was identical.
+
+The same v126 branch serializes the `UStruct` portion of a struct/class/function-like export after inherited `UField` data, in this order:
+
+1. `ScriptText` object reference, then `Children` object reference, then `FriendlyName` (serialized FName index).
+2. `CppText` object reference **only when package engine version is at least 120**.
+3. `Line` and `TextPos` as two consecutive signed 32-bit integers.
+4. Signed 32-bit `ScriptSize`, followed by script expressions serialized using that game revision's script-token rules. `ScriptSize` describes the logical script code count; **do not infer that the remaining serialized expression stream always occupies exactly that many raw file bytes**.
+
+This is a **class segment**, not a claim that an entire export object starts at `ScriptText`; inherited class/field/state bytes and subsequent specialized fields remain in their own class-defined order.
+
+**Legacy tagged-property load compatibility (January 2003 v126 loader):** a saved element of a fixed-length array can be placed into the corresponding element of a later dynamic-array property when its stored type matches the current array's inner type. A saved `ByteProperty` targeting a current `FloatProperty` is read as an unsigned byte and converted to floating point. Unrecognised, type-mismatched, out-of-bounds, or nonserializable tags are skipped by their stored `Size` rather than interpreted using a mismatched declaration. These are consumer-side conversion rules, not new package table fields; they are not proof that every v110 native producer used the v126 class serializer.
+
+**Observed native distribution identities:** the original USA retail Unreal II `Core.u` and `Engine.u` both report **v110/licensee2481**, while the original USA Special Edition single-player packages report **v110/licensee2609**. Their complete package summaries and Name/Import/Export entries have been decoded and field-compared against the shared UE2 format. A version/licensee identity and a successful table read do **not** prove that an unexamined v110 compiled class/body serializer matches the later v126 game branch.
+
+**Original-byte class-default observation (not native-certified):** independent backward decoding of `None`-terminated tagged-property suffixes in the retail and Special Edition `Engine.u` archives finds structural candidates for `Actor`, `Pawn` and `Texture` (288 tags across six candidate streams; 281 match an exported property declaration's type). `Material` has no detected suffix meeting the probe's minimum three-tag criterion. Suffix starts were inferred from the export ends, not established by the original executable's complete `UClass` serializer; these findings corroborate the subformat but do not close historical native-body parity.
+
+## 8. Decoding agreement
 
 An Unreal II reader conforming to the binary addendum:
 

@@ -1,0 +1,142 @@
+{
+  "schema": "ue2-source-property-tag-and-struct-branch-review-v1",
+  "source_authority_only": true,
+  "reader_code_used": false,
+  "class_payload_natively_verified": false,
+  "original_game_or_engine_source_modified": false,
+  "source_revisions": [
+    {
+      "variant": "engine-ue2.5",
+      "source_rule": null,
+      "native_struct_body_class_serializers_verified": false,
+      "source_files": [
+        {
+          "path": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnClass.cpp",
+          "sha256": "cdc521e0a25421923e94d63a8b12a08c0870d8b255dec931561080c6c9d0e55f"
+        },
+        {
+          "path": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnProp.cpp",
+          "sha256": "e5e7720aba1af28f7a8ecba41ac760715274c532279f6e49be92bc1595cf99f4"
+        },
+        {
+          "path": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Inc\\UnNames.h",
+          "sha256": "6a5da291ef8090b15d6a3f70642bacf0d0c32e5d521936ff2e48ea137dbbb8da"
+        }
+      ],
+      "tag_header_name_info_type_struct_size_array_index": true,
+      "tag_property_type_byte_int_bool_float_object_name_array_struct": true,
+      "struct_property_binary_vector_rotator_color_exceptions": true
+    },
+    {
+      "variant": "unreal2-january2003",
+      "source_rule": "engine_version>=118",
+      "native_struct_body_class_serializers_verified": false,
+      "source_files": [
+        {
+          "path": "L:\\Source\\Games\\Unreal II\\Unreal II The Awakening [01-07-2003]\\Core\\Src\\UnClass.cpp",
+          "sha256": "e68d0e3c1e1a943592618a06bb6d390e9a79cb6a4a68bbe38d1029fc4629de33"
+        },
+        {
+          "path": "L:\\Source\\Games\\Unreal II\\Unreal II The Awakening [01-07-2003]\\Core\\Src\\UnProp.cpp",
+          "sha256": "c1fb835b400def76c800fdf9b39d45b90013877d73c0ef82df1b3201cbf9170f"
+        },
+        {
+          "path": "L:\\Source\\Games\\Unreal II\\Unreal II The Awakening [01-07-2003]\\Core\\Inc\\UnNames.h",
+          "sha256": "25eb58695fef9e7edf77a195b80b68f12ba497cfa003adffd67eced18655594f"
+        }
+      ],
+      "tag_header_name_info_type_struct_size_array_index": true,
+      "tag_property_type_byte_int_bool_float_object_name_array_struct": true,
+      "struct_property_binary_vector_rotator_color_exceptions": true
+    },
+    {
+      "variant": "ut2003-v2107",
+      "source_rule": "licensee_version>=28",
+      "native_struct_body_class_serializers_verified": false,
+      "source_files": [
+        {
+          "path": "L:\\Source\\Games\\UT2003\\Unreal Tournament 2003 [v2107] [2002-10-01]\\Core\\Src\\UnClass.cpp",
+          "sha256": "371e8d41058f89d73bdab779638c1d2cfee91964b68b5d2213eec75884fd9b65"
+        },
+        {
+          "path": "L:\\Source\\Games\\UT2003\\Unreal Tournament 2003 [v2107] [2002-10-01]\\Core\\Src\\UnProp.cpp",
+          "sha256": "2a87bf1a88b88acb047a4d807b97c79d4177ca0c66e64c9f292aa7c1765f7604"
+        },
+        {
+          "path": "L:\\Source\\Games\\UT2003\\Unreal Tournament 2003 [v2107] [2002-10-01]\\Core\\Inc\\UnNames.h",
+          "sha256": "cd84c6364d0483599ba85370e8f92c0c57feb6525332ef1ea21dcb4a0a173ddf"
+        }
+      ],
+      "tag_header_name_info_type_struct_size_array_index": true,
+      "tag_property_type_byte_int_bool_float_object_name_array_struct": true,
+      "struct_property_binary_vector_rotator_color_exceptions": true
+    },
+    {
+      "variant": "ut2004-v3186",
+      "source_rule": "licensee_version>=28",
+      "native_struct_body_class_serializers_verified": false,
+      "source_files": [
+        {
+          "path": "L:\\Source\\Games\\UT2004\\Unreal Tournament 2004 - v3186\\Core\\Src\\UnClass.cpp",
+          "sha256": "3f5de3ca8d9f2e1c7360da47b6d88237023acfdf647ad43e1ca58566d0c127f7"
+        },
+        {
+          "path": "L:\\Source\\Games\\UT2004\\Unreal Tournament 2004 - v3186\\Core\\Src\\UnProp.cpp",
+          "sha256": "4a703b588a452994fc9db507b968eb229e1125a016a3ebba3122cbc2dfdfb6f1"
+        },
+        {
+          "path": "L:\\Source\\Games\\UT2004\\Unreal Tournament 2004 - v3186\\Core\\Inc\\UnNames.h",
+          "sha256": "38923b98486c5be23b9357c2d6a34afd0efbcdcac2200ccf4a6bc311fddebdae"
+        }
+      ],
+      "tag_header_name_info_type_struct_size_array_index": true,
+      "tag_property_type_byte_int_bool_float_object_name_array_struct": true,
+      "struct_property_binary_vector_rotator_color_exceptions": true
+    },
+    {
+      "variant": "ut2004-v3369",
+      "source_rule": "licensee_version>=28",
+      "native_struct_body_class_serializers_verified": false,
+      "source_files": [
+        {
+          "path": "L:\\Source\\Games\\UT2004\\Unreal Tournament 2004 [v3369] [03-16-2004]\\Core\\Src\\UnClass.cpp",
+          "sha256": "7d34512baea5f859a832051e6abb298b2332f867f941ed768caf04c512b25e80"
+        },
+        {
+          "path": "L:\\Source\\Games\\UT2004\\Unreal Tournament 2004 [v3369] [03-16-2004]\\Core\\Src\\UnProp.cpp",
+          "sha256": "0bafa12aa900bc641ff25b1e242805877bb9c8a6d60ec12d63e89398cbb97bc0"
+        },
+        {
+          "path": "L:\\Source\\Games\\UT2004\\Unreal Tournament 2004 [v3369] [03-16-2004]\\Core\\Inc\\UnNames.h",
+          "sha256": "92ff0688994405e8ac067746390b71e8afa2994364b8d727f21e637d8b7817ba"
+        }
+      ],
+      "tag_header_name_info_type_struct_size_array_index": true,
+      "tag_property_type_byte_int_bool_float_object_name_array_struct": true,
+      "struct_property_binary_vector_rotator_color_exceptions": true
+    },
+    {
+      "variant": "ut2004-later",
+      "source_rule": "licensee_version>=28",
+      "native_struct_body_class_serializers_verified": false,
+      "source_files": [
+        {
+          "path": "L:\\Source\\Games\\UT2004\\UT2004Src\\UT2004SrcCmake\\Core\\Src\\UnClass.cpp",
+          "sha256": "250fbc280c1c378d6b1a1c0b472aba12a8f4420fc551c50cac2f47794f91af66"
+        },
+        {
+          "path": "L:\\Source\\Games\\UT2004\\UT2004Src\\UT2004SrcCmake\\Core\\Src\\UnProp.cpp",
+          "sha256": "2fc627bb39e3e71355ce68eae5b407f8ea7f476b0aeb85ab47fdfa01c8423160"
+        },
+        {
+          "path": "L:\\Source\\Games\\UT2004\\UT2004Src\\UT2004SrcCmake\\Core\\Inc\\UnNames.h",
+          "sha256": "206b438f60fcb403e242f99a8b5b5caa006c73bb9e46b59a4cc8841f16f31d30"
+        }
+      ],
+      "tag_header_name_info_type_struct_size_array_index": true,
+      "tag_property_type_byte_int_bool_float_object_name_array_struct": true,
+      "struct_property_binary_vector_rotator_color_exceptions": true
+    }
+  ],
+  "source_revision_count": 6
+}

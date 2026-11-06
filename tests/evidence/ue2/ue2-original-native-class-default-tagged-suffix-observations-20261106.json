@@ -1,0 +1,302 @@
+﻿{
+    "schema":  "ue2-original-native-class-default-suffix-observation-v1",
+    "date":  "2026-11-06",
+    "status":  "EXPLORATORY_NOT_CERTIFIED",
+    "engine_scope":  "UE2 Unreal II, UT2003, UT2004",
+    "engine_game_source_is_normative":  true,
+    "class_default_stream_start_verified_from_original_native_loader":  false,
+    "class_default_stream_start_inferred_from_tail_structure":  true,
+    "source_class_serializer_path":  "UClass::Serialize -\u003e UStruct::SerializeTaggedProperties",
+    "algorithm":  "Independently decode original Name/Import/Export tables, locate UClass export body span, backward-chain 3+ structurally complete property-tag records ending with None at export end, and compare tag names/types against exported property declarations",
+    "criterion":  "candidate only; never a native trace of exact class-body offset, every historical writer or loader",
+    "original_inputs":  [
+                            {
+                                "relative_path":  "unreal2/retail-USA-original-v110-lic2481/Engine.u",
+                                "sha256":  "9fdbef30163de6b9948e842c9ab7778042984fe7ad81c7f71bebcd141cfd6769",
+                                "bytes":  2285020
+                            },
+                            {
+                                "relative_path":  "unreal2/special-edition-SP-original-v110-lic2609/Engine.u",
+                                "sha256":  "bf660c827ea7f3a90e023d941fb55f553626bde5540046d8cf2c99f5d31adf03",
+                                "bytes":  2353451
+                            },
+                            {
+                                "relative_path":  "ut2003/patch-2136/Engine.u",
+                                "sha256":  "07dde6d4528ad7fdee09fe595e28af98d7bd208ff982a2439ae322fe63628d40",
+                                "bytes":  2152490
+                            },
+                            {
+                                "relative_path":  "ut2003/patch-2225/Engine.u",
+                                "sha256":  "786a0d1952fd2485757eb78608a456b2bfed7236549209626f02a3529a541bb7",
+                                "bytes":  2202902
+                            },
+                            {
+                                "relative_path":  "ut2004/patch-3204/Engine.u",
+                                "sha256":  "5f84f7f382990a8e3dfaddc49c9b48153c3e91ef4575a15a91e8910884d37e2d",
+                                "bytes":  2694063
+                            },
+                            {
+                                "relative_path":  "ut2004/patch-3369/Engine.u",
+                                "sha256":  "6376b53a278d06e7af5f394d0b84b69a7e05588f21aecf9c2afadceb7e954b0e",
+                                "bytes":  2720630
+                            }
+                        ],
+    "script_path":  "tests/tools/probe_ue2_class_default_tagged_suffix.py",
+    "script_sha256":  "5c0da6366fecbb55d5584aa04f3e3af2351adf0b5f39e676d592d968e4d148af",
+    "summary":  {
+                    "candidate_class_bodies":  24,
+                    "candidate_suffixes":  18,
+                    "no_three_tag_suffix":  6,
+                    "candidate_tagged_records":  714,
+                    "tags_matching_exported_property_declaration_types":  699,
+                    "type_nonmatches":  15
+                },
+    "observations":  [
+                         {
+                             "asset":  "unreal2/retail-USA-original-v110-lic2481/Engine.u",
+                             "class_name":  "Actor",
+                             "candidate":  true,
+                             "export_body_size":  1555,
+                             "inferred_suffix_offset":  115458,
+                             "candidate_tags":  53,
+                             "declared_type_matches":  51,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "unreal2/retail-USA-original-v110-lic2481/Engine.u",
+                             "class_name":  "Pawn",
+                             "candidate":  true,
+                             "export_body_size":  2888,
+                             "inferred_suffix_offset":  118099,
+                             "candidate_tags":  87,
+                             "declared_type_matches":  86,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "unreal2/retail-USA-original-v110-lic2481/Engine.u",
+                             "class_name":  "Texture",
+                             "candidate":  true,
+                             "export_body_size":  119,
+                             "inferred_suffix_offset":  128616,
+                             "candidate_tags":  4,
+                             "declared_type_matches":  4,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "unreal2/retail-USA-original-v110-lic2481/Engine.u",
+                             "class_name":  "Material",
+                             "candidate":  false,
+                             "export_body_size":  null,
+                             "inferred_suffix_offset":  null,
+                             "candidate_tags":  null,
+                             "declared_type_matches":  null,
+                             "not_detected_reason":  "no \u003e=3-tag class default suffix reconstructed"
+                         },
+                         {
+                             "asset":  "unreal2/special-edition-SP-original-v110-lic2609/Engine.u",
+                             "class_name":  "Actor",
+                             "candidate":  true,
+                             "export_body_size":  1555,
+                             "inferred_suffix_offset":  115684,
+                             "candidate_tags":  53,
+                             "declared_type_matches":  50,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "unreal2/special-edition-SP-original-v110-lic2609/Engine.u",
+                             "class_name":  "Pawn",
+                             "candidate":  true,
+                             "export_body_size":  2866,
+                             "inferred_suffix_offset":  118302,
+                             "candidate_tags":  87,
+                             "declared_type_matches":  86,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "unreal2/special-edition-SP-original-v110-lic2609/Engine.u",
+                             "class_name":  "Texture",
+                             "candidate":  true,
+                             "export_body_size":  119,
+                             "inferred_suffix_offset":  128855,
+                             "candidate_tags":  4,
+                             "declared_type_matches":  4,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "unreal2/special-edition-SP-original-v110-lic2609/Engine.u",
+                             "class_name":  "Material",
+                             "candidate":  false,
+                             "export_body_size":  null,
+                             "inferred_suffix_offset":  null,
+                             "candidate_tags":  null,
+                             "declared_type_matches":  null,
+                             "not_detected_reason":  "no \u003e=3-tag class default suffix reconstructed"
+                         },
+                         {
+                             "asset":  "ut2003/patch-2136/Engine.u",
+                             "class_name":  "Pawn",
+                             "candidate":  true,
+                             "export_body_size":  2725,
+                             "inferred_suffix_offset":  110512,
+                             "candidate_tags":  64,
+                             "declared_type_matches":  63,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2003/patch-2136/Engine.u",
+                             "class_name":  "Actor",
+                             "candidate":  true,
+                             "export_body_size":  2275,
+                             "inferred_suffix_offset":  112989,
+                             "candidate_tags":  30,
+                             "declared_type_matches":  29,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2003/patch-2136/Engine.u",
+                             "class_name":  "Texture",
+                             "candidate":  true,
+                             "export_body_size":  119,
+                             "inferred_suffix_offset":  132354,
+                             "candidate_tags":  4,
+                             "declared_type_matches":  4,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2003/patch-2136/Engine.u",
+                             "class_name":  "Material",
+                             "candidate":  false,
+                             "export_body_size":  null,
+                             "inferred_suffix_offset":  null,
+                             "candidate_tags":  null,
+                             "declared_type_matches":  null,
+                             "not_detected_reason":  "no \u003e=3-tag class default suffix reconstructed"
+                         },
+                         {
+                             "asset":  "ut2003/patch-2225/Engine.u",
+                             "class_name":  "Pawn",
+                             "candidate":  true,
+                             "export_body_size":  2792,
+                             "inferred_suffix_offset":  114701,
+                             "candidate_tags":  65,
+                             "declared_type_matches":  64,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2003/patch-2225/Engine.u",
+                             "class_name":  "Actor",
+                             "candidate":  true,
+                             "export_body_size":  2275,
+                             "inferred_suffix_offset":  117182,
+                             "candidate_tags":  30,
+                             "declared_type_matches":  29,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2003/patch-2225/Engine.u",
+                             "class_name":  "Texture",
+                             "candidate":  true,
+                             "export_body_size":  119,
+                             "inferred_suffix_offset":  137476,
+                             "candidate_tags":  4,
+                             "declared_type_matches":  4,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2003/patch-2225/Engine.u",
+                             "class_name":  "Material",
+                             "candidate":  false,
+                             "export_body_size":  null,
+                             "inferred_suffix_offset":  null,
+                             "candidate_tags":  null,
+                             "declared_type_matches":  null,
+                             "not_detected_reason":  "no \u003e=3-tag class default suffix reconstructed"
+                         },
+                         {
+                             "asset":  "ut2004/patch-3204/Engine.u",
+                             "class_name":  "Pawn",
+                             "candidate":  true,
+                             "export_body_size":  4139,
+                             "inferred_suffix_offset":  156456,
+                             "candidate_tags":  78,
+                             "declared_type_matches":  77,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2004/patch-3204/Engine.u",
+                             "class_name":  "Actor",
+                             "candidate":  true,
+                             "export_body_size":  2487,
+                             "inferred_suffix_offset":  159215,
+                             "candidate_tags":  31,
+                             "declared_type_matches":  30,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2004/patch-3204/Engine.u",
+                             "class_name":  "Texture",
+                             "candidate":  true,
+                             "export_body_size":  127,
+                             "inferred_suffix_offset":  187930,
+                             "candidate_tags":  5,
+                             "declared_type_matches":  5,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2004/patch-3204/Engine.u",
+                             "class_name":  "Material",
+                             "candidate":  false,
+                             "export_body_size":  null,
+                             "inferred_suffix_offset":  null,
+                             "candidate_tags":  null,
+                             "declared_type_matches":  null,
+                             "not_detected_reason":  "no \u003e=3-tag class default suffix reconstructed"
+                         },
+                         {
+                             "asset":  "ut2004/patch-3369/Engine.u",
+                             "class_name":  "Pawn",
+                             "candidate":  true,
+                             "export_body_size":  4150,
+                             "inferred_suffix_offset":  158506,
+                             "candidate_tags":  78,
+                             "declared_type_matches":  77,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2004/patch-3369/Engine.u",
+                             "class_name":  "Actor",
+                             "candidate":  true,
+                             "export_body_size":  2492,
+                             "inferred_suffix_offset":  161265,
+                             "candidate_tags":  32,
+                             "declared_type_matches":  31,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2004/patch-3369/Engine.u",
+                             "class_name":  "Texture",
+                             "candidate":  true,
+                             "export_body_size":  127,
+                             "inferred_suffix_offset":  190262,
+                             "candidate_tags":  5,
+                             "declared_type_matches":  5,
+                             "not_detected_reason":  null
+                         },
+                         {
+                             "asset":  "ut2004/patch-3369/Engine.u",
+                             "class_name":  "Material",
+                             "candidate":  false,
+                             "export_body_size":  null,
+                             "inferred_suffix_offset":  null,
+                             "candidate_tags":  null,
+                             "declared_type_matches":  null,
+                             "not_detected_reason":  "no \u003e=3-tag class default suffix reconstructed"
+                         }
+                     ],
+    "limitations":  [
+                        "Suffix matching is not a native loader offset trace",
+                        "Fewer than three tags cannot be established or excluded by this search",
+                        "Nonmatching property type may be inherited, coerced or version-dependent; no byte corruption inferred",
+                        "Native UClass payload and VerifyImport are not certified"
+                    ]
+}

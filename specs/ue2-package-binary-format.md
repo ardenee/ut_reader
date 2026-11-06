@@ -162,7 +162,9 @@ Check that both the offset and the entire positive span lie inside the file. The
 
 For `SerialSize == 0`, **no** `SerialOffset` field is present in the Export table. For negative size, retain the stored signed fields and do not invent a positive byte range.
 
-No universal package-section ordering, alignment, compression flag, encryption table, export checksum, class property layout or full-file trailer is established by this summary/table format. A transport wrapper or game-specific payload codec requires a separate documented schema.
+**Specified export subformat:** When the class's object serializer invokes a tagged property stream, its **exact serialized property header and common typed values** are defined in [UE2 tagged export-property streams](ue2-export-property-stream-format.md). That format uses compact NameMap identifiers, a packed type/size/index byte, optional struct names and size/index fields, and the `None` terminator. **That stream is not necessarily at the beginning of an export's SerialOffset span**: inherited object/field/struct/state data can precede it. The Unreal II, UT2003 and UT2004 addenda specify their distinct struct serialization/version conditions.
+
+No universal package-section ordering, alignment, compression flag, encryption table, export checksum, *single class-body layout for all exports* or full-file trailer is established by this summary/table format. A transport wrapper or game-specific payload codec requires a separate documented schema.
 
 ## 8. Format-consistent decoding procedure
 

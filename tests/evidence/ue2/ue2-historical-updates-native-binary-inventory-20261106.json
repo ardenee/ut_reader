@@ -1,0 +1,572 @@
+{
+  "schema": "ue2-authentic-updates-native-revisions-v1",
+  "original_update_archives_modified": false,
+  "original_game_packages_modified": false,
+  "patched_executables_executed_on_host": false,
+  "source_revisions_vs_exact_import_verification": "Core.u emitted package versions prove their own byte format, not compiled Core.dll VerifyImport equivalence",
+  "ut2003": [
+    {
+      "patch": "2111beta2",
+      "source_archive": "L:\\Source\\Updates\\ut2003\\ut2003-winpatch2111beta2.exe",
+      "source_archive_evidence": {
+        "bytes": 7857152,
+        "sha256": "cbbaf0773ed80647a33cd26a4d6c1db71488ff1ada66915b03b7b9b5e04d3049"
+      },
+      "core_package_identity": {
+        "engine_version": 121,
+        "licensee_version": 28
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 634880,
+          "sha256": "2c4da3269b9876b816359ccda3860cb725685b6f455e5b127b30590b21a22b0e"
+        },
+        "Engine.dll": {
+          "bytes": 3457024,
+          "sha256": "c909b847a356b06a8e595cf2a0ad5947a5dafc8ee1de0ad383070c1a5eb330f0"
+        },
+        "Core.u": {
+          "bytes": 65500,
+          "sha256": "3bb4722d899ab5f5aa173fea1e37ea177631dcee192ba3c1b47a132d9826ac3a"
+        },
+        "Engine.u": {
+          "bytes": 2145568,
+          "sha256": "4c187550017301b607e49276d67e61df05214e08a7896ac46b82324f2cb3902f"
+        },
+        "UCC.exe": {
+          "bytes": 102400,
+          "sha256": "023e8123021368d3d4affa40519d1eb3755eb3bfd0feaa9c4f005c6ddae0c46e"
+        },
+        "UT2003.exe": {
+          "bytes": 892371,
+          "sha256": "92b5edbda09245e695073005e81f7ccc88140906fc652fd3a0faa3e8f5aa7ea3"
+        }
+      }
+    },
+    {
+      "patch": "2136release",
+      "source_archive": "L:\\Source\\Updates\\ut2003\\ut2003-winpatch2136release.exe",
+      "source_archive_evidence": {
+        "bytes": 10792960,
+        "sha256": "0bd7406ed71b0c45feb6dd87bea229d5ed8097ee6785baad7fa41dac69dd6561"
+      },
+      "core_package_identity": {
+        "engine_version": 121,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 634880,
+          "sha256": "29d484931f18fa0c34113b68bf9d3394fa18352a9552f477c1f844db4ed3baee"
+        },
+        "Engine.dll": {
+          "bytes": 3465216,
+          "sha256": "e14623aa0be676071535ff46ad39a0b2f028f5614729f9547784dd3967ba5820"
+        },
+        "Core.u": {
+          "bytes": 65634,
+          "sha256": "032803bd6ad8d74a87c96521eae917413045bbea4c36f93e9c7fb18f85209f1c"
+        },
+        "Engine.u": {
+          "bytes": 2152490,
+          "sha256": "07dde6d4528ad7fdee09fe595e28af98d7bd208ff982a2439ae322fe63628d40"
+        },
+        "UCC.exe": {
+          "bytes": 102400,
+          "sha256": "209ed014db273405c299a182ee9858c9683d793a732fc095cf3833444bb96fdb"
+        },
+        "UT2003.exe": {
+          "bytes": 892371,
+          "sha256": "3b394d13f6c62ecb07f050fe22dc4d36f819e21318882d71eded953aa8738610"
+        }
+      },
+      "build_ini": "[BuildVersion]\nLabel=UT2003_Build_[2002-10-28_01.28]"
+    },
+    {
+      "patch": "2166",
+      "source_archive": "L:\\Source\\Updates\\ut2003\\ut2003-winpatch2166.exe",
+      "source_archive_evidence": {
+        "bytes": 12995584,
+        "sha256": "0dfb5c8c95059de1eafe8907198c2dbb660c252b9f8c8a9e24a111e7d744a3df"
+      },
+      "core_package_identity": {
+        "engine_version": 121,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 638976,
+          "sha256": "5030246ee18ace9b56f6811b6f46e98dda2fddaa73514852a7d2286bca0b92d7"
+        },
+        "Engine.dll": {
+          "bytes": 3502080,
+          "sha256": "a55d6084c4b38bb4c13150d605528b1552c29f1431468d35a51e798331cc92bb"
+        },
+        "Core.u": {
+          "bytes": 65796,
+          "sha256": "1f0e5c5836678bcb230bd38ff5361162d70d49acdedba1e2abaa9e60a5ee8954"
+        },
+        "Engine.u": {
+          "bytes": 2171197,
+          "sha256": "30f75922a18d40df333b053b5d95e1e2e99b964586add0fbbe9bbf1da3e65cf3"
+        },
+        "UCC.exe": {
+          "bytes": 102400,
+          "sha256": "b14c0f1f8074430751335a906a85290053f47891aa79f05a4314472a2e6047f5"
+        },
+        "UT2003.exe": {
+          "bytes": 966099,
+          "sha256": "0f555c1b6ce52445ed980a1b296e487ed45abe619efc0e365de72a7842c0cec7"
+        }
+      },
+      "build_ini": "[BuildVersion]\nLabel=UT2003_Build_[2002-12-17_23.50]"
+    },
+    {
+      "patch": "2186release",
+      "source_archive": "L:\\Source\\Updates\\ut2003\\ut2003-winpatch2186release.exe",
+      "source_archive_evidence": {
+        "bytes": 13122560,
+        "sha256": "d0a8effb5f5b0854534db0c931b22b2a2739b2cc56141101e3d1cd72a1c29de9"
+      },
+      "core_package_identity": {
+        "engine_version": 121,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 643072,
+          "sha256": "56686b26a4c8bae4f3ab79a664d53df08ff95eead5ca9a18bee29e5d4f405aad"
+        },
+        "Engine.dll": {
+          "bytes": 3510272,
+          "sha256": "3a07ff93d6b412dbf7987d3e2f4476e1d2a817709bbac0672dabbeb0dbe5c9a2"
+        },
+        "Core.u": {
+          "bytes": 65911,
+          "sha256": "7a11c2e2ed0707442172091db02ec7e5e8c630056dc5bc903280bbb0eb5c3cc6"
+        },
+        "Engine.u": {
+          "bytes": 2180901,
+          "sha256": "98c100adb7aacf20dd6436f24f89ff71ad32d6b67acffc5be0b295a13c092f46"
+        },
+        "UCC.exe": {
+          "bytes": 102400,
+          "sha256": "aa162bd1564a28bbe1546ade8b3d81428bd0a89845660daebb447d7f944e6b0c"
+        },
+        "UT2003.exe": {
+          "bytes": 892371,
+          "sha256": "1378a49f2f63e70d04cdb5ab9200ae3f48a74912593463b104645316d2f08426"
+        }
+      },
+      "build_ini": "[BuildVersion]\nLabel=UT2003_Build_[2003-01-23_16.56]"
+    },
+    {
+      "patch": "2199",
+      "source_archive": "L:\\Source\\Updates\\ut2003\\ut2003-winpatch2199.exe",
+      "source_archive_evidence": {
+        "bytes": 13164544,
+        "sha256": "8ffa6c6562908774c6e74ef0a366b7cf68b4b6ebef0f9dbbb877a2d5aa9d2e52"
+      },
+      "core_package_identity": {
+        "engine_version": 121,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 643072,
+          "sha256": "cf13d93bc77a3237deae2fdd1d8c84cd405be504536ef4b666805a173f4791b4"
+        },
+        "Engine.dll": {
+          "bytes": 3522560,
+          "sha256": "5bf82419e0edbd4c902cd2532956d0960e140696f68218bdf0bb641d0158bb61"
+        },
+        "Core.u": {
+          "bytes": 66026,
+          "sha256": "6c7606774d7f4c23f4ffed24569fa0f07c6269f348b0bead85032d5a6138c629"
+        },
+        "Engine.u": {
+          "bytes": 2182138,
+          "sha256": "32fd52d648c07f528fa46e8c12248d467182dfff1c4cb0b717da53f57ae4214c"
+        },
+        "UCC.exe": {
+          "bytes": 102400,
+          "sha256": "82d5f7ae8550a002041e6e655f9dfd012455d7b7684cec10684a2635005e38fe"
+        },
+        "UT2003.exe": {
+          "bytes": 892371,
+          "sha256": "1f1da6318482697f3711bd45cd0bfc6adc5b63fbf86db7e057c7c0a3b7a150f4"
+        }
+      },
+      "build_ini": "[BuildVersion]\nLabel=UT2003_Build_[2003-02-13_18.53]"
+    },
+    {
+      "patch": "2225",
+      "source_archive": "L:\\Source\\Updates\\ut2003\\ut2003-winpatch2225.exe",
+      "source_archive_evidence": {
+        "bytes": 12943360,
+        "sha256": "44d9278fb46a3208e1fdf639364e87a792de8a32f52d88e251ecf254ff74303a"
+      },
+      "core_package_identity": {
+        "engine_version": 121,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 643072,
+          "sha256": "5c8d84748032175796d517edee05e4de2027da8a31e06cdf3ccfd414ebc397f6"
+        },
+        "Engine.dll": {
+          "bytes": 3534848,
+          "sha256": "3b98a8a314ee7668d34610123ee4a53d521535768d5ad5ae5e8b0fcb0df06e4b"
+        },
+        "Core.u": {
+          "bytes": 66198,
+          "sha256": "06ba1c8992844e7699bdd45fa007bd92786342f9f4e461860c3804757ec0d51f"
+        },
+        "Engine.u": {
+          "bytes": 2202902,
+          "sha256": "786a0d1952fd2485757eb78608a456b2bfed7236549209626f02a3529a541bb7"
+        },
+        "UCC.exe": {
+          "bytes": 102400,
+          "sha256": "bc7e095c5151723f5f1311634ea0969334314fb8d9133552287d4fcc619dfe0c"
+        },
+        "UT2003.exe": {
+          "bytes": 172032,
+          "sha256": "5e219666aee7adfc650f2ed9348c250a3a6d0d2871de5bbd82921f1752bbb2af"
+        }
+      },
+      "build_ini": "[BuildVersion]\nLabel=UT2003_Build_[2003-04-07_17.42]"
+    }
+  ],
+  "ut2004": [
+    {
+      "patch": "3204",
+      "source_archive": "L:\\Source\\Updates\\ut2004\\ut2004-winpatch3204.exe",
+      "archive_size": 12694028,
+      "archive_sha256": "0e72617a80e7d4601ffd2fdbb102f3354eb6873bd0642f573101f9b25b9adf5f",
+      "unexpected_download_prefix": "lftp/4.9.3\\n\\n",
+      "prefix_bytes_removed_from_copy": 12,
+      "recovered_pe_sha256": "83e920d3a91c35dd3cf33df95225cafa2baa02acfa15f8d1df4e291a1de60019",
+      "core_package_identity": {
+        "engine_version": 127,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 764536,
+          "sha256": "b03424dd8979b32dac1ec74b5850d554d6bce7a52d4023c5c60d9ce3864d9912"
+        },
+        "Engine.dll": {
+          "bytes": 4729464,
+          "sha256": "1eedb0038816dbc52eedad9f6d4c0ef6578f71c0944e0f0cff821e1149043e1d"
+        },
+        "Core.u": {
+          "bytes": 74447,
+          "sha256": "bcf2e24026cdafaec06fcdfb8534a29e948a9ce844f02480effd29acc03812d4"
+        },
+        "Engine.u": {
+          "bytes": 2694063,
+          "sha256": "5f84f7f382990a8e3dfaddc49c9b48153c3e91ef4575a15a91e8910884d37e2d"
+        },
+        "UCC.exe": {
+          "bytes": 113272,
+          "sha256": "2844eabaf92bdea2aa902e211d826cd7cedc8b5e0d7ff2ce4f7e017ae3f94da3"
+        },
+        "UT2004.exe": {
+          "bytes": 204800,
+          "sha256": "269fafa8ad683cb7f2329fa43b346766918d000466873ace9e058e3940a85bee"
+        }
+      },
+      "static_extraction_only": true
+    },
+    {
+      "patch": "3236",
+      "source_archive": "L:\\Source\\Updates\\ut2004\\ut2004-winpatch3236.exe",
+      "archive_size": 12458508,
+      "archive_sha256": "b2ac8026451c8da4ff5c68f19a96d704ebdd2c7a284ad6bb86e5d2d46267523e",
+      "unexpected_download_prefix": "lftp/4.9.3\\n\\n",
+      "prefix_bytes_removed_from_copy": 12,
+      "recovered_pe_sha256": "713a96adcdced4235c495e5331330388216257fceaf52ca109f8660d456c7226",
+      "core_package_identity": {
+        "engine_version": 127,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 764536,
+          "sha256": "bfff9766e0233c866e1a0df118638837ccfc0938598f217dde684219d9af9faf"
+        },
+        "Engine.dll": {
+          "bytes": 4737656,
+          "sha256": "efe49dbd71bb795c087f9d2b8e20b0c4078e2db689c48dd604a597440385cfec"
+        },
+        "Core.u": {
+          "bytes": 74543,
+          "sha256": "ac4cd90988fd4f5f7fcfb04a7397deaf29667f27e2974c7ac7e368b7497bbcd8"
+        },
+        "Engine.u": {
+          "bytes": 2707387,
+          "sha256": "32bca9ffd97b5a149c0f772ea33ecdd4e3d662a7d0300ca34d43847a94978496"
+        },
+        "UCC.exe": {
+          "bytes": 113272,
+          "sha256": "f2682583fbc540a86e053b0faeb48762077c2ea18fa8e024a5c14b3a16f81b31"
+        },
+        "UT2004.exe": {
+          "bytes": 204800,
+          "sha256": "7aeaf5bdf6bdb9dd80f7436ba1cddc0f8a8cb3c1ac8500ffe368b8e7045e4b45"
+        }
+      },
+      "static_extraction_only": true
+    },
+    {
+      "patch": "3270",
+      "source_archive": "L:\\Source\\Updates\\ut2004\\ut2004-winpatch3270.exe",
+      "archive_size": 12599820,
+      "archive_sha256": "21122d170b7a92f8089c8d923a0f2aa2915542856b1270638cd91bc0e752fa94",
+      "unexpected_download_prefix": "lftp/4.9.3\\n\\n",
+      "prefix_bytes_removed_from_copy": 12,
+      "recovered_pe_sha256": "bc975d6503727e6e9a51a70ce429c2b1087bf07861169e29006d6a4e14046f52",
+      "core_package_identity": {
+        "engine_version": 127,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 764536,
+          "sha256": "881c9635bc82befa823fa2968380cccc43e5cdabd75fc9c206dd67c3f4a90ff5"
+        },
+        "Engine.dll": {
+          "bytes": 4745848,
+          "sha256": "ab2a41c51d8fbf715fee6ebc574c0f0a13c834d22f4442ccbadc5cb786e9ae1a"
+        },
+        "Core.u": {
+          "bytes": 74580,
+          "sha256": "d7a2009f52366e198af91193c872038ec9f8bccd059a2958bd8b6311b7a014c0"
+        },
+        "Engine.u": {
+          "bytes": 2708120,
+          "sha256": "a92b526a6b1e1659d69aac95dc91061e3eac93ea1a8d589e8c523ef298af1038"
+        },
+        "UCC.exe": {
+          "bytes": 113272,
+          "sha256": "a48f04a803d57a5700f4c7462771644c90f420b188d6505a44b470c03b38fb2d"
+        },
+        "UT2004.exe": {
+          "bytes": 204800,
+          "sha256": "2ebb2492b908ac8968f209cb01e0b0d045aed7ca5267bb73c9bee32e92b0fc0e"
+        }
+      },
+      "static_extraction_only": true
+    },
+    {
+      "patch": "3323",
+      "source_archive": "L:\\Source\\Updates\\ut2004\\ut2004-winpatch3323.exe",
+      "archive_size": 12781580,
+      "archive_sha256": "1a5afc6bb633f801b0386343d45ce5f1916f1caa1e77e5687379a203b4493071",
+      "unexpected_download_prefix": "lftp/4.9.3\\n\\n",
+      "prefix_bytes_removed_from_copy": 12,
+      "recovered_pe_sha256": "c8539fa4bdc522a4deaeb59cd7e72727a4c682a157802c6386acbb8348ae43d4",
+      "core_package_identity": {
+        "engine_version": 128,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 764536,
+          "sha256": "ac9fb565d12e540844eec15d9b501bd85da2473d3eeeb432d989d305bf945f35"
+        },
+        "Engine.dll": {
+          "bytes": 4749944,
+          "sha256": "f499755cfc2b037a83bf9c3c8064fee456775f1f757a5f29a75e10c6fa9f2b88"
+        },
+        "Core.u": {
+          "bytes": 74636,
+          "sha256": "3f01876519aedafd633c61e4f69c5a62df8597a1cc14f6735049cf006436f68e"
+        },
+        "Engine.u": {
+          "bytes": 2719941,
+          "sha256": "590df11c1373a17eef974c9137c964b0f0ea07a5453e11cc5667a4c2602db156"
+        },
+        "UCC.exe": {
+          "bytes": 113272,
+          "sha256": "939d35a1bab2cf6d39b0407bd816361d30f94a6a41645f16bcb13f89bb63dc66"
+        },
+        "UT2004.exe": {
+          "bytes": 204800,
+          "sha256": "91d7b8e4155729a2526b6229af8489db153a19f6779db08dd228d4abc270198d"
+        }
+      },
+      "static_extraction_only": true
+    },
+    {
+      "patch": "3339",
+      "source_archive": "L:\\Source\\Updates\\ut2004\\ut2004-winpatch3339.exe",
+      "archive_size": 13244940,
+      "archive_sha256": "808202816e89824cc9eeaee4ac6f8ddb876a7843fafd54872d1c56a8fb9e8cb0",
+      "unexpected_download_prefix": "lftp/4.9.3\\n\\n",
+      "prefix_bytes_removed_from_copy": 12,
+      "recovered_pe_sha256": "223f4fd952a79ef2ed4a5336da103d277a9d3109f7f1811ce9c0da898f973bb4",
+      "core_package_identity": {
+        "engine_version": 128,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 768632,
+          "sha256": "4925f711655c80547ab613e1a0a813a97ca86ca96b8ec3ffeb56428a174c17b2"
+        },
+        "Engine.dll": {
+          "bytes": 4749944,
+          "sha256": "3e7bf74f2e08c31405ea5391fefa70ee586e7508d9f13f942f5f607bb69642f4"
+        },
+        "Core.u": {
+          "bytes": 74709,
+          "sha256": "fb80ca2cd2778a460ba71ff205c19d3cd3d2dd5e45386776a78aa6eea388bcb6"
+        },
+        "Engine.u": {
+          "bytes": 2719107,
+          "sha256": "3377b5e386742988a72cecfe047f5f4f65e9d1d639ca49e38e52519e75ec9615"
+        },
+        "UCC.exe": {
+          "bytes": 113272,
+          "sha256": "bc3f7952bb88efaa200605e8fa49ce1964d85a67cd3acab48f954d1c2ff61636"
+        },
+        "UT2004.exe": {
+          "bytes": 204800,
+          "sha256": "e8b3d4e413bd73d9ed0a15d0759bfb1b8ecbdfe62c9e1290e1b2c327e5f25c16"
+        }
+      },
+      "static_extraction_only": true
+    },
+    {
+      "patch": "3355",
+      "source_archive": "L:\\Source\\Updates\\ut2004\\ut2004-winpatch3355.exe",
+      "archive_size": 13262860,
+      "archive_sha256": "93ffccd104e9cd26e4c0fbce1ed2ad3e70fd84f9af55b6437ecfc717da118ee9",
+      "unexpected_download_prefix": "lftp/4.9.3\\n\\n",
+      "prefix_bytes_removed_from_copy": 12,
+      "recovered_pe_sha256": "7b14ba68c961986df0e5198509b637bff26203ddf675bee06d43a76156ee8192",
+      "core_package_identity": {
+        "engine_version": 128,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 768632,
+          "sha256": "ba288e8ff7686c2a72a63af7e351b9d7b3f58874c3cbdfe1c985d99c464c169d"
+        },
+        "Engine.dll": {
+          "bytes": 4754040,
+          "sha256": "3766933c1ad02655b5b5fd66b5f6f1e1c6ca9b31f385afe86831cd1314ecc88d"
+        },
+        "Core.u": {
+          "bytes": 74765,
+          "sha256": "9673c1ddddde29a239b70c4510a47669cb13af820328e9886c8316c03eca5610"
+        },
+        "Engine.u": {
+          "bytes": 2719589,
+          "sha256": "da3c0e9372ce32e88133b69bde8e46318f79bbc2a8747c252b265e12604bcfe8"
+        },
+        "UCC.exe": {
+          "bytes": 113272,
+          "sha256": "c28f4259ea47501555b57d2cffd43793829f7a0866de5351944959998d582429"
+        },
+        "UT2004.exe": {
+          "bytes": 204800,
+          "sha256": "9412244d24f7297e81b94d0388c20165d2d3f3beffd67020987878836f732afa"
+        }
+      },
+      "static_extraction_only": true
+    },
+    {
+      "patch": "3369",
+      "source_archive": "L:\\Source\\Updates\\ut2004\\ut2004-winpatch3369.exe",
+      "archive_size": 13323788,
+      "archive_sha256": "b7cc16ad724ce95a2d406085728f3a556d3a0adb502b7f595bbf1d20d9f64db0",
+      "unexpected_download_prefix": "lftp/4.9.3\\n\\n",
+      "prefix_bytes_removed_from_copy": 12,
+      "recovered_pe_sha256": "9786e8e0f7c4227a4d74ecedfb71500a1f16a2db8ccbc04a923ec0cd2642952e",
+      "core_package_identity": {
+        "engine_version": 128,
+        "licensee_version": 29
+      },
+      "native_files": {
+        "Core.dll": {
+          "bytes": 765952,
+          "sha256": "4d40639061756ee2885ad839719d4f3bc67dfb3d4cbc4d73be3b13d06683d82f"
+        },
+        "Engine.dll": {
+          "bytes": 4775936,
+          "sha256": "a61171005bbc3e3fbf9ba5348d361ed7d37a7ff802b28bd3fbb15b8aa3180239"
+        },
+        "Core.u": {
+          "bytes": 74837,
+          "sha256": "3890394bd26d3b443952bfe4040b7a5766ab2cfba2661d422bbfe389e93df556"
+        },
+        "Engine.u": {
+          "bytes": 2720630,
+          "sha256": "6376b53a278d06e7af5f394d0b84b69a7e05588f21aecf9c2afadceb7e954b0e"
+        },
+        "UCC.exe": {
+          "bytes": 114688,
+          "sha256": "a29db6920d71776b74e8c5356405da1322fc09a19ccfe4f532f9037309e9bca4"
+        },
+        "UT2004.exe": {
+          "bytes": 208896,
+          "sha256": "df3dc8b4a31f01954552bdc0fed4714c8d219205a449d0e3cf5b2cf075bdcf9d"
+        }
+      },
+      "static_extraction_only": true
+    }
+  ],
+  "sandbox": [
+    {
+      "name": "ut2004-winpatch3369",
+      "log_sha256": "362e2a13161ffca5d175111ee7dc45278aaa9e94d45eec697e0044f2c6b39557",
+      "network_disabled_declared": true,
+      "installer_started": false,
+      "installer_exit_reported": false,
+      "installer_platform_rejected": true,
+      "captured_files": [],
+      "interpretation": "No Core/Engine files recovered by the isolated installer run; not native-loader proof"
+    },
+    {
+      "name": "u2_retail_031403_uk",
+      "log_sha256": "7715b8927c1577c5699ad616c57d38186dc452cb7ffa93eadc866c2762f660d2",
+      "network_disabled_declared": true,
+      "installer_started": true,
+      "installer_exit_reported": true,
+      "installer_platform_rejected": false,
+      "captured_files": [],
+      "interpretation": "No Core/Engine files recovered by the isolated installer run; not native-loader proof"
+    },
+    {
+      "name": "6497-7710_u2xmp",
+      "log_sha256": "ec527a6819ac941c50773bb17833fc409dd039830c64227a98b1037ce02c2957",
+      "network_disabled_declared": true,
+      "installer_started": true,
+      "installer_exit_reported": true,
+      "installer_platform_rejected": false,
+      "captured_files": [],
+      "interpretation": "No Core/Engine files recovered by the isolated installer run; not native-loader proof"
+    }
+  ],
+  "rea_static_ut2003_2136": {
+    "binary_sha256": "29d484931f18fa0c34113b68bf9d3394fa18352a9552f477c1f844db4ed3baee",
+    "analysis_provider": "ghidra",
+    "procedure_count": 3489,
+    "string_count": 3866,
+    "import_verify_behavior_reconstructed": false
+  },
+  "summary": {
+    "ut2003_authentic_compiled_patch_builds": 6,
+    "ut2003_patches_package_121_licensee_29": 5,
+    "ut2004_authentic_compiled_patch_builds": 7,
+    "ut2004_patches_package_127_licensee_29": 3,
+    "ut2004_patches_package_128_licensee_29": 4,
+    "game_specific_verify_import_certified_by_this_inventory": false,
+    "original_files_reparsed_or_imported": 0
+  }
+}
