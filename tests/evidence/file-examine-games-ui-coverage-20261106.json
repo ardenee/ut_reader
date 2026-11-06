@@ -1,0 +1,130 @@
+{
+  "schema": "unrealdb-file-examine-games-ui-source-coverage-20261106-v1",
+  "date": "2026-11-06",
+  "mode": "READ_ONLY original SHA-256 fixtures and PRD catalogue database",
+  "ui": {
+    "classic_missing_filter": "dep_filter=missing",
+    "short_headings": [
+      "Files With Gaps",
+      "Files Without Gaps",
+      "Native Script"
+    ],
+    "native_script_cell": "not in src / in src; separate title hover explanations and links",
+    "import_column_order": [
+      "Index",
+      "Package ref",
+      "Class package",
+      "Class",
+      "Outer ref",
+      "Root",
+      "Object",
+      "Full path"
+    ],
+    "subtle_shading": [
+      "amber import without indexed physical package",
+      "blue export without cross-file indexed same package/object import"
+    ],
+    "search": "All classic displayed fields including derived root/full/local paths and numeric flags/offsets; Zen indexed serialized scalar values",
+    "scanner_notes": "collapsed by default",
+    "raw_header_location": "directly after Catalogue metadata & package identity",
+    "metadata_card": "Separate catalogue met/missing dependency counts and UT4 native source names"
+  },
+  "raw_header_original_problem": "ue_files.relative_path starts storage/games/... but config.storage_path already ends /storage; old path became /storage/storage/games/...",
+  "raw_header_fix": "shared secure storage-root realpath resolver for card and endpoint, two original headers SHA-verified",
+  "read_only_acceptance": "tests/tools/verify_file_examine_coverage_ui_20261106.php",
+  "file_examine_acceptance": {
+    "pass": true,
+    "read_only": true,
+    "original_package_headers": [
+      {
+        "source_file": "storage/games/ut99/verified/2aa9a951613309c83ffbe0f90a08aea7.utx",
+        "sha256": "50edfe60fcf99c61f369cf8100079351bd75eb0a23febc77aa891142086dbbc0",
+        "raw_fields": 12
+      },
+      {
+        "source_file": "storage/games/unreal2/verified/05a4c4138b95620f110abb60d8e6e3fd.un2",
+        "sha256": "9e944f8c30da071b7d3b29e7154e4882036651d227d45a7c384c7160a7f8695f",
+        "raw_fields": 11
+      }
+    ],
+    "blocked_unsafe_paths": 4,
+    "field_search_matches": [
+      {
+        "table": "imports",
+        "needle": "-1",
+        "matches": 1
+      },
+      {
+        "table": "imports",
+        "needle": "Engine",
+        "matches": 2
+      },
+      {
+        "table": "exports",
+        "needle": "504",
+        "matches": 1
+      },
+      {
+        "table": "exports",
+        "needle": "00070000",
+        "matches": 3
+      },
+      {
+        "table": "zen_exports",
+        "needle": "712438030E5C1A50",
+        "matches": 1
+      },
+      {
+        "table": "zen_imports",
+        "needle": "49159F3AC1005A8F",
+        "matches": 1
+      }
+    ],
+    "indexed_cross_file_import_coverage": {
+      "113253": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "113526": [
+        true
+      ],
+      "1390232": [
+        null,
+        null,
+        true
+      ]
+    },
+    "unreal2_missing_file_filter_count": 2,
+    "ui_columns_header_collapse_and_source_semantics_checked": true,
+    "native_runtime_verifyimport_inferred": false
+  },
+  "all_games_regression": {
+    "pass": true,
+    "games": 8,
+    "filters": 7,
+    "originals": 4
+  },
+  "source_sha256": {
+    "catalog/games.php": "4de6b66c25463c5df83e09cf3fdf9ff5d63851b103c949f2fb0013ea01dc430d",
+    "catalog/game-files.php": "570b92124e341331ada8a76d0582967e111917b82d536f1f40aeb24f40f288d6",
+    "catalog/file-examine.php": "94450db59c64056a44a5648924c9c08af25e4013da069abfb3204edab27cedb0",
+    "catalog/file-examine-paged-core.php": "f96df405b3a04c17de6d5faf1ebb80d9cc77eae9ca1eab76f9ca5a58517b25dd",
+    "catalog/file-examine-header.php": "a813a3092888695ff2e4ae66c570e614dab1ea4f48889cb1f28edfda65cb936b",
+    "catalog/file-examine-zen-tables.php": "0a26711d8e5802c6905581647e0ccc99ebc9e45796a4cbcf5555dca47e02870e",
+    "catalog/file-examine-zen-exports.php": "4c42ec987f5586f3d4a7d054fec18f65a0b5d59f87cdd0fa57d5ccd5127c4f8e",
+    "catalog/src/Infrastructure/Persistence/PdoGameIndexedPackageCoverageQuery.php": "fe3ca1ae4ddb07c5f2b0faa56f1964017f75f9b1ab03e7c7e8fd70641b43e8a8",
+    "catalog/src/Infrastructure/Persistence/CatalogStoredPackageFileResolver.php": "c4e29395cf320e5708bcaea231b5216db9ab8b0a554a9074261af2d2c20d3670",
+    "catalog/src/Infrastructure/Persistence/PdoFileExamineExportUsageQuery.php": "293a1a6e82b9553d62ff2d7bc2804e44dc7f0625659c964add9bfe33d9767ea0",
+    "catalog/src/Infrastructure/Metadata/Uedb5RuntimeMetadataReader.php": "e22b69f9a00105af80e04fbffbffb5a96fac2a6c9c1d2915ce9cda04b6014c9a",
+    "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php": "109ff5c31f93357b319ac6d4e70142cd52292e008cf5271633bc8842419abf61",
+    "tests/tools/verify_file_examine_coverage_ui_20261106.php": "f68d1786ff2b8a53c7f9aaff940aaca2e730790b04533fcf74d664be4a02130e"
+  },
+  "production_sql_writes": 0,
+  "uedb5_source_modified": false,
+  "native_verifyimport_proven": false,
+  "web_browser_rendering_tested": false
+}

@@ -57,23 +57,107 @@ final class Uedb5RuntimeMetadataReader
         $limit = max(1, min(1000, $limit));
         $rows = [];
         $total = 0;
-        foreach ($this->reader->scan($gameId, $fileId, $this->sectionAlias($gameId, $fileId, $section)) as $position => $row) {
+        $memo = [];
+
+        // Compact source rows contain the original outer references, not
+        // flattened root/full paths. Resolve those fields only when a search
+        // has not already matched a directly serialized column.
+        $fileQuery = $this->db->prepare('SELECT package_name FROM ue_files WHERE id=?');
+        $fileQuery->execute([$fileId]);
+        $packageName = (string)($fileQuery->fetchColumn() ?: '');
+
+        $scalar = static function (mixed $value): string {
+            if (is_array($value)) {
+                $pieces = [];
+                array_walk_recursive($value, static function (mixed $part) use (&$pieces): void {
+                    if (is_scalar($part)) $pieces[] = (string)$part;
+                });
+                return implode(' ', $pieces);
+            }
+            return is_scalar($value) ? (string)$value : '';
+        };
+        $derived = function (array $row, int $position) use (
+            $section, $fileId, $packageName, $scalar, &$memo
+        ): array {
+            $index = (int)($row['index']
+                ?? $row[$section === 'imports' ? 'import_index' : 'export_index'] ?? $position);
+            $originRef = $section === 'imports' ? -($index + 1) : $index + 1;
+            $ref = $originRef;
+            $chain = [];
+            $seen = [];
+            $external = false;
+            for ($depth = 0; $ref !== 0; $depth++) {
+                if ($depth >= 128 || isset($seen[$ref])) return [];
+                $seen[$ref] = true;
+                if ($ref === $originRef) {
+                    $ancestor = $row;
+                } elseif (array_key_exists($ref, $memo)) {
+                    $ancestor = $memo[$ref];
+                } else {
+                    $kind = $ref < 0 ? 'imports' : 'exports';
+                    $ancestorRows = $this->page($fileId, $kind, abs($ref) - 1, 1);
+                    $ancestor = $ancestorRows[0] ?? null;
+                    $memo[$ref] = is_array($ancestor) ? $ancestor : null;
+                }
+                if (!is_array($ancestor)) return [];
+                $object = $scalar($ancestor['object_name'] ?? '');
+                if ($object === '') return [];
+                $chain[] = $object;
+                if ($ref < 0) $external = true;
+                $ref = (int)($ancestor['outer_index'] ?? 0);
+            }
+            if (!$chain) return [];
+            $chain = array_reverse($chain);
+            $relative = implode('.', $chain);
+            if ($section === 'imports') {
+                return [$chain[0], $relative]; // Root, Full Path
+            }
+            return [$relative, !$external && $packageName !== ''
+                ? $packageName . '.' . $relative : $relative]; // Local, Full
+        };
+
+        foreach ($this->reader->scan($gameId, $fileId,
+            $this->sectionAlias($gameId, $fileId, $section)) as $position => $row) {
+            $index = (int)($row['index'] ?? $row[$section === 'names'
+                ? 'name_index' : ($section === 'imports' ? 'import_index' : 'export_index')] ?? $position);
+            // Include every directly serialized field appearing in the UI.
+            // Numeric reference/size/offset values are matched as displayed.
             $fields = match ($section) {
-                'names' => [$row['text'] ?? $row['name_text'] ?? '', $row['index'] ?? $position],
-                'imports' => [$row['object_name'] ?? '', $row['class_name'] ?? '',
+                'names' => [
+                    $row['name_text'] ?? $row['text'] ?? '', $row['flags'] ?? '',
+                    $row['hash_version'] ?? '', $row['name_hash'] ?? '', $index,
+                ],
+                'imports' => [
+                    $row['object_name'] ?? '', $row['class_name'] ?? '',
                     $row['class_package'] ?? '', $row['type'] ?? '',
+                    $row['root_package'] ?? '', $row['full_path'] ?? '',
+                    $row['outer_index'] ?? 0, -($index + 1), $index,
                     $row['script_import_hash'] ?? '', $row['provider_package_id'] ?? '',
                     $row['provider_public_export_hash'] ?? '',
-                    $row['raw_type_and_id'] ?? '', $row['index'] ?? $position],
-                'exports' => [$row['object_name'] ?? '', $row['public_export_hash'] ?? '',
-                    $row['index'] ?? $position],
+                    $row['raw_type_and_id'] ?? '',
+                ],
+                'exports' => [
+                    $row['object_name'] ?? '', $row['class_name'] ?? '',
+                    $row['class_index'] ?? 0, $row['outer_index'] ?? 0,
+                    $row['local_path'] ?? '', $row['full_path'] ?? '',
+                    $row['object_flags'] ?? '', $row['serial_size'] ?? '',
+                    $row['serial_offset'] ?? '', $row['public_export_hash'] ?? '',
+                    $index, $index + 1,
+                ],
             };
             $found = false;
             foreach ($fields as $field) {
-                $value = is_array($field) ? (string)($field['text'] ?? '') : (string)$field;
-                if (stripos($value, $needle) !== false) {
+                if (stripos($scalar($field), $needle) !== false) {
                     $found = true;
                     break;
+                }
+            }
+            if (!$found && $section !== 'names') {
+                foreach ($derived($row, (int)$position) as $pathValue) {
+                    if (stripos($pathValue, $needle) !== false) {
+                        $found = true;
+                        break;
+                    }
                 }
             }
             if (!$found) continue;

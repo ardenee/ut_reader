@@ -188,7 +188,14 @@ function zen_exam_imports(array $rows,array $matches,array $scripts,int $fileId,
                 .catalog_h(examine_href((int)$match['file_id'],'export-'.(int)$match['export_index'],$size))
                 .'">'.catalog_h((string)$match['package_name']).'</a>';
         }
-        echo '<tr id="'.$id.'"'.($target===$id?' class="is-reference-target"':'').'>'
+        $missingSource = !in_array($kind, ['Null','Export'], true)
+            && !in_array($state,
+                ['resolved_script','resolved_export','multiple_matches','package_found'], true);
+        $rowClass = trim(($target===$id?'is-reference-target ':'')
+            . ($missingSource?'examine-import-missing':''));
+        echo '<tr id="'.$id.'"'.($rowClass!==''?' class="'.$rowClass.'"':'')
+            .($missingSource?' title="No exact indexed catalogue counterpart for this serialized external import"':'')
+            .'>'
             .'<td class="mono">'.$index.'</td>'
             // An import's raw value should lead to its actual source match,
             // not link back to the same import row.

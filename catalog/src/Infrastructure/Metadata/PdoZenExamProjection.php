@@ -174,20 +174,46 @@ final class PdoZenExamProjection
     public function searchPage(int $fileId, string $section, string $query, int $start, int $limit): array
     {
         self::requireSection($section);
-        $pattern = '%'.str_replace(['!','%','_'],['!!','!%','!_'],$query).'%';
-        $filter = 'file_id=? AND section=? AND search_text LIKE ? ESCAPE \'!\'';
-        $total = $this->db->prepare('SELECT COUNT(*) FROM ue_uedb5_zen_exam_rows WHERE '.$filter);
-        $total->execute([$fileId,$section,$pattern]);
-        $count = (int)$total->fetchColumn();
-        $q = $this->db->prepare('SELECT row_json FROM ue_uedb5_zen_exam_rows WHERE '.$filter
-            . ' ORDER BY row_index LIMIT '.max(1,min(5000,$limit))
-            . ' OFFSET '.max(0,$start));
-        $q->execute([$fileId,$section,$pattern]);
+        $needle = trim($query);
+        $offset = max(0, $start);
+        $limit = max(1, min(1000, $limit));
+        $total = 0;
         $rows = [];
-        foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $json) {
-            $rows[] = json_decode((string)$json,true,512,JSON_THROW_ON_ERROR);
+
+        // search_text alone omits some serialized fields, especially integer
+        // sizes, reference indices and raw FMappedName words. Scan all scalar
+        // leaf *values* of the immutable SHA-bound SQL row JSON. Do NOT LIKE
+        // the JSON string itself: matching JSON field names would falsely
+        // match every row for a word such as "index" or "type".
+        $q = $this->db->prepare(
+            'SELECT row_json,search_text,row_index FROM ue_uedb5_zen_exam_rows '
+            . 'WHERE file_id=? AND section=? ORDER BY row_index'
+        );
+        $q->execute([$fileId, $section]);
+        while (($entry = $q->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $row = json_decode((string)$entry['row_json'], true, 512, JSON_THROW_ON_ERROR);
+            if (!is_array($row)) {
+                throw new RuntimeException('Invalid Zen serialized exam row.');
+            }
+            $found = stripos((string)$entry['search_text'], $needle) !== false
+                || stripos((string)$entry['row_index'], $needle) !== false;
+            if (!$found) {
+                $stack = array_values($row);
+                while ($stack !== [] && !$found) {
+                    $value = array_pop($stack);
+                    if (is_array($value)) {
+                        foreach ($value as $child) $stack[] = $child;
+                    } elseif (is_scalar($value)
+                        && stripos((string)$value, $needle) !== false) {
+                        $found = true;
+                    }
+                }
+            }
+            if (!$found) continue;
+            if ($total >= $offset && count($rows) < $limit) $rows[] = $row;
+            $total++;
         }
-        return ['total'=>$count,'rows'=>$rows];
+        return ['total'=>$total,'rows'=>$rows];
     }
 
     /**

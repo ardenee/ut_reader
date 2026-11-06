@@ -11,13 +11,15 @@ declare(strict_types=1);
  * @param array<string,array<string,mixed>> $external */
 function zen_exam_exports(
     array $rows,array $scriptLabels,array $scripts,array $localImports,
-    array $external,int $fileId,int $size,string $target
+    array $external,int $fileId,int $size,string $target,array $incoming=[]
 ):void {
     echo '<h2>Exports — serialized FExportMapEntry</h2>'
         .'<p class="muted">The first twelve columns preserve the actual serialized '
         .'FExportMapEntry fields, including the two uint32 FMappedName words. '
         .'Reference links go to exact ImportMap/ExportMap indices. The last three '
-        .'columns are decoded information, not extra header fields.</p>'
+        .'columns are decoded information, not extra header fields. '
+        .'Light blue rows have no indexed cross-file import of their exact '
+        .'public export hash; unaddressable exports are left unshaded.</p>'
         .'<div class="examine-table-region"><table class="examine-exports-table examine-zen-exports" '
         .'data-catalog-identity-skip="1"><thead>'
         .'<tr><th colspan="12">Serialized ExportMap fields</th>'
@@ -50,7 +52,13 @@ function zen_exam_exports(
             (array)($row['class_index']??[]),$scriptLabels,$localImports,$fileId,$size
         );
         $path=(string)($row['full_path']??'');
-        echo '<tr id="'.$id.'"'.($target===$id?' class="is-reference-target"':'').'>'
+        $noImporter = array_key_exists($index, $incoming)
+            && $incoming[$index] === false;
+        $rowClass = trim(($target===$id?'is-reference-target ':'')
+            .($noImporter?'examine-export-unreferenced':''));
+        echo '<tr id="'.$id.'"'.($rowClass!==''?' class="'.$rowClass.'"':'')
+            .($noImporter?' title="No indexed cross-file import of this public export hash"':'')
+            .'>'
             .'<td class="mono">'.$index.'</td>'
             .'<td>'.zen_exam_hex((string)($row['cooked_serial_offset_u64']??'')).'</td>'
             .'<td>'.zen_exam_hex((string)($row['cooked_serial_size_u64']??'')).'</td>'

@@ -13,6 +13,9 @@ require_once __DIR__ . '/file-examine-zen-tables.php';
 require_once __DIR__ . '/file-examine-zen-exports.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameIndexedPackageCoverageQuery;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameFileListQuery;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoFileExamineExportUsageQuery;
 
 catalog_start_session();
 
@@ -409,6 +412,8 @@ try {
             }
         }
     }
+    // Highlight only negative catalogue evidence. Never infer that an
+    // identically named import/export is a successful native loader match.
     $packageFiles = [];
     if ($table === 'imports' && !$isZen) {
         $roots = array_values(array_unique(array_filter(array_map(
@@ -424,6 +429,55 @@ try {
         [$fileId]
     );
     $dependencyCurrent = (int)($dependencyCurrentRow['dependency_current'] ?? 0) === 1;
+    $pageExportIncoming = [];
+    if ($table === 'exports' && $rows !== [] && $dependencyCurrent) {
+        $pageExportIncoming = (new PdoFileExamineExportUsageQuery($db))
+            ->forExportPage($fileId, array_map(
+                static fn(array $item): int => (int)($item['export_index'] ?? -1),
+                $rows
+            ));
+    }
+
+    // Catalogue availability is not a claim of source-selected native mounts.
+    $examDependencyTotals = null;
+    if ($dependencyCurrent && (string)($file['scan_status'] ?? '') === 'verified') {
+        if ($isZen) {
+            // Reuse the same exact Zen ScriptObjects/public-export matching
+            // read model used by the game-file list; don't use source-only
+            // unresolved codes as the user-visible catalogue counts.
+            $coveragePage = (new PdoGameFileListQuery($db))->fetchNumberedPage(
+                'WHERE f.id=? AND f.game_id=?', [$fileId,(int)$file['game_id']],
+                'package', 'asc', 1, 1
+            );
+            $coverageRow = $coveragePage['rows'][0] ?? null;
+            if (is_array($coverageRow)
+                && (int)($coverageRow['dependency_projection_current'] ?? 0) === 1) {
+                $examDependencyTotals = [
+                    'met' => (int)$coverageRow['resolved_count']
+                        + (int)$coverageRow['package_only_count'],
+                    'missing' => (int)$coverageRow['unresolved_count']
+                        + (int)$coverageRow['missing_count'],
+                    'source_matched_script' => 0,
+                    'source_unmatched_script' => 0,
+                ];
+            }
+        } else {
+            $availability = (new PdoGameIndexedPackageCoverageQuery($db))->forFiles(
+                (int)$file['game_id'], [$fileId],
+                strtoupper((string)($file['profile_engine'] ?? $file['engine_key'] ?? '')) === 'UE4'
+                    || (int)$file['game_id'] === 7
+            )[$fileId] ?? null;
+            if (is_array($availability)) {
+                $examDependencyTotals = [
+                    'met' => (int)$availability['indexed'],
+                    'missing' => (int)$availability['unindexed'],
+                    'source_matched_script' => (int)$availability['source_matched_script'],
+                    'source_unmatched_script' => (int)$availability['source_unmatched_script'],
+                ];
+            }
+        }
+    }
+
     // Catalogue resolution uses only persisted identities: cooked ScriptObjects
     // and exact FPackageId + PublicExportHash candidates. No live game state.
     $zenStaticImports = $isZen && $table === 'imports' && $rows !== []
@@ -523,7 +577,7 @@ try {
 
     $back = examine_back((int)$file['game_id']);
     catalog_head('Examine ' . (string)$file['package_name']);
-    echo '<style>.examine-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}.examine-tab{display:inline-flex;gap:6px;min-height:34px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);background:rgba(255,255,255,.035);font-weight:650;text-decoration:none}.examine-tab.is-active{color:#07111f;background:linear-gradient(180deg,#9dc2ff,#76a9ff);border-color:#a9c9ff}.examine-table-region{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.used-by-identity span{display:block;overflow-wrap:anywhere}.examine-imports-table{min-width:1420px}.examine-exports-table{min-width:1320px}.examine-zen-ref-link{display:block;margin-top:5px}.examine-zen-secondary{display:block;color:var(--muted);font-size:.83em;margin-top:4px}.examine-zen-extras{margin-top:5px;font-size:.85em}.examine-zen-extras summary{color:var(--muted);cursor:pointer}.is-reference-target td{background:rgba(246,196,83,.18)!important;box-shadow:inset 4px 0 0 #f6c453}.path{white-space:normal}.table-tools{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:10px 0}.to-top{position:fixed;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(16,24,39,.94);border:1px solid var(--line2);font-size:22px}</style>';
+    echo '<style>.examine-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}.examine-tab{display:inline-flex;gap:6px;min-height:34px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);background:rgba(255,255,255,.035);font-weight:650;text-decoration:none}.examine-tab.is-active{color:#07111f;background:linear-gradient(180deg,#9dc2ff,#76a9ff);border-color:#a9c9ff}.examine-table-region{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.used-by-identity span{display:block;overflow-wrap:anywhere}.examine-imports-table{min-width:1420px}.examine-exports-table{min-width:1320px}.examine-zen-ref-link{display:block;margin-top:5px}.examine-zen-secondary{display:block;color:var(--muted);font-size:.83em;margin-top:4px}.examine-zen-extras{margin-top:5px;font-size:.85em}.examine-zen-extras summary{color:var(--muted);cursor:pointer}.examine-import-missing td{background:rgba(241,164,84,.085);box-shadow:inset 3px 0 0 rgba(241,164,84,.42)}.examine-export-unreferenced td{background:rgba(124,170,231,.072);box-shadow:inset 3px 0 0 rgba(124,170,231,.32)}.is-reference-target td{background:rgba(246,196,83,.18)!important;box-shadow:inset 4px 0 0 #f6c453}.path{white-space:normal}.table-tools{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:10px 0}.to-top{position:fixed;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(16,24,39,.94);border:1px solid var(--line2);font-size:22px}</style>';
 
     echo '<div class="card hero" id="top"><h1>Examine ' . catalog_h($file['package_name']) . '</h1><p class="muted">Bounded database-backed Names, Imports and Exports pages. Cross-references open the page containing the selected row.</p><p><a class="button" href="' . catalog_h($back) . '">Back to files</a> <a class="button" href="file-info.php?id=' . $fileId . '">Package details</a> <a class="button" href="download-info.php?id=' . $fileId . '">Download options</a> <a class="button" href="package-coverage.php?file_id=' . $fileId . '">Send to Package Coverage</a></p></div>';
 
@@ -578,10 +632,37 @@ try {
     ] as $label => $value) {
         echo '<tr><th>' . catalog_h($label) . '</th><td class="mono path">' . catalog_h((string)$value) . '</td></tr>';
     }
-    echo '</table></div></div>';
+    echo '</table></div>';
+    echo '<div class="two-col"><table>';
+    if ($examDependencyTotals !== null) {
+        foreach ([
+            'Dependencies met (catalogue)' => (int)$examDependencyTotals['met'],
+            'Missing dependencies (catalogue)' => (int)$examDependencyTotals['missing'],
+        ] as $label => $count) {
+            echo '<tr><th>' . catalog_h($label) . '</th><td class="mono">'
+                . number_format($count) . '</td></tr>';
+        }
+        if ((int)$examDependencyTotals['source_matched_script'] > 0
+            || (int)$examDependencyTotals['source_unmatched_script'] > 0) {
+            echo '<tr><th>Native script in source</th><td class="mono">'
+                . number_format((int)$examDependencyTotals['source_matched_script']) . '</td></tr>'
+                . '<tr><th>Native script not in source</th><td class="mono">'
+                . number_format((int)$examDependencyTotals['source_unmatched_script']) . '</td></tr>';
+        }
+    } else {
+        echo '<tr><th>Dependency coverage</th><td class="muted">Not yet evaluated</td></tr>';
+    }
+    echo '</table></div>'
+        . '<p class="muted small">Met is based on available indexed package identities '
+        . '(or exact Zen catalogue matches), not proven native runtime loading. '
+        . 'Missing means a required identity has no suitable indexed catalogue match. '
+        . 'UT4 native script source names are counted separately.</p></div>';
+    echo '<div id="examine-header-slot"></div>';
 
     if (!empty($file['detection_notes']) || !empty($file['scan_notes'])) {
-        echo '<div class="card"><h2>Scanner notes</h2>';
+        echo '<div class="card"><details class="examine-scanner-notes">'
+            . '<summary style="cursor:pointer"><strong>Scanner notes</strong></summary>'
+            . '<div style="margin-top:12px">';
         $noteSourceId = $isZen ? (int)($zenSourceContainer['container_id']??0) : 0;
         $noteLink = $noteSourceId>0
             ? '<a href="iostore-info.php?id='.$noteSourceId.'">'
@@ -596,7 +677,7 @@ try {
             }
             echo '<h3>'.$heading.'</h3><pre class="mono path">'.$safe.'</pre>';
         }
-        echo '</div>';
+        echo '</div></details></div>';
     }
 
     $counts = [
@@ -745,7 +826,7 @@ try {
        . '<input type="hidden" name="id" value="'.$fileId.'">'
        . '<input type="hidden" name="tab" value="'.catalog_h($table).'">'
        . '<input type="hidden" name="page_size" value="'.$pageSize.'">'
-       . '<label>Search all '.catalog_h(ucfirst($table)).' <input type="search" name="filter" maxlength="128" value="'.catalog_h($filter).'" placeholder="Object, class, name or index"></label> '
+       . '<label>Search all '.catalog_h(ucfirst($table)).' <input type="search" name="filter" maxlength="128" value="'.catalog_h($filter).'" placeholder="Any displayed field: name, path, root, outer, flags, size..."></label> '
        . '<button class="button" type="submit">Filter</button> '
        . '<a class="button secondary" href="'.catalog_h(examine_tab_href($fileId,$table,$pageSize)).'">Clear</a></form>'
        . '<form method="get"><input type="hidden" name="id" value="'.$fileId.'"><input type="hidden" name="tab" value="'.catalog_h($table).'">'
@@ -788,16 +869,35 @@ try {
         if ($isZen) {
             zen_exam_imports($rows,$zenStaticImports,$zenScriptDetails,$fileId,$pageSize,$target);
         } else {
-        echo '<h2>Imports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-imports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th></tr></thead><tbody>';
+        echo '<h2>Imports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export. '
+            . 'Light amber rows have no indexed provider for their required package name '
+            . '(not proof that a runtime installation lacks it).</p><div class="examine-table-region"><table class="examine-imports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Outer ref</th><th>Root</th><th>Object</th><th>Full path</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $index = (int)$row['import_index'];
             $rowId = 'import-' . $index;
-            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td>'
+            $rootName = (string)($row['root_package'] ?? '');
+            $hasProvider = $rootName !== ''
+                && !empty($packageFiles[strtolower($rootName)]);
+            $scriptRoot = (int)$file['game_id'] === 7
+                && str_starts_with(strtolower($rootName), '/script/');
+            $noIndexedProvider = $dependencyCurrent && $rootName !== ''
+                && !$hasProvider && !$scriptRoot;
+            $importClass = trim(($target === $rowId ? 'is-reference-target ' : '')
+                . ($noIndexedProvider ? 'examine-import-missing' : ''));
+            echo '<tr id="' . $rowId . '"'
+                . ($importClass !== '' ? ' class="' . $importClass . '"' : '')
+                . ($noIndexedProvider ? ' title="No indexed same-game package provider for this import root"' : '')
+                . '><td class="mono">' . $index . '</td>'
                 . '<td class="mono"><a class="xref mono" href="' . catalog_h(examine_href($fileId, $rowId, $pageSize)) . '">' . (-(int)($index + 1)) . '</a></td>'
                 . '<td>' . examine_name_index_link((string)$row['class_package'], isset($row['class_package_name_index']) ? (int)$row['class_package_name_index'] : null, $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['class_name'], isset($row['class_name_index']) ? (int)$row['class_name_index'] : null, $fileId, $pageSize) . '</td>'
+                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td>'
+                . '<td class="mono path">' . PdoPackageTablePageQuery::packageReferenceHtml(
+                    (string)($row['root_package'] ?? ''), (int)$file['game_id'],
+                    $packageFiles[strtolower((string)($row['root_package'] ?? ''))] ?? []
+                ) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['object_name'], isset($row['object_name_index']) ? (int)$row['object_name_index'] : null, $fileId, $pageSize) . '</td>'
-                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)($row['full_path'] ?? '')) . '</td><td class="mono path">' . PdoPackageTablePageQuery::packageReferenceHtml((string)($row['root_package'] ?? ''), (int)$file['game_id'], $packageFiles[strtolower((string)($row['root_package'] ?? ''))] ?? []) . '</td></tr>';
+                . '<td class="mono path">' . catalog_h((string)($row['full_path'] ?? '')) . '</td></tr>';
         }
         echo '</tbody></table></div>';
         }
@@ -805,14 +905,25 @@ try {
         if ($isZen) {
             zen_exam_exports(
                 $rows,$zenScriptLabels,$zenScriptDetails,$zenImportIndices,
-                $zenExternalRefMatches,$fileId,$pageSize,$target
+                $zenExternalRefMatches,$fileId,$pageSize,$target,
+                $pageExportIncoming
             );
         } else {
-        echo '<h2>Exports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-exports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Local path</th><th>Full path</th><th>Flags</th><th>Serial size</th><th>Serial offset</th></tr></thead><tbody>';
+        echo '<h2>Exports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export. '
+            . 'Light blue rows have no indexed cross-file import referencing the same '
+            . 'package and object-name key. A same-name candidate does not prove the original '
+            . 'runtime mounted or loaded this export.</p><div class="examine-table-region"><table class="examine-exports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Local path</th><th>Full path</th><th>Flags</th><th>Serial size</th><th>Serial offset</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $index = (int)$row['export_index'];
             $rowId = 'export-' . $index;
-            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td>'
+            $noIndexedImporter = array_key_exists($index, $pageExportIncoming)
+                && $pageExportIncoming[$index] === false;
+            $exportClass = trim(($target === $rowId ? 'is-reference-target ' : '')
+                . ($noIndexedImporter ? 'examine-export-unreferenced' : ''));
+            echo '<tr id="' . $rowId . '"'
+                . ($exportClass !== '' ? ' class="' . $exportClass . '"' : '')
+                . ($noIndexedImporter ? ' title="No indexed cross-file import of this package/object-name identity"' : '')
+                . '><td class="mono">' . $index . '</td>'
                 . '<td class="mono"><a class="xref mono" href="' . catalog_h(examine_href($fileId, $rowId, $pageSize)) . '">' . ($index + 1) . '</a></td>'
                 . '<td>' . examine_reference((int)($row['class_index'] ?? 0), $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['object_name'], isset($row['object_name_index']) ? (int)$row['object_name_index'] : null, $fileId, $pageSize) . '</td>'

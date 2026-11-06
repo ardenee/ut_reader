@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## 6 November 2026 — Games page and file examination coverage updates
+
+Restored compact Files With Gaps and Files Without Gaps headings. Native Script shows not in source / in source numbers (UT4 32 / 413,651), with individual hover explanations and file-list links. Public dependency-filter URL is dep_filter=missing instead of unindexed. The containing files are already indexed; what is missing are their required same-game catalogue dependency package candidates. No source runtime mount is asserted.
+
+File-examine Imports columns now place Outer ref after Class and Root before Object, giving Root, Object and Full Path adjacent positions. Missing physical package import rows have a subtle amber tint, and exports without any indexed cross-file same-package-and-object import identity have a subtle blue tint; neither is a native engine VerifyImport result. No public-hash Zen export is falsely called unreferenced (unknown remains unshaded). Search now checks all serialised visible fields (including flags, numeric references and serial size/offset) as well as derived classic root, local and full paths. Zen search checks all indexed scalar row values.
+
+Raw Package Header used to look for storage/storage/games because the database relative path includes storage/ but configured storage_path already ends with storage. A shared path-constrained resolver fixes both visible header and JSON endpoint. Two original hash-verified source packages (UT99 #113253 and Unreal II #1253000) parse their raw headers. Four unsafe or absent path inputs were rejected. Raw Header now appears immediately below Catalogue metadata & package identity, ahead of Scanner notes. Scanner notes is collapsible and closed by default. The metadata card shows indexed dependencies met and missing separately; UT4 native source-name counts remain separate.
+
+Source and read-only PRD acceptance covered two original package headers, six classic/Zen all-field search cases, cross-file export-usage identity results, a two-file Unreal II missing filter, and the full eight-game regression. Evidence: tests/evidence/file-examine-games-ui-coverage-20261106.json. No production writes, no UEDB5 regeneration, no assertion of native runtime equivalence.
+
+---
+
+
+
 ## 6 November 2026 — dependency labels now say Missing; UT4 /Script/ source matches distinguished
 
 The Games page and per-game file lists now use **Missing** for references to required physical packages absent from that *same game's* verified catalogue, rather than the misleading phrase Not Indexed (the referring file itself remains verified/indexed). Original Unreal II examples: #1253000 needs MyStuff (3), #1265641 needs CliffTest (3) and CubeMaps (4): **2 files / 10 missing package references**. Those package names are indexed under other games, but same-name cross-game files are not automatically valid Unreal II native providers. A rescan cannot create an absent dependency.

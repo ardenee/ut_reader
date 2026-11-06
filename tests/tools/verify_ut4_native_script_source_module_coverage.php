@@ -55,14 +55,14 @@ try {
         throw new RuntimeException('UT4 original database source-name mismatch.');
     }
     $filters = [];
-    foreach (['script_source_matched', 'script_source_unmatched', 'unindexed'] as $filter) {
+    foreach (['script_source_matched', 'script_source_unmatched', 'missing'] as $filter) {
         $pred = Coverage::fileFilterPredicate($filter, true);
         $actual = (int)$db->query('SELECT COUNT(*) FROM ue_files f WHERE f.game_id=7 '
             . 'AND f.scan_status="verified" AND ' . $pred)->fetchColumn();
         $expect = match ($filter) {
             'script_source_matched' => $ut4['source_matched_script_files'],
             'script_source_unmatched' => $ut4['source_unmatched_script_files'],
-            'unindexed' => $ut4['unindexed_files'],
+            'missing' => $ut4['unindexed_files'],
         };
         if ($actual !== $expect) {
             throw new RuntimeException('UT4 game-files filter mismatch: ' . $filter);
@@ -104,7 +104,7 @@ try {
     $gamesUi = (string)file_get_contents(dirname(__DIR__, 2) . '/catalog/games.php');
     $filesUi = (string)file_get_contents(dirname(__DIR__, 2) . '/catalog/game-files.php');
     if (!str_contains($gamesUi, '>Missing</th>')
-        || !str_contains($gamesUi, 'Native Script (Source)')
+        || !str_contains($gamesUi, 'Native Script')
         || !str_contains($filesUi, "'missing: '")
         || !str_contains($filesUi, "'script not in source: '")
         || str_contains($gamesUi, '>Not Indexed</th>')) {
@@ -112,7 +112,7 @@ try {
     }
 
     $unreal2 = $coverage->forGame(2, false);
-    $unreal2Filter = Coverage::fileFilterPredicate('unindexed', false);
+    $unreal2Filter = Coverage::fileFilterPredicate('missing', false);
     $unreal2Files = (int)$db->query('SELECT COUNT(*) FROM ue_files f '
         . 'WHERE f.game_id=2 AND f.scan_status="verified" AND ' . $unreal2Filter)
         ->fetchColumn();

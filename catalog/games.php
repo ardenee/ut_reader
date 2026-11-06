@@ -82,7 +82,7 @@ try {
 
         $unresolvedUrl = 'game-files.php?' . http_build_query([
             'id' => $gameId,
-            'dep_filter' => $zen ? 'unresolved' : 'unindexed',
+            'dep_filter' => 'missing',
         ]);
         $resolvedUrl = 'game-files.php?' . http_build_query([
             'id' => $gameId,
@@ -117,12 +117,12 @@ try {
         ]);
         $nativeSourceDisplay = '&mdash;';
         if ($nativeSourceMatched !== null && $nativeSourceUnmatched !== null) {
-            $nativeSourceDisplay = '<a href="' . catalog_h($nativeSourceMatchedUrl)
-                . '" title="Native /Script/ module names declared in the retained UT4 game/engine source; not proof of runtime module registration or matching imported class">'
-                . 'in source: ' . number_format($nativeSourceMatched) . '</a>'
-                . '<br><a href="' . catalog_h($nativeSourceUnmatchedUrl)
-                . '" title="Module names without a corresponding declaration in the retained UT4 source snapshot; may be supplied by an external build/plugin">'
-                . 'not in source: ' . number_format($nativeSourceUnmatched) . '</a>';
+            $nativeSourceDisplay = '<a href="' . catalog_h($nativeSourceUnmatchedUrl)
+                . '" title="Not in source: module declarations absent from the retained UT4 game/engine source; 32 references across 8 files. They may exist in another compiled build.">'
+                . number_format($nativeSourceUnmatched) . '</a>'
+                . ' / <a href="' . catalog_h($nativeSourceMatchedUrl)
+                . '" title="In source: module declarations found in the retained UT4 game/engine source. Runtime registration and imported classes are not verified.">'
+                . number_format($nativeSourceMatched) . '</a>';
         }
 
         $rows .= '<tr>';
@@ -180,10 +180,10 @@ try {
         . '<th scope="col">Game</th><th scope="col">Profile engine</th>'
         . '<th scope="col">Files</th>'
         . '<th scope="col" title="Dependency packages missing from this game&#039;s catalogue. Not proof that an original installation lacks them.">Missing</th>'
-        . '<th scope="col" title="Files referring to one or more packages missing from this game&#039;s catalogue">Files Missing Dependencies</th>'
+        . '<th scope="col" title="Files referring to one or more packages missing from this game&#039;s catalogue">Files With Gaps</th>'
         . '<th scope="col" title="Dependencies with matching verified package-name candidates in the game catalogue; not a claim of matching exports or native runtime resolution">Packages Found</th>'
-        . '<th scope="col" title="UT4 native script-module references with and without matching declarations in retained source. Neither status proves a module is compiled or loaded.">Native Script (Source)</th>'
-        . '<th scope="col" title="Files with no missing physical dependency packages; UT4 native script source matches are reported separately">Files Without Missing Packages</th>'
+        . '<th scope="col" title="UT4 native script reference counts: not in source / in source. Hover each number for its meaning. Source presence does not prove runtime loading.">Native Script</th>'
+        . '<th scope="col" title="Files with no missing physical dependency packages; UT4 native script source matches are reported separately">Files Without Gaps</th>'
         . '<th scope="col">Total size</th><th scope="col">Open</th>'
         . '</tr></thead><tbody>' . $rows . '</tbody></table>';
 

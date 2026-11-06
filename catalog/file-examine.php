@@ -14,6 +14,7 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogFileFeedback.php';
 
 use UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector;
+use UnrealDb\Catalog\Infrastructure\Persistence\CatalogStoredPackageFileResolver;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogVerifiedFileRenameService;
 
@@ -261,18 +262,8 @@ if (is_array($examFileRecord) && (string)($examFileRecord['scan_status'] ?? '') 
         $headerHtml = zen_exam_raw_header_html($db,$id,150);
     } else {
         try {
-            $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
-            $relativePath = ltrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR,
-                (string)($examFileRecord['relative_path'] ?? '')), DIRECTORY_SEPARATOR);
-            $storedPath = $storageRoot !== false && $relativePath !== ''
-                ? realpath($storageRoot . DIRECTORY_SEPARATOR . $relativePath)
-                : false;
-            if ($storageRoot !== false && $storedPath !== false
-                && ($storedPath === $storageRoot || str_starts_with($storedPath,$storageRoot.DIRECTORY_SEPARATOR))) {
-                $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath,$examFileRecord);
-            } else {
-                $headerInspection = CatalogPackageHeaderInspector::inspect(null,$examFileRecord);
-            }
+            $storedPath = CatalogStoredPackageFileResolver::resolve($config, $examFileRecord);
+            $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath, $examFileRecord);
         } catch (Throwable $error) {
             $headerInspection = ['ok'=>false,'error'=>$error->getMessage(),'summary'=>[],'rows'=>[]];
         }
@@ -280,7 +271,7 @@ if (is_array($examFileRecord) && (string)($examFileRecord['scan_status'] ?? '') 
     }
 }
 if ($headerHtml !== '') {
-    $html = str_replace('<div class="card" id="package-tables">', $headerHtml . '<div class="card" id="package-tables">', $html);
+    $html = str_replace('<div id="examine-header-slot"></div>', $headerHtml, $html);
 }
 
 echo $html;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector;
+use UnrealDb\Catalog\Infrastructure\Persistence\CatalogStoredPackageFileResolver;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -17,13 +18,8 @@ try {
         throw new RuntimeException('Verified file not found.');
     }
 
-    $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
-    $storedPath = realpath(__DIR__ . '/' . (string)$file['relative_path']);
-    if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
-        $storedPath = null;
-    }
-
-    $inspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $file);
+    $storedPath = CatalogStoredPackageFileResolver::resolve($config, $file);
+    $inspection = CatalogPackageHeaderInspector::inspect($storedPath, $file);
     echo json_encode(['ok' => true, 'inspection' => $inspection], JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
 } catch (Throwable $error) {
     http_response_code(500);

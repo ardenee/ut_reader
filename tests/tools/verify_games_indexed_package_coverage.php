@@ -70,13 +70,13 @@ try {
     foreach ([12,7] as $gameId) {
         $isUe4 = $gameId === 7;
         $stats = $availability->forGame($gameId, $isUe4);
-        foreach (['indexed','unindexed','native_script','no_gaps'] as $kind) {
+        foreach (['indexed','missing','native_script','no_gaps'] as $kind) {
             if (!$isUe4 && $kind === 'native_script') continue;
             $predicate = PdoGameIndexedPackageCoverageQuery::fileFilterPredicate($kind, $isUe4);
             $query = $db->prepare('SELECT COUNT(*) FROM ue_files f WHERE f.game_id=? AND f.scan_status="verified" AND ' . $predicate);
             $query->execute([$gameId]);$actual=(int)$query->fetchColumn();
             $field = match($kind) {
-                'indexed'=>'indexed_files','unindexed'=>'unindexed_files',
+                'indexed'=>'indexed_files','missing'=>'unindexed_files',
                 'native_script'=>'native_script_files','no_gaps'=>'no_gaps_files',
             };
             if ($actual !== $stats[$field]) {

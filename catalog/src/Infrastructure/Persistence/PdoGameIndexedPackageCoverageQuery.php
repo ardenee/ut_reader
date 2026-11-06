@@ -152,7 +152,7 @@ final class PdoGameIndexedPackageCoverageQuery
             . 'AND s.game_id=f.game_id AND s.dependency_count>0 AND ';
         return match ($kind) {
             'indexed' => 'EXISTS (' . $prefix . $packageIndexed . ')',
-            'unindexed' => 'EXISTS (' . $prefix . $gap . ')',
+            'missing' => 'EXISTS (' . $prefix . $gap . ')',
             'native_script' => 'EXISTS (' . $prefix . $script . ')',
             'script_source_matched' => 'EXISTS (' . $prefix
                 . $script . ' AND (' . $sourceMatched . '))',

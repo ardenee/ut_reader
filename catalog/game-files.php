@@ -308,7 +308,7 @@ try {
         $db, (int)$gameId, (string)($game['profile_engine'] ?? '')
     );
     $dependencySelectionUnavailable = !$gameDependencyCurrent
-        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','unresolved','any','indexed','unindexed','no_gaps','native_script','script_source_matched','script_source_unmatched'], true);
+        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','unresolved','any','indexed','no_gaps','native_script','script_source_matched','script_source_unmatched'], true);
     // The Games page uses current catalogue target coverage for UE5 Zen
     // (package/export ID and pinned global ScriptObjects). The file filter
     // must consume the identical cached exception-set, not the source-only
@@ -316,7 +316,7 @@ try {
     $zenCoverage = null;
     if (!$dependencySelectionUnavailable && $gameDependencyCurrent
         && $engineMajor === 5
-        && in_array($depFilter, ['unresolved','resolved','fully_resolved'], true)) {
+        && in_array($depFilter, ['missing','resolved','fully_resolved'], true)) {
         $stats = catalog_one($db,
             'SELECT updated_at FROM ue_game_catalog_stats WHERE game_id=?', [$gameId]);
         if ($stats !== null
@@ -369,14 +369,14 @@ try {
         array_push($args, $like, $like, $like, $like, $like);
     }
     if ($engineMajor !== 5 && in_array($depFilter,
-        ['indexed','unindexed','no_gaps','native_script',
+        ['indexed','missing','no_gaps','native_script',
          'script_source_matched','script_source_unmatched'], true)) {
         // Catalogue package availability is separate from runtime VerifyImport.
         $where .= ' AND f.scan_status="verified" AND '
             . PdoGameIndexedPackageCoverageQuery::fileFilterPredicate(
                 $depFilter, $engineMajor === 4 && $gameId === 7);
     } elseif ($engineMajor === 5 && $zenCoverage !== null
-        && in_array($depFilter, ['unresolved','resolved','fully_resolved'], true)) {
+        && in_array($depFilter, ['missing','resolved','fully_resolved'], true)) {
         // All ID lists are internal integers generated from verified/current
         // SQL, never client-provided identifiers. Exception sets are small
         // relative to the 27k+ published Zen package members.
@@ -391,7 +391,7 @@ try {
             . 'WHERE dx.file_id=f.id AND dx.dependency_count>0 AND ' . $scope . ')';
         $hasZen = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_edges e '
             . 'WHERE e.file_id=f.id)';
-        if ($depFilter === 'unresolved') {
+        if ($depFilter === 'missing') {
             $classic = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
                 . 'WHERE dx.file_id=f.id AND (dx.unresolved_count+dx.common_count)>0 AND ' . $scope . ')';
             $zen = 'f.id IN (' . $missingIds . ')';
@@ -411,7 +411,7 @@ try {
             . '((f.extension="zenpkg" AND ' . $zen . ') OR '
             . '(f.extension<>"zenpkg" AND (' . $classic . ')))';
     } elseif (in_array($depFilter,
-        ['resolved', 'fully_resolved', 'missing', 'package_only', 'unresolved', 'any'], true)) {
+        ['resolved', 'fully_resolved', 'package_only', 'unresolved', 'any'], true)) {
         $scope = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx');
         if ($depFilter === 'any') {
             $where .= ' AND (EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND '
@@ -557,7 +557,7 @@ try {
         'unresolved' => 'runtime-unverified dependency references',
         'resolved' => 'native-verified dependency references',
         'fully_resolved' => 'files with all native-verified references',
-        'unindexed' => 'missing package dependencies',
+        'missing' => 'missing dependency references',
         'indexed' => 'dependency packages found',
         'script_source_matched' => 'native script references with a matching module declaration in source',
         'script_source_unmatched' => 'native script references without a matching module declaration in source',
@@ -566,7 +566,7 @@ try {
     if (isset($filterDescriptions[$depFilter]) && $filter === '' && $typeFilter === ''
         && $compressionFilter === '' && $gameDependencyCurrent) {
         if ($engineMajor !== 5 && in_array($depFilter,
-            ['unindexed','indexed','script_source_matched','script_source_unmatched'], true)) {
+            ['missing','indexed','script_source_matched','script_source_unmatched'], true)) {
             $updated = catalog_one($db,
                 'SELECT updated_at FROM ue_game_catalog_stats WHERE game_id=?', [$gameId]);
             $coverage = $updated === null ? null
@@ -574,7 +574,7 @@ try {
                     $gameId, (string)($game['profile_engine'] ?? ''),
                     (string)$updated['updated_at']);
             $counter = match ($depFilter) {
-                'unindexed' => 'unindexed_references',
+                'missing' => 'unindexed_references',
                 'indexed' => 'indexed_references',
                 'script_source_matched' => 'source_matched_script_references',
                 'script_source_unmatched' => 'source_unmatched_script_references',
@@ -582,7 +582,7 @@ try {
             $references = isset($coverage[$counter]) ? (int)$coverage[$counter] : null;
         } elseif ($engineMajor === 5 && $zenCoverage !== null
             && isset($zenCoverage['dependency_count'], $zenCoverage['unresolved_references'])) {
-            $references = $depFilter === 'unresolved'
+            $references = $depFilter === 'missing'
                 ? (int)$zenCoverage['unresolved_references']
                 : ($depFilter === 'resolved'
                     ? max(0, (int)$zenCoverage['dependency_count']
@@ -623,11 +623,10 @@ try {
     echo '<label for="dependency-filter">Dependencies <select id="dependency-filter" name="dep_filter">';
     $dependencyOptions = $engineMajor === 5
         ? ['' => 'All', 'any' => 'Has dependencies',
-            'unresolved' => 'Missing', 'resolved' => 'Found',
-            'fully_resolved' => 'Fully indexed files',
-            'missing' => 'Missing (confirmed)']
+            'missing' => 'Missing dependencies', 'resolved' => 'Found',
+            'fully_resolved' => 'Fully indexed files']
         : ['' => 'All', 'any' => 'Has dependencies',
-            'indexed' => 'Packages found', 'unindexed' => 'Missing dependencies',
+            'indexed' => 'Packages found', 'missing' => 'Missing dependencies',
             'no_gaps' => 'No missing packages',
             'unresolved' => 'Runtime unresolved',
             'resolved' => 'Native confirmed', 'fully_resolved' => 'Native complete'];
@@ -635,8 +634,6 @@ try {
         $dependencyOptions['script_source_matched'] = 'Native scripts in source';
         $dependencyOptions['script_source_unmatched'] = 'Native scripts not in source';
     }
-    // Historic bookmarks to dep_filter=native_script / dep_filter=missing
-    // continue to work even though the user-facing filter no longer conflates them.
     foreach ($dependencyOptions as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }

@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## File-examine UI and raw-header acceptance — 6 November 2026
+
+Run php tests/tools/verify_file_examine_coverage_ui_20261106.php with original DEV fixtures and read-only PRD database access. SHA-verified original raw headers, secure path resolution, full-field classic and Zen searches, indexed cross-file export usage, missing filter, UI column order, subtle tints, and placement were tested. Evidence: tests/evidence/file-examine-games-ui-coverage-20261106.json. No original UEDB5 writes and no native runtime mount selected.
+
+---
+
+
 ## Public Missing status and UT4 script-source verification — 6 November 2026
 
 Missing means required dependency package absent from the **same-game** verified catalogue, not that the file containing the import was unindexed. Do not silently resolve missing same-name packages from UT99/UT2003/UT2004 against Unreal II: exact imported export and native mount rules still need evidence.
