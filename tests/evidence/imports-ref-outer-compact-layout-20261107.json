@@ -1,0 +1,492 @@
+{
+  "date": "2026-11-07",
+  "status": "PASS",
+  "original": "Unreal II package #1253000, UE2 ImportMap original UEDB5 with live read-only production catalogue DB",
+  "request": "Shorten Index/Ref/Offset/Class/Type columns; put true immediate Outer object after Root, before Object name and full path. Keep serialized OuterIndex width visible without a cluttered extra column.",
+  "reference_semantics": "Import row i is addressed by -(i+1); Ref identifies the current row, not a separate package file. Outer ref uses signed FPackageIndex and links to targeted Import/Export row, not an arbitrary physical provider.",
+  "source_resolver": "Uses source-selected serialized OuterIndex reference chain; immediate Outer name is recorded from the genuine parent source record by the existing indexed ancestor walk. Missing/cyclic/ambiguous chains remain unknown; null OuterIndex displays no parent. No string-splitting guess or provider pick.",
+  "layout": "Index|Ref|Offset|Class|Type|Outer ref|Root (derived)|Outer|Object name|Full path (derived). Source width 32 remains visible inline as 32b next to numeric Outer ref.",
+  "browser_check": [
+    {
+      "file": 1253000,
+      "tab": "imports",
+      "status": 200,
+      "headingCount": 10,
+      "headings": [
+        "Index",
+        "Ref",
+        "Offset",
+        "Class",
+        "Type",
+        "Outer ref",
+        "Root (derived)",
+        "Outer",
+        "Object name",
+        "Full path (derived)"
+      ],
+      "firstColsWidths": [
+        67,
+        54,
+        98
+      ],
+      "secondRowOuter": "Engine",
+      "secondRowOuterLink": "file-examine.php?id=1253000&tab=imports&page=1&page_size=250&target=import-0#import-0",
+      "secondRowRef": "-132b",
+      "secondRowWidth": "32",
+      "ninthRowOuter": "Surface_Floor",
+      "ninthRowOuterLink": "file-examine.php?id=1253000&tab=imports&page=1&page_size=250&target=import-4#import-4",
+      "ninthRowPath": "Mission_09T.Surface_Floor.PlasFloorUO9E400mtv1",
+      "firstRowCells": 10,
+      "firstRowFName": {
+        "text": "Core",
+        "title": "Name index: 1297; FName number: 0",
+        "href": "file-examine.php?id=1253000&tab=names&page=6&page_size=250&target=name-1297#name-1297",
+        "index": "1297",
+        "number": "0"
+      },
+      "sourceFNameLinkCount": 750,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 1399,
+      "afterScroll": 99,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "1399.41px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine pshuttleworthlevelfinal"
+    },
+    {
+      "file": 1253000,
+      "tab": "exports",
+      "status": 200,
+      "headingCount": 18,
+      "headings": [
+        "Index",
+        "Ref",
+        "Offset",
+        "Class Index",
+        "Super Index",
+        "Outer ref",
+        "Outer Index Serialized",
+        "Width",
+        "Object name",
+        "Object flags",
+        "Object Flags Serialized Width Bits",
+        "Serial size",
+        "Serial Size Encoding",
+        "Serial Offset Present",
+        "Serial offset",
+        "Serial Offset Encoding",
+        "Local path (derived)",
+        "Full path (derived)"
+      ],
+      "firstColsWidths": [
+        67,
+        54,
+        98
+      ],
+      "secondRowOuter": null,
+      "secondRowOuterLink": null,
+      "secondRowRef": "none",
+      "secondRowWidth": null,
+      "ninthRowOuter": null,
+      "ninthRowOuterLink": null,
+      "ninthRowPath": "pshuttleworthlevelfinal.Light2",
+      "firstRowCells": 18,
+      "firstRowFName": {
+        "text": "LevelInfo0",
+        "title": "Name index: 315; FName number: 0",
+        "href": "file-examine.php?id=1253000&tab=names&page=2&page_size=250&target=name-315#name-315",
+        "index": "315",
+        "number": "0"
+      },
+      "sourceFNameLinkCount": 250,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 2653,
+      "afterScroll": 1353,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "2652.78px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine pshuttleworthlevelfinal"
+    },
+    {
+      "file": 1253000,
+      "tab": "names",
+      "status": 200,
+      "headingCount": 5,
+      "headings": [
+        "Index",
+        "Offset",
+        "Name",
+        "Name flags",
+        "Flags Serialized Width Bits"
+      ],
+      "firstColsWidths": [
+        67,
+        70,
+        98
+      ],
+      "secondRowOuter": null,
+      "secondRowOuterLink": null,
+      "secondRowRef": null,
+      "secondRowWidth": null,
+      "ninthRowOuter": null,
+      "ninthRowOuterLink": null,
+      "ninthRowPath": null,
+      "firstRowCells": 5,
+      "firstRowFName": null,
+      "sourceFNameLinkCount": 0,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 1300,
+      "afterScroll": 0,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "1300px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine pshuttleworthlevelfinal"
+    },
+    {
+      "file": 112300,
+      "tab": "imports",
+      "status": 200,
+      "headingCount": 10,
+      "headings": [
+        "Index",
+        "Ref",
+        "Offset",
+        "Class",
+        "Type",
+        "Outer ref",
+        "Root (derived)",
+        "Outer",
+        "Object name",
+        "Full path (derived)"
+      ],
+      "firstColsWidths": [
+        67,
+        54,
+        98
+      ],
+      "secondRowOuter": "Engine",
+      "secondRowOuterLink": "file-examine.php?id=112300&tab=imports&page=1&page_size=250&target=import-4#import-4",
+      "secondRowRef": "-5",
+      "secondRowWidth": null,
+      "ninthRowOuter": null,
+      "ninthRowOuterLink": null,
+      "ninthRowPath": null,
+      "firstRowCells": 10,
+      "firstRowFName": {
+        "text": "Core",
+        "title": "Name index: 4; FName number: 0",
+        "href": "file-examine.php?id=112300&tab=names&page=1&page_size=250&target=name-4#name-4",
+        "index": "4",
+        "number": "0"
+      },
+      "sourceFNameLinkCount": 15,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 1300,
+      "afterScroll": 0,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "1300px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine CH_IronGuard"
+    },
+    {
+      "file": 113526,
+      "tab": "imports",
+      "status": 200,
+      "headingCount": 12,
+      "headings": [
+        "Index",
+        "Ref",
+        "Offset",
+        "Class",
+        "Type",
+        "Outer ref",
+        "Root (derived)",
+        "Outer",
+        "Object name",
+        "Full path (derived)",
+        "Package Name Present",
+        "Package Name"
+      ],
+      "firstColsWidths": [
+        67,
+        54,
+        98
+      ],
+      "secondRowOuter": "ÔÇö",
+      "secondRowOuterLink": null,
+      "secondRowRef": "none",
+      "secondRowWidth": null,
+      "ninthRowOuter": null,
+      "ninthRowOuterLink": null,
+      "ninthRowPath": null,
+      "firstRowCells": 12,
+      "firstRowFName": {
+        "text": "/Script/CoreUObject",
+        "title": "Name index: 1; FName number: 0",
+        "href": "file-examine.php?id=113526&tab=names&page=1&page_size=250&target=name-1#name-1",
+        "index": "1",
+        "number": "0"
+      },
+      "sourceFNameLinkCount": 6,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 1483,
+      "afterScroll": 183,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "1482.69px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine /Engine/Functions/Engine_MaterialFunctions01/Opacity/CameraDepthFade"
+    }
+  ],
+  "http_routes": {
+    "pass": true,
+    "routes_checked": 24,
+    "failed_routes": 0,
+    "original_file_sample_count": 8,
+    "entries": [
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 32864,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 24587,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 28749,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 32963,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 24573,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 29254,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 137574,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "imports",
+        "page_size": 250,
+        "http_status": 200,
+        "html_bytes": 497623,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 501929,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 111916,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 80194,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 255330,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 25827,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 24428,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 23891,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 32257,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 25755,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 34606,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 27961,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 24483,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 25641,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 43786,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 29141,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 20934,
+        "source_table_rendered": true
+      }
+    ]
+  },
+  "read_only_regressions": [
+    "source-field-parity",
+    "file-examine",
+    "version-licensee",
+    "games"
+  ],
+  "sha256": {
+    "catalog/file-examine-source-rows.php": "0242fc0b9104c709ff38923872b9e664698663deed16cb430f76857e8d5ab8d2",
+    "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php": "167b911b04f5a3c6aa18968dd6c38ed016b5cdb794ea14287cf482a7e6931ad8",
+    "catalog/file-examine-paged-core.php": "91e4fcfb2616449f8a4ddc0d91d79cc6fc9c915d30517a7e71259bf9f2b963fa",
+    "tests/tools/verify-file-examine-http-routes.ps1": "e0cc34ced7bdf97c1df10581ce9b374f0d8f2c4caa3dfb85533e28c9448a1ce7",
+    "tests/tools/verify_package_table_all_source_fields_20261107.php": "0a3e25ea84c7ddb2d159235e6962bc7484640fcbe369b2b503bbeee90fbedf7d",
+    "tests/tools/verify_game_file_licensee_sort_and_exam_layout_20261106.php": "c03bbc30a1d965aa77ab60c591f20a0c54b5501212fffea7ddd419370f4264d0"
+  },
+  "original_package_bytes_modified": false,
+  "uedb5_metadata_modified": false,
+  "production_sql_writes": 0,
+  "production_browser_site_tested": false
+}

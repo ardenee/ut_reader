@@ -282,6 +282,8 @@ final class PdoPackageTablePageQuery
             $ref = $table === 'imports' ? -($ownIndex + 1) : $ownIndex + 1;
             $complete = true;
             $externalRoot = false;
+            $immediateOuterRef = (int)($row['outer_index'] ?? 0);
+            $immediateOuterName = '';
             for ($depth = 0; $ref !== 0; $depth++) {
                 if ($depth >= 128 || isset($seen[$ref])) {
                     $complete = false;
@@ -299,19 +301,27 @@ final class PdoPackageTablePageQuery
                     break;
                 }
                 $chain[] = $name;
+                if ($depth === 1 && $ref === $immediateOuterRef) {
+                    // The name comes from the indexed source record *at* the
+                    // actual OuterIndex, not from splitting a guessed path.
+                    $immediateOuterName = $name;
+                }
                 if ($ref < 0) $externalRoot = true;
                 $ref = (int)($record['outer_index'] ?? 0);
             }
             if (!$complete || !$chain) {
                 $row['full_path'] = '';
-                if ($table === 'imports') $row['root_package'] = '';
-                else $row['local_path'] = '';
+                if ($table === 'imports') {
+                    $row['root_package'] = '';
+                    $row['outer_name'] = '';
+                } else $row['local_path'] = '';
                 continue;
             }
             $chain = array_reverse($chain);
             $local = implode('.', $chain);
             if ($table === 'imports') {
                 $row['root_package'] = $chain[0];
+                $row['outer_name'] = $immediateOuterName;
                 $row['full_path'] = $local;
             } else {
                 $row['local_path'] = $local;

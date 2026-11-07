@@ -28,14 +28,14 @@ function examine_source_label(string $field): string
 {
     return match ($field) {
         'index' => 'Index',
-        'package_index' => 'Package ref',
-        'serialized_offset' => 'Byte offset',
+        'package_index' => 'Ref',
+        'serialized_offset' => 'Offset',
         'name_text', 'text' => 'Name',
         'object_name' => 'Object name',
-        'class_package' => 'Class package',
-        'class_name' => 'Class',
+        'class_package' => 'Class',
+        'class_name' => 'Type',
         'outer_index' => 'Outer ref',
-        'outer_index_serialized_width_bits' => 'Outer bits',
+        'outer_index_serialized_width_bits' => 'Width',
         'object_flags' => 'Object flags',
         'flags' => 'Name flags',
         'package_guid' => 'Package GUID',
@@ -53,12 +53,12 @@ function examine_source_description(string $field, string $table): string
 {
     $detail = match ($field) {
         'index' => 'Zero-based position in this ' . $table . ' table (index metadata).',
-        'package_index' => 'Signed package object reference: Imports use -(row + 1), Exports use row + 1. Not an additional serialized record field.',
+        'package_index' => 'Signed reference identifying this row: Import row 0 is -1; Import row 1 is -2, etc. Other objects use this number to refer to this import. A self-link is not useful.',
         'serialized_offset' => 'Original byte position of the table entry in the package file (provenance).',
         'class_package' => 'FName of the package defining the imported object class; click the text to open the exact Name-table entry.',
         'class_name' => 'FName of the imported object type; click to open its original Name-table entry.',
         'object_name' => 'FName of the imported object; click to open its original Name-table entry.',
-        'outer_index' => 'Signed outer/parent object reference: zero is null; negative values refer to imports; positive values to exports.',
+        'outer_index' => 'Signed outer reference: zero means none, negative targets another Import row, positive an Export row. Click the number to open its target. The adjacent small suffix is serialized width in bits.',
         'outer_index_serialized_width_bits' => 'Width, in bits, of the serialized OuterIndex field. 32 means a four-byte integer.',
         default => 'Source-record field: ' . $field,
     };
@@ -172,6 +172,7 @@ function examine_classic_full_source_table(
     $sourceKeys = examine_source_columns($rows);
     $derived = match ($table) {
         'imports' => ['root_package' => 'Root (derived)',
+            'outer_name' => 'Outer',
             'full_path' => 'Full path (derived)'],
         'exports' => ['local_path' => 'Local path (derived)',
             'full_path' => 'Full path (derived)'],
@@ -184,9 +185,17 @@ function examine_classic_full_source_table(
     $columns = [];
     $placedDerived = [];
     foreach ($sourceKeys as $key) {
+        if ($table === 'imports' && $key === 'outer_index_serialized_width_bits'
+            && in_array('outer_index',$sourceKeys,true)) {
+            // Keep the original serialized width visible beside its Outer ref,
+            // rather than using a wide dedicated column just to show 32.
+            continue;
+        }
         if ($table === 'imports' && $key === 'object_name') {
             $columns[] = ['kind'=>'derived','key'=>'root_package'];
+            $columns[] = ['kind'=>'derived','key'=>'outer_name'];
             $placedDerived['root_package'] = true;
+            $placedDerived['outer_name'] = true;
         }
         $columns[] = ['kind'=>'source','key'=>$key];
         if ($table === 'imports' && $key === 'object_name') {
@@ -204,7 +213,8 @@ function examine_classic_full_source_table(
         . '<p class="muted">Every indexed source field is retained. '
         . 'FName cells show the original text; hover for its name index and '
         . 'number, or click to open the Name table. '
-        . 'Root and Full path are derived, not serialized. '
+        . 'Root, Outer and Full path are derived; the small Outer ref suffix '
+        . 'preserves its serialized bit width. '
         . ($table === 'imports'
             ? 'Amber rows have no indexed package candidate. '
             : '')
@@ -253,11 +263,36 @@ function examine_classic_full_source_table(
                 $value = $present ? examine_source_value(
                     $raw[$key], $fileId, $pageSize, $table, $key
                 ) : '<span class="muted" title="Not serialized in this source version">—</span>';
+                if ($table === 'imports' && $key === 'outer_index'
+                    && array_key_exists('outer_index_serialized_width_bits',$raw)
+                    && $raw['outer_index_serialized_width_bits'] !== null) {
+                    $bits = (int)$raw['outer_index_serialized_width_bits'];
+                    $value .= '<small class="examine-outer-width mono"'
+                        . ' title="Serialized OuterIndex width: ' . $bits . ' bits"'
+                        . ' data-outer-width-bits="' . $bits . '">'
+                        . $bits . 'b</small>';
+                }
             } elseif ($key === 'root_package') {
                 $root = (string)($row[$key] ?? '');
                 $value = $root !== '' ? PdoPackageTablePageQuery::packageReferenceHtml(
                     $root, (int)$file['game_id'], $packageFiles[strtolower($root)] ?? []
                 ) : '<span class="muted">Unknown</span>';
+            } elseif ($key === 'outer_name') {
+                $ref = (int)($row['outer_index'] ?? 0);
+                $outer = trim((string)($row['outer_name'] ?? ''));
+                if ($ref === 0) {
+                    $value = '<span class="muted" title="No parent: OuterIndex is zero">—</span>';
+                } elseif ($outer === '') {
+                    $value = '<span class="muted" title="Parent identity is not resolved">Unknown</span>';
+                } else {
+                    $target = $ref < 0 ? 'import-' . ((-$ref) - 1)
+                        : 'export-' . ($ref - 1);
+                    $value = '<a class="xref mono examine-outer-name" href="'
+                        . catalog_h(examine_href($fileId,$target,$pageSize))
+                        . '" title="Outer ref ' . $ref . ': open the referenced '
+                        . ($ref < 0 ? 'Import' : 'Export')
+                        . ' row">' . catalog_h($outer) . '</a>';
+                }
             } else {
                 $value = '<span class="mono examine-source-value">'
                     . catalog_h((string)($row[$key] ?? '')) . '</span>';

@@ -89,6 +89,14 @@ try{
                 && str_contains($html,$source['engine'].' source fields'),
                 $source['game_name'].' '.$table.': original columns modified by browser');
             foreach($displayed as $field) {
+                if($table === 'imports' && $field === 'outer_index_serialized_width_bits'
+                    && in_array('outer_index',$displayed,true)) {
+                    requireTrue(str_contains($html,'data-outer-width-bits="32"')
+                        || str_contains($html,'data-outer-width-bits="64"'),
+                        $source['game_name'].' '.$table
+                        .': compact Outer ref cell lost the serialized width');
+                    continue;
+                }
                 requireTrue(str_contains($html,examine_source_label($field)),
                     $source['game_name'].' '.$table.': heading missing '.$field);
             }

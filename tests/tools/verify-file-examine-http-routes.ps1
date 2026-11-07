@@ -58,8 +58,20 @@ try{
      if($html -notmatch $fname){
        throw 'UE2 Imports FName must show linked Core with raw index/number tooltip'
      }
-     if($html -notmatch '<th[^>]*>Root \(derived\)</th>\s*<th[^>]*>Object name</th>\s*<th[^>]*>Full path \(derived\)</th>'){
-       throw 'UE2 Imports Root/Object/Path columns not adjacent or reordered'
+     if($html -notmatch '<th[^>]*>Index</th>\s*<th[^>]*>Ref</th>\s*<th[^>]*>Offset</th>\s*<th[^>]*>Class</th>\s*<th[^>]*>Type</th>'){
+       throw 'UE2 Imports compact Index/Ref/Offset/Class/Type headings not present'
+     }
+     if($html -notmatch '<th[^>]*>Root \(derived\)</th>\s*<th[^>]*>Outer</th>\s*<th[^>]*>Object name</th>\s*<th[^>]*>Full path \(derived\)</th>'){
+       throw 'UE2 Imports Root/Outer/Object/Path columns are not adjacent'
+     }
+     if($html -notmatch 'data-outer-width-bits="32">32b</small>'){
+       throw 'UE2 original 32-bit Outer serialization width was lost'
+     }
+     if($html -notmatch 'class="xref mono examine-outer-name" href="[^"]*target=import-0[^"]*"[^>]*>Engine</a>'){
+       throw 'UE2 Outer reference -1 must display linked Engine target from Import row 0'
+     }
+     if($html -notmatch 'class="xref mono examine-outer-name" href="[^"]*target=import-4[^"]*"[^>]*>Surface_Floor</a>'){
+       throw 'UE2 Outer reference -5 must display linked Surface_Floor from Import row 4'
      }
      if($html.Contains('Original indexed source record (serialized fields and record provenance)')){
        throw 'Obsolete multi-line grouped header still present'

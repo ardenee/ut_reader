@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## UE2 Imports Ref/Outer link and compact column acceptance — 7 November 2026
+
+The existing live HTTP driver tests/tools/verify-file-examine-http-routes.ps1 now asserts the 250-row Unreal II Imports page uses Index/Ref/Offset/Class/Type and Root/Outer/Object name/Full path headings, shows serialized 32-bit Outer width as a compact inline 32b, and resolves signed -1 and -5 Outer refs to real imported Engine and Surface_Floor rows respectively. Original-source field parity, all-game dependency counters, and game-file sorts remain independent regressions. Real PHP-captured HTML rendered in Chrome with production CSS/JS passed five layout geometry checks (no overlap, correct links and no page-wide overflow). Evidence: tests/evidence/imports-ref-outer-compact-layout-20261107.json.
+
+---
+
+
 ## Compact classic FName and browser layout acceptance — 7 November 2026
 
 The existing tests/tools/verify-file-examine-http-routes.ps1 now requires that the exact Unreal II 250-import HTTP response displays Core as a single linked FName with original index 1297, Number 0 in title and adjacent Root/Object/Full Path headings. Chrome rendered five genuine PHP-captured pages with the actual CSS/JS and checked column/row geometry, horizontal scrolling, no cell overlap, and that document width stays within the viewport. Metrics, hashes and the real HTTP pass result: tests/evidence/file-examine-fname-compact-browser-20261107.json. The visual browser fixture was run from DEV temporary storage, not installed on PRD.

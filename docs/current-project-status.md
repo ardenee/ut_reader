@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 7 November 2026 — UE2 Imports compact Ref/Outer layout and original parent references
+
+On the actual Unreal II Imports table the old Index / Package ref / Byte offset / Class package / Class / Outer ref / Outer bits / Root / Object name / Full path layout was too wide and obscured the direct parent value. The source-preserving layout now reads **Index, Ref, Offset, Class, Type, Outer ref, Root (derived), Outer, Object name, Full path (derived)**. Original OuterIndex serialization width (32 bits on the original UE2 example) remains explicitly visible as a compact 32b suffix next to the clickable Outer ref; it was not discarded from UEDB5 metadata. Compact first-three-column widths apply without distorting long engine-specific columns.
+
+**Ref** is the negative reference assigned to the current import (row i => -(i+1)), not a link to a separate package. It deliberately does not link back to itself. The **Outer ref** is the true serialized parent FPackageIndex and already links to its target Import/Export row. The new derived **Outer** displays the immediate actual parent object name, linked to that exact target row; it is taken from the source reader's existing signed-outer ancestor chain, not guessed from full-path string splitting. Original source examples: -1 -> Engine (import index 0), -5 -> Surface_Floor (import index 4); root imports with OuterIndex 0 have no parent, and incomplete chains remain unresolved.
+
+The compact three FName columns retain Name-table links and tooltips. Original read-only HTTP acceptance passed 24/24 page routes across UE1–UE5; Chrome computed browser geometry passed 5/5 original file page samples, checking the exact 10-column UE2 order, linked parent Engine and Surface_Floor, no overlapping cells, no page-wide horizontal scroll and original 32-bit Outer width visible. Source field coverage, file examination, version/licence sorting and eight-game counters all passed. SHA-pinned evidence: tests/evidence/imports-ref-outer-compact-layout-20261107.json. No Epic source, game package, UEDB5 metadata or production catalogue record was mutated.
+
+---
+
+
+
 ## 7 November 2026 — Compact FName and readable source tables
 
 On Unreal II Imports #1253000 the source-complete renderer showed FNames as three stacked rows (name_index, number and text). Each FName now shows just its resolved text, linking to the exact source Name index; the index and original Number (including zero) remain preserved in the hover title and data attributes. This applies to Class package, Class name and Object name in classic engine tables and retains the full original source data internally.
