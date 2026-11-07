@@ -713,6 +713,15 @@ try {
 #package-tables .examine-source-table td:nth-child(3){width:98px}
 #package-tables .examine-source-table .examine-outer-name{white-space:nowrap}
 #package-tables .examine-source-table .examine-derived-col{background:rgba(130,165,220,.055)}
+/* Match fonts for original and derived fields throughout the same source
+   table. Some global link/path rules previously rendered decoded paths bold
+   and in a different font than the original FName references. */
+#package-tables .examine-source-table th,
+#package-tables .examine-source-table td,
+#package-tables .examine-source-table td *{font-family:Consolas,ui-monospace,monospace!important;font-size:13px!important;font-style:normal!important}
+#package-tables .examine-source-table tbody td,
+#package-tables .examine-source-table tbody td *{font-weight:400!important}
+#package-tables .examine-source-table thead th{font-weight:700!important}
 .examine-zen-exports-scroll{overflow-x:auto;max-width:100%}
 .examine-zen-exports{width:max-content;min-width:100%;table-layout:auto}
 .examine-zen-exports th{white-space:nowrap}

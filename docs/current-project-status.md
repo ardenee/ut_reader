@@ -1,5 +1,15 @@
 # UnrealDB current project status
 
+## 7 November 2026 — Uniform source-table fonts and verified UE2 Outer path construction
+
+The user asked why original Unreal II Imports #1253000 row 18 shows Mission_02T rather than Mission_02T.Mission_02T; row 20 Mission_02T.Terrain rather than repeating its root; and row 27 Engine.Camera instead of Engine.Engine.Camera. The correct source-shaped OuterIndex traversal includes each node once: row 18 is a root with OuterIndex 0, row 20 points to row 18, row 21 points to row 20, and row 27 traces to Engine. The original package paths are not repeated artificially. Verified in Chrome from genuine PHP-rendered original data, including row 21 Mission_02T.Terrain.StonWall_U02A023v3.
+
+All classic source-table Names/Imports/Exports body columns, including FName links, reference links and derived Full Path, now share Consolas 13px normal weight. Headings remain bold, and links remain coloured to indicate navigation. Five Chrome tests across UE2 Names/Imports/Exports, UE3 Imports and UE4 Imports passed: each sampled cell has an identical computed font family/size/weight, no cell overlaps or page-wide overflow. Four read-only regression suites and 24 actual HTTP GET routes passed. Evidence tests/evidence/source-table-uniform-font-20261107.json. No original package, UEDB5 or DB changes.
+
+---
+
+
+
 ## 7 November 2026 — Original OuterIndex, Ref link and Root explanation
 
 The user reported confusing Outer refs and missing Ref links. The signed source OuterIndex did not change; the UI had appended its 32-bit width to the visible reference, making -1 look like -132b. Now the cell displays exactly -1 or 0 while original width stays in tooltip/data attributes. Ref identifies this signed ImportMap entry (row i => -(i+1)), not an external physical provider; its explicit link highlights the original row on click. Browser JavaScript previously removed same-row links; this exception is now narrowly disabled for these Ref links.

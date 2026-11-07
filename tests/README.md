@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Uniform font and original UE2 Outer chain — 7 November 2026
+
+Chrome rendered five genuine PHP source-table pages with actual CSS/JS and compared every first-row column's computed font. All body values use Consolas 13px weight 400, including linked FNames and decoded Full Paths. It also confirms actual Unreal II path values for original import rows 18, 20, 21 and 27, without artificial repeated roots. Evidence: tests/evidence/source-table-uniform-font-20261107.json. Headings remain bold and navigation remains link-coloured.
+
+---
+
+
 ## Exact signed Outer references and Ref self-navigation — 7 November 2026
 
 Original Unreal II #1253000 HTTP acceptance requires OuterIndex to show only -1 or 0, and its 32-bit width in a tooltip, without visible suffix. Ref -2 links to current Import row 1; Chrome verifies clicking highlights that row and changes the URL fragment to #import-1. Root and full path come from source OuterIndex chains. Evidence tests/evidence/file-examine-ref-root-original-20261107.json.
