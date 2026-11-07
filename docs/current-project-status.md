@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 7 November 2026 — Compact FName and readable source tables
+
+On Unreal II Imports #1253000 the source-complete renderer showed FNames as three stacked rows (name_index, number and text). Each FName now shows just its resolved text, linking to the exact source Name index; the index and original Number (including zero) remain preserved in the hover title and data attributes. This applies to Class package, Class name and Object name in classic engine tables and retains the full original source data internally.
+
+Column headings were shortened with full descriptions on hover. Imports places Root (derived), Object name and Full path (derived) beside one another. The oversized top grouping-header row was removed. The browser JavaScript previously forced all tables to 100% width, compressing intrinsically wide source tables and making headers overlap. The new CSS/JS keeps actual source tables at intrinsic width inside a horizontal scroll region.
+
+Read-only browser validation used original PHP-rendered GET responses captured on DEV from the PRD catalogue, then loaded in Chrome with the exact DEV CSS/JS from a local static fixture. Five routes (UE2 Names/Imports/Exports, UE3 Imports and UE4 Imports) had no overlapping cells and no page-wide horizontal scroll; wide tables scrolled within the region. UE2 Imports had ten aligned source/derived columns and 750 compact FName links in 250 rows. Core retained original source Name index 1297, Number 0 and exact Name-table navigation. The 24 real PHP HTTP routes and three affected source regression suites passed. Evidence: tests/evidence/file-examine-fname-compact-browser-20261107.json. No raw game package, UEDB5 metadata or production catalogue data was changed.
+
+---
+
+
+
 ## 7 November 2026 — File examiner HTTP class-autoload regression
 
 The first UE1–UE5 complete source-table deployment contained a real error when rendering Unreal II Imports (file #1253000, 250 rows): the PdoPackageTablePageQuery class was not found. The source-table helper referenced a namespaced class from the global namespace without importing the class. PHP lint and the prior isolated formatter test missed this dependency.

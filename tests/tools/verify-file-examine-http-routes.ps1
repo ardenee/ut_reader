@@ -50,6 +50,21 @@ try{
        throw 'UE5 Zen ExportMap lost one FMappedName source word'
      }
    }
+   if($case.id -eq 1253000 -and $tab -eq 'imports'){
+     # Assert the real HTTP output has human-readable compact FNames. The
+     # Name table index and the complete original FName number must remain
+     # accessible, even though their labels no longer clutter each cell.
+     $fname='<a class="xref mono examine-fname" title="Name index: 1297; FName number: 0" data-fname-index="1297" data-fname-number="0" href="[^"]*target=name-1297[^"]*">Core</a>'
+     if($html -notmatch $fname){
+       throw 'UE2 Imports FName must show linked Core with raw index/number tooltip'
+     }
+     if($html -notmatch '<th[^>]*>Root \(derived\)</th>\s*<th[^>]*>Object name</th>\s*<th[^>]*>Full path \(derived\)</th>'){
+       throw 'UE2 Imports Root/Object/Path columns not adjacent or reordered'
+     }
+     if($html.Contains('Original indexed source record (serialized fields and record provenance)')){
+       throw 'Obsolete multi-line grouped header still present'
+     }
+   }
    $results.Add([pscustomobject]@{
      game=$case.game;file_id=$case.id;tab=$tab;page_size=$pageSize;
      http_status=[int]$code;html_bytes=$html.Length;source_table_rendered=$hasTable

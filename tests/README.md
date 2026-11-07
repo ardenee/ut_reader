@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Compact classic FName and browser layout acceptance — 7 November 2026
+
+The existing tests/tools/verify-file-examine-http-routes.ps1 now requires that the exact Unreal II 250-import HTTP response displays Core as a single linked FName with original index 1297, Number 0 in title and adjacent Root/Object/Full Path headings. Chrome rendered five genuine PHP-captured pages with the actual CSS/JS and checked column/row geometry, horizontal scrolling, no cell overlap, and that document width stays within the viewport. Metrics, hashes and the real HTTP pass result: tests/evidence/file-examine-fname-compact-browser-20261107.json. The visual browser fixture was run from DEV temporary storage, not installed on PRD.
+
+---
+
+
 ## File-examine real HTTP regression — 7 November 2026
 
 Set UNREALDB_CATALOG_CONFIG to a scoped config pointing at the original PRD catalogue DB and source storage. Run powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/tools/verify-file-examine-http-routes.ps1. This starts a localhost PHP web server, checks eight original packages across UE1–UE5 and all three Names/Imports/Exports tabs (24 HTTP GET requests), and stops the server. It specifically checks the Unreal II Imports 250-row route and fails on HTML errors, missing source tables or PHP fatal logs. Evidence: tests/evidence/file-examine-http-class-autoload-regression-20261107.json.

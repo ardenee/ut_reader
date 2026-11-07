@@ -27,23 +27,42 @@ function examine_source_columns(array $rows): array
 function examine_source_label(string $field): string
 {
     return match ($field) {
-        'index' => 'Row index',
+        'index' => 'Index',
         'package_index' => 'Package ref',
-        'serialized_offset' => 'Serialized record offset',
-        'name_text', 'text' => 'Name text',
-        'object_name' => 'Object name (FName)',
-        'class_package' => 'Class package (FName)',
-        'class_name' => 'Class name (FName)',
+        'serialized_offset' => 'Byte offset',
+        'name_text', 'text' => 'Name',
+        'object_name' => 'Object name',
+        'class_package' => 'Class package',
+        'class_name' => 'Class',
+        'outer_index' => 'Outer ref',
+        'outer_index_serialized_width_bits' => 'Outer bits',
         'object_flags' => 'Object flags',
         'flags' => 'Name flags',
         'package_guid' => 'Package GUID',
         'serial_size' => 'Serial size',
         'serial_offset' => 'Serial offset',
         'component_map' => 'Component map',
-        'generation_net_object_count' => 'Generation net object counts',
+        'generation_net_object_count' => 'Generation counts',
         'preload' => 'Preload dependencies',
         default => ucwords(str_replace('_', ' ', $field)),
     };
+}
+
+/** Human explanation and original source key for compact column headers. */
+function examine_source_description(string $field, string $table): string
+{
+    $detail = match ($field) {
+        'index' => 'Zero-based position in this ' . $table . ' table (index metadata).',
+        'package_index' => 'Signed package object reference: Imports use -(row + 1), Exports use row + 1. Not an additional serialized record field.',
+        'serialized_offset' => 'Original byte position of the table entry in the package file (provenance).',
+        'class_package' => 'FName of the package defining the imported object class; click the text to open the exact Name-table entry.',
+        'class_name' => 'FName of the imported object type; click to open its original Name-table entry.',
+        'object_name' => 'FName of the imported object; click to open its original Name-table entry.',
+        'outer_index' => 'Signed outer/parent object reference: zero is null; negative values refer to imports; positive values to exports.',
+        'outer_index_serialized_width_bits' => 'Width, in bits, of the serialized OuterIndex field. 32 means a four-byte integer.',
+        default => 'Source-record field: ' . $field,
+    };
+    return 'Source key: ' . $field . '. ' . $detail;
 }
 
 /**
@@ -73,6 +92,33 @@ function examine_source_value(
         return '<span class="mono examine-source-value">' . catalog_h($display) . '</span>';
     }
     if ($value === []) return '<span class="mono">[]</span>';
+
+    // Compact, source-preserving FName display. The visible cell is just the
+    // resolved text (e.g. "Core"); both original words remain in title/data
+    // attributes and the exact original Name-table entry is linked.
+    if ($depth === 0
+        && in_array($field, ['class_package','class_name','object_name'], true)
+        && array_key_exists('name_index', $value)
+        && array_key_exists('number', $value)
+        && array_key_exists('text', $value)
+        && count($value) === 3) {
+        $nameIndex = (int)$value['name_index'];
+        $number = (int)$value['number'];
+        $display = (string)$value['text'];
+        $tooltip = catalog_h('Name index: ' . $nameIndex
+            . '; FName number: ' . $number);
+        $attributes = ' title="' . $tooltip . '"'
+            . ' data-fname-index="' . $nameIndex . '"'
+            . ' data-fname-number="' . $number . '"';
+        if ($nameIndex >= 0) {
+            return '<a class="xref mono examine-fname"'
+                . $attributes . ' href="'
+                . catalog_h(examine_href($fileId, 'name-' . $nameIndex, $pageSize))
+                . '">' . catalog_h($display) . '</a>';
+        }
+        return '<span class="mono examine-fname"' . $attributes . '>'
+            . catalog_h($display) . '</span>';
+    }
 
     // A compact FName (text, name_index and number) must retain the original
     // index/number even though the presentation reader also exposes text.
@@ -133,38 +179,54 @@ function examine_classic_full_source_table(
     };
     $engine = strtoupper((string)($file['profile_engine'] ?? $file['engine_key'] ?? ''));
     $label = $engine !== '' ? $engine : 'Classic Unreal';
-    $count = count($sourceKeys);
+    // Keep every indexed source column. In Imports the derived Root and Full
+    // Path are placed directly around Object name for readable object identity.
+    $columns = [];
+    $placedDerived = [];
+    foreach ($sourceKeys as $key) {
+        if ($table === 'imports' && $key === 'object_name') {
+            $columns[] = ['kind'=>'derived','key'=>'root_package'];
+            $placedDerived['root_package'] = true;
+        }
+        $columns[] = ['kind'=>'source','key'=>$key];
+        if ($table === 'imports' && $key === 'object_name') {
+            $columns[] = ['kind'=>'derived','key'=>'full_path'];
+            $placedDerived['full_path'] = true;
+        }
+    }
+    foreach ($derived as $key => $_heading) {
+        if (!isset($placedDerived[$key])) {
+            $columns[] = ['kind'=>'derived','key'=>$key];
+        }
+    }
     echo '<h2>' . catalog_h(ucfirst($table)) . ' — '
         . catalog_h($label) . ' source fields</h2>'
-        . '<p class="muted">All fields in this package&#039;s indexed source records '
-        . 'are displayed, including conditional version fields and raw reference '
-        . 'values. Row index, package reference and record offset are indexing '
-        . 'provenance rather than additional serialized fields. Nested source '
-        . 'structures can be expanded in place. '
+        . '<p class="muted">Every indexed source field is retained. '
+        . 'FName cells show the original text; hover for its name index and '
+        . 'number, or click to open the Name table. '
+        . 'Root and Full path are derived, not serialized. '
         . ($table === 'imports'
-            ? 'Subtle amber rows indicate a missing catalogue package candidate. '
+            ? 'Amber rows have no indexed package candidate. '
             : '')
-        . 'Scroll horizontally to see every column.</p>'
+        . 'Scroll the table horizontally for more fields.</p>'
         . '<div class="examine-table-region examine-source-scroll" role="region" '
         . 'aria-label="' . catalog_h(ucfirst($table)) . ' full source columns" tabindex="0">'
-        . '<table class="examine-source-table" data-catalog-identity-skip="1"><thead>';
-    if ($count > 0) {
-        echo '<tr><th colspan="' . $count . '">Original indexed source record '
-            . '(serialized fields and record provenance)</th>';
-        if ($derived !== []) echo '<th colspan="' . count($derived)
-            . '">Decoded values — not serialized table fields</th>';
-        echo '</tr><tr>';
-        foreach ($sourceKeys as $key) {
-            $title = in_array($key,['index','package_index','serialized_offset'],true)
-                ? 'Indexed provenance; not an additional serialized field'
-                : 'Preserved from this package&#039;s version-specific source record';
-            echo '<th title="' . $title . '">' . catalog_h(examine_source_label($key))
-                . '</th>';
-        }
-        foreach ($derived as $title) echo '<th>' . catalog_h($title) . '</th>';
-        echo '</tr>';
+        . '<table class="examine-source-table" data-catalog-identity-skip="1">'
+        . '<thead><tr>';
+    foreach ($columns as $column) {
+        $key = $column['key'];
+        $isDerived = $column['kind'] === 'derived';
+        $heading = $isDerived ? $derived[$key] : examine_source_label($key);
+        $tooltip = $isDerived
+            ? ('Derived from the original Outer reference chain: ' . $key
+                . '. Not an additional serialized field.')
+            : examine_source_description($key, $table);
+        echo '<th title="' . catalog_h($tooltip) . '"'
+            . ($isDerived ? ' class="examine-derived-col"' : '')
+            . '>' . catalog_h($heading) . '</th>';
     }
-    echo '</thead><tbody>';
+    echo '</tr></thead><tbody>';
+
 
     foreach ($rows as $row) {
         $index = (int)($row[$table === 'names' ? 'name_index'
@@ -184,15 +246,14 @@ function examine_classic_full_source_table(
             . (trim($rowClass) !== '' ? ' class="' . trim($rowClass) . '"' : '')
             . '>';
         $raw = (array)($row['__serialized_source_fields'] ?? $row);
-        foreach ($sourceKeys as $field) {
-            $present = array_key_exists($field, $raw);
-            $value = $present ? examine_source_value(
-                $raw[$field],$fileId,$pageSize,$table,$field
-            ) : '<span class="muted" title="This field is gated off in the source version of this record">Not serialized</span>';
-            echo '<td class="examine-source-cell">' . $value . '</td>';
-        }
-        foreach ($derived as $key => $_title) {
-            if ($key === 'root_package') {
+        foreach ($columns as $column) {
+            $key = $column['key'];
+            if ($column['kind'] === 'source') {
+                $present = array_key_exists($key, $raw);
+                $value = $present ? examine_source_value(
+                    $raw[$key], $fileId, $pageSize, $table, $key
+                ) : '<span class="muted" title="Not serialized in this source version">—</span>';
+            } elseif ($key === 'root_package') {
                 $root = (string)($row[$key] ?? '');
                 $value = $root !== '' ? PdoPackageTablePageQuery::packageReferenceHtml(
                     $root, (int)$file['game_id'], $packageFiles[strtolower($root)] ?? []
@@ -201,7 +262,9 @@ function examine_classic_full_source_table(
                 $value = '<span class="mono examine-source-value">'
                     . catalog_h((string)($row[$key] ?? '')) . '</span>';
             }
-            echo '<td class="examine-source-cell">' . $value . '</td>';
+            echo '<td class="examine-source-cell'
+                . ($column['kind'] === 'derived' ? ' examine-derived-col' : '')
+                . '">' . $value . '</td>';
         }
         echo '</tr>';
     }

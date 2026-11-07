@@ -316,7 +316,7 @@
 
         addStyle([
             '#package-tables .examine-table-region { width: 100% !important; }',
-            '#package-tables .examine-table-region > table { width: 100% !important; min-width: 100% !important; max-width: none !important; table-layout: auto !important; }',
+            '#package-tables .examine-table-region > table:not(.examine-source-table):not(.examine-zen-exports) { width: 100% !important; min-width: 100% !important; max-width: none !important; table-layout: auto !important; }',
             '#package-tables .examine-imports-table, #package-tables .examine-exports-table { width: 100% !important; min-width: 100% !important; max-width: none !important; }',
             '#package-tables .examine-imports-table th, #package-tables .examine-imports-table td, #package-tables .examine-exports-table th, #package-tables .examine-exports-table td { width: auto !important; }',
             '#package-tables .examine-imports-table th:nth-child(n+2), #package-tables .examine-imports-table td:nth-child(n+2), #package-tables .examine-imports-table th:nth-child(n+2) *, #package-tables .examine-imports-table td:nth-child(n+2) * { white-space: nowrap !important; word-break: normal !important; overflow-wrap: normal !important; }',

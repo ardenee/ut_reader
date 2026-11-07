@@ -697,11 +697,17 @@ try {
             . 'until source-correct regeneration.</p>';
     }
     echo '<style>
-.examine-source-scroll,.examine-zen-exports-scroll{overflow-x:auto;max-width:100%}
-.examine-source-table,.examine-zen-exports{width:max-content;min-width:100%;table-layout:auto}
-.examine-source-table th,.examine-zen-exports th{white-space:nowrap}
-.examine-source-cell{vertical-align:top;min-width:115px;max-width:340px;overflow-wrap:anywhere}
-.examine-source-value{white-space:pre-wrap;overflow-wrap:anywhere}
+#package-tables .examine-source-scroll{display:block;width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+#package-tables .examine-source-scroll > table.examine-source-table{width:max-content!important;min-width:100%!important;max-width:none!important;table-layout:auto!important}
+#package-tables .examine-source-table th{font-size:12px;white-space:nowrap;line-height:1.3}
+#package-tables .examine-source-table th,#package-tables .examine-source-table td{padding:10px 11px;vertical-align:middle}
+#package-tables .examine-source-table .examine-source-cell{min-width:70px;max-width:340px;overflow-wrap:anywhere}
+#package-tables .examine-source-table .examine-fname{white-space:nowrap;display:inline-block}
+#package-tables .examine-source-table .examine-derived-col{background:rgba(130,165,220,.055)}
+.examine-zen-exports-scroll{overflow-x:auto;max-width:100%}
+.examine-zen-exports{width:max-content;min-width:100%;table-layout:auto}
+.examine-zen-exports th{white-space:nowrap}
+.examine-source-value{white-space:normal;overflow-wrap:anywhere}
 .examine-source-parts{font-size:12px;line-height:1.5}
 .examine-source-part{display:block;white-space:normal}
 .examine-source-part-label{font-size:11px;opacity:.7}

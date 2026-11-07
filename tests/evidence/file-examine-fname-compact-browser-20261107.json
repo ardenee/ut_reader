@@ -1,0 +1,427 @@
+{
+  "schema": "unrealdb-compact-fname-real-browser-layout-v1",
+  "date": "2026-11-07",
+  "scope": "Unreal II imports file 1253000, plus UE2 Names/Exports and UE3/UE4 Imports; original PHP-rendered HTML with actual DEV CSS and JS loaded in Chrome from a local static fixture, avoiding changing website access controls.",
+  "root_cause": "FName displayed three stacked key/value rows and page JavaScript forced every source table to width 100%, crowding headers and data.",
+  "fix": {
+    "compact_fnames": "Original FName text linked to exact source Name index; title and data attributes preserve FName index and Number including zero.",
+    "headers": "Short source headers with full field explanations as title tooltips.",
+    "columns": "All original source values preserved, derived Root before Object and Full path after Object in Imports.",
+    "overflow": "Intrinsic wide table inside horizontal scroll region, without whole document horizontal scrolling."
+  },
+  "actual_php_http_acceptance": {
+    "pass": true,
+    "routes_checked": 24,
+    "failed_routes": 0,
+    "original_file_sample_count": 8,
+    "entries": [
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 32195,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 22776,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 27853,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 32179,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 22762,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 28358,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 136790,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "imports",
+        "page_size": 250,
+        "http_status": 200,
+        "html_bytes": 424431,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 501033,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 111132,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 69978,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 254434,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 25043,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 22589,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 22995,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 31473,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 23640,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 33705,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 27177,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 23017,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 24740,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 43051,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 28406,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 20199,
+        "source_table_rendered": true
+      }
+    ]
+  },
+  "browser_computed_layout_acceptance": [
+    {
+      "file": 1253000,
+      "tab": "imports",
+      "status": 200,
+      "headingCount": 10,
+      "headings": [
+        "Index",
+        "Package ref",
+        "Byte offset",
+        "Class package",
+        "Class",
+        "Outer ref",
+        "Outer bits",
+        "Root (derived)",
+        "Object name",
+        "Full path (derived)"
+      ],
+      "firstRowCells": 10,
+      "firstRowFName": {
+        "text": "Core",
+        "title": "Name index: 1297; FName number: 0",
+        "href": "file-examine.php?id=1253000&tab=names&page=6&page_size=250&target=name-1297#name-1297",
+        "index": "1297",
+        "number": "0"
+      },
+      "sourceFNameLinkCount": 750,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 1429,
+      "afterScroll": 129,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "1429.44px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine pshuttleworthlevelfinal"
+    },
+    {
+      "file": 1253000,
+      "tab": "exports",
+      "status": 200,
+      "headingCount": 18,
+      "headings": [
+        "Index",
+        "Package ref",
+        "Byte offset",
+        "Class Index",
+        "Super Index",
+        "Outer ref",
+        "Outer Index Serialized",
+        "Outer bits",
+        "Object name",
+        "Object flags",
+        "Object Flags Serialized Width Bits",
+        "Serial size",
+        "Serial Size Encoding",
+        "Serial Offset Present",
+        "Serial offset",
+        "Serial Offset Encoding",
+        "Local path (derived)",
+        "Full path (derived)"
+      ],
+      "firstRowCells": 18,
+      "firstRowFName": {
+        "text": "LevelInfo0",
+        "title": "Name index: 315; FName number: 0",
+        "href": "file-examine.php?id=1253000&tab=names&page=2&page_size=250&target=name-315#name-315",
+        "index": "315",
+        "number": "0"
+      },
+      "sourceFNameLinkCount": 250,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 2723,
+      "afterScroll": 1423,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "2722.81px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine pshuttleworthlevelfinal"
+    },
+    {
+      "file": 1253000,
+      "tab": "names",
+      "status": 200,
+      "headingCount": 5,
+      "headings": [
+        "Index",
+        "Byte offset",
+        "Name",
+        "Name flags",
+        "Flags Serialized Width Bits"
+      ],
+      "firstRowCells": 5,
+      "firstRowFName": null,
+      "sourceFNameLinkCount": 0,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 1300,
+      "afterScroll": 0,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "1300px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine pshuttleworthlevelfinal"
+    },
+    {
+      "file": 112300,
+      "tab": "imports",
+      "status": 200,
+      "headingCount": 9,
+      "headings": [
+        "Index",
+        "Package ref",
+        "Byte offset",
+        "Class package",
+        "Class",
+        "Outer ref",
+        "Root (derived)",
+        "Object name",
+        "Full path (derived)"
+      ],
+      "firstRowCells": 9,
+      "firstRowFName": {
+        "text": "Core",
+        "title": "Name index: 4; FName number: 0",
+        "href": "file-examine.php?id=112300&tab=names&page=1&page_size=250&target=name-4#name-4",
+        "index": "4",
+        "number": "0"
+      },
+      "sourceFNameLinkCount": 15,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 1300,
+      "afterScroll": 0,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "1300px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine CH_IronGuard"
+    },
+    {
+      "file": 113526,
+      "tab": "imports",
+      "status": 200,
+      "headingCount": 11,
+      "headings": [
+        "Index",
+        "Package ref",
+        "Byte offset",
+        "Class package",
+        "Class",
+        "Outer ref",
+        "Root (derived)",
+        "Object name",
+        "Full path (derived)",
+        "Package Name Present",
+        "Package Name"
+      ],
+      "firstRowCells": 11,
+      "firstRowFName": {
+        "text": "/Script/CoreUObject",
+        "title": "Name index: 1; FName number: 0",
+        "href": "file-examine.php?id=113526&tab=names&page=1&page_size=250&target=name-1#name-1",
+        "index": "1",
+        "number": "0"
+      },
+      "sourceFNameLinkCount": 6,
+      "containerClientWidth": 1300,
+      "containerScrollWidth": 1402,
+      "afterScroll": 102,
+      "tableScrollLayout": "auto",
+      "tableComputedWidth": "1401.58px",
+      "pageScrollWidth": 1380,
+      "viewportWidth": 1380,
+      "noOverlap": true,
+      "errorText": "Examine /Engine/Functions/Engine_MaterialFunctions01/Opacity/CameraDepthFade"
+    }
+  ],
+  "browser_screenshot_dev_only": "D:\\Temp\\UnrealDB\\ue2-import-fname-compact-20261107.png",
+  "browser_screenshot_sha256": "598d86eac84bc985dfa0d972eff2e2bf8188b36d233e8d4e6cb40a4e84224225",
+  "updated_source_sha256": {
+    "catalog/file-examine-source-rows.php": "157869dfde52d9cc3545b7779a0192d9c997923abbbab71f9105a7daca2fbb51",
+    "catalog/file-examine-paged-core.php": "593fe45fcbf3659495f891fd9cf77239265faa7f693a5c23c43139bde2061a87",
+    "catalog/assets/catalog-ui.js": "89141ebfc630576ced789180cbc6e7f74c63145aedb3207599f7c106eb756eb4",
+    "tests/tools/verify-file-examine-http-routes.ps1": "df2b2ef7f9444b231589935d73b5546371f744957405ac3a858947ad8e667c05"
+  },
+  "uedb5_source_changes": 0,
+  "production_database_changes": 0,
+  "original_packages_changed": false,
+  "production_apache_browser_render_tested": false
+}
