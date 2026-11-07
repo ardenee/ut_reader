@@ -88,6 +88,30 @@ try{
      if($html.Contains('Original indexed source record (serialized fields and record provenance)')){
        throw 'Obsolete multi-line grouped header still present'
      }
+     # The route has #package-tables, NOT a row target. Before this patch,
+     # building Outer links overwrote the requested $target variable and
+     # accidentally highlighted import rows 41, 58 and several others.
+     if([regex]::IsMatch($html,'<tr id="import-[0-9]+" class="is-reference-target"')){
+       throw 'Imports were highlighted without a requested row target'
+     }
+     $sourceRow41=[regex]::Match($html,'(?s)<tr id="import-41"[^>]*>(.*?)</tr>').Groups[1].Value
+     $sourceRow58=[regex]::Match($html,'(?s)<tr id="import-58"[^>]*>(.*?)</tr>').Groups[1].Value
+     $sourceRow1=[regex]::Match($html,'(?s)<tr id="import-1"[^>]*>(.*?)</tr>').Groups[1].Value
+     if((-not $sourceRow41.Contains('class="xref mono examine-matched-export"')) -or
+         ($sourceRow41 -notmatch 'file-examine.php\?id=111140&amp;tab=exports[^"]*target=export-425#export-425') -or
+         ($sourceRow41 -notmatch '>AtlantisT\.Floor</a>')){
+       throw 'AtlantisT.Floor must link to its real Export #425 in physical file #111140'
+     }
+     if($sourceRow58.Contains('examine-matched-export')){
+       throw '343T top-level ImportMap package record is not itself a provider export'
+     }
+     if(($sourceRow1 -notmatch '<details class="examine-export-options">') -or
+         ($sourceRow1 -notmatch 'Engine\.StaticMeshActor') -or
+         ($sourceRow1 -notmatch '\(2 exports\)') -or
+         ($sourceRow1 -notmatch 'id=111198&amp;tab=exports[^"]*target=export-6548') -or
+         ($sourceRow1 -notmatch 'id=149518&amp;tab=exports[^"]*target=export-10183')){
+       throw 'Two Engine.StaticMeshActor source exports must be presented without guessing one provider'
+     }
    }
    $results.Add([pscustomobject]@{
      game=$case.game;file_id=$case.id;tab=$tab;page_size=$pageSize;
@@ -97,11 +121,52 @@ try{
    Remove-Item -LiteralPath $output -Force
   }
  }
+ # An explicit selected Import row still highlights exactly that one row,
+ # while an ordinary #package-tables request highlights no Import rows.
+ $selectUrl="http://127.0.0.1:$port/file-examine.php?id=1253000&tab=imports&page_size=250&target=import-41"
+ $selectedFile=Join-Path $work 'selected-import-41.html'
+ $selectedHttp=& curl.exe --noproxy '*' -sS -A 'Mozilla/5.0' --max-time 65 -w '%{http_code}' -o $selectedFile $selectUrl
+ if($LASTEXITCODE -ne 0 -or $selectedHttp -ne '200'){throw 'SELECTED_IMPORT_TARGET_ROUTE_FAILED'}
+ $selectedHtml=[IO.File]::ReadAllText($selectedFile)
+ $highlights=[regex]::Matches($selectedHtml,'<tr id="import-[0-9]+" class="is-reference-target"')
+ if($highlights.Count -ne 1 -or $highlights[0].Value -ne '<tr id="import-41" class="is-reference-target"'){
+   throw "Explicit selected ImportMap target highlighted wrong rows: $($highlights.Count)"
+ }
+ Write-Output 'SELECTED_IMPORT_PASS index=41 highlights=1'
+ $results.Add([pscustomobject]@{
+   game='Unreal2';file_id=1253000;tab='imports';target='import-41';
+   http_status=[int]$selectedHttp;selected_rows=1
+ })
+ Remove-Item -LiteralPath $selectedFile -Force
+ # Follow known links to the actual physical ExportMap row through the same
+ # PHP HTTP entry point, verifying its source path and exact targeted index.
+ foreach($export in @(
+   @{file=111140;index=425;path='AtlantisT.Floor'},
+   @{file=111198;index=6548;path='Engine.StaticMeshActor'},
+   @{file=149518;index=10183;path='Engine.StaticMeshActor'}
+ )){
+   $url="http://127.0.0.1:$port/file-examine.php?id=$($export.file)&tab=exports&page_size=250&target=export-$($export.index)"
+   $page=Join-Path $work "matched-provider-$($export.file)-$($export.index).html"
+   $status=& curl.exe --noproxy '*' -sS -A 'Mozilla/5.0' --max-time 65 -w '%{http_code}' -o $page $url
+   if($LASTEXITCODE -ne 0 -or $status -ne '200'){throw "TARGET_EXPORT_ROUTE_FAILED $url HTTP=$status"}
+   $html=[IO.File]::ReadAllText($page)
+   $entry='export-'+$export.index
+   $row=[regex]::Match($html,'(?s)<tr id="'+[regex]::Escape($entry)+'"[^>]*>(.*?)</tr>').Groups[1].Value
+   if(-not $row.Contains($export.path) -or -not $html.Contains('id="'+$entry+'" class="is-reference-target"')){
+     throw "TARGET_EXPORT_INVALID file=$($export.file) row=$entry path=$($export.path)"
+   }
+   Write-Output "TARGET_EXPORT_PASS file=$($export.file) export=$($export.index)"
+   $results.Add([pscustomobject]@{
+     game='Unreal2';file_id=$export.file;tab='exports';target=$entry;
+     http_status=[int]$status;source_export_path=$export.path
+   })
+   Remove-Item -LiteralPath $page -Force
+ }
  $fatal=Select-String -Path (Join-Path $work 'php-stderr.log') -Pattern 'PHP Fatal error|Uncaught Error|Class "PdoPackageTablePageQuery" not found' -ErrorAction SilentlyContinue
  if($fatal){throw ('PHP_SERVER_FATAL '+($fatal|Select-Object -First 1).Line)}
  [pscustomobject]@{
    pass=$true;routes_checked=$results.Count;failed_routes=0;
-   original_file_sample_count=$cases.Count;entries=@($results)
+   original_file_sample_count=$cases.Count;verified_export_target_count=3;entries=@($results)
  } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $work 'results.json') -Encoding UTF8
  Write-Output "ALL_HTTP_ROUTES_PASS=$($results.Count)"
 } finally {

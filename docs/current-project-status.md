@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## 7 November 2026 - Actual ExportMap path links and accidental Imports highlights
+
+The Unreal II package #1253000 rendered Imports #41 and #58 highlighted even without a target. Root cause: the per-row Outer reference link builder overwrote the function's requested target parameter. The renderer now uses a separate outerTarget variable, so a plain Imports page has zero selected rows while target=import-41 selects exactly one. The legend differentiates gold selected-reference highlights from subtle missing-provider warnings.
+
+Full Path now has a bounded, source-verified export lookup for classic engines. It looks up exact leaf names only in verified same-game physical packages for the Import's Root; then reads the original candidate ExportMap record at its serialized index, reconstructs the Export path through its original OuterIndex chain, and requires an exact case-insensitive path match. Nonzero numbered FName, false Outer paths, cross-game candidate files and root-package-only entries are not falsely linked. A unique source export is linked directly. Multiple physical matching exports are shown as an expandable set, not silently assigned a selected runtime provider.
+
+On the first 250 genuine Unreal II imports, 206 import rows had exact ExportMap path candidates and 234 physical source export records matched. AtlantisT.Floor links to file #111140 Export #425; Engine.StaticMeshActor has two physical exports, files #111198 / #149518. Import root 343T is not itself an exported object and stays plain text. These links are navigation to genuine source export records, NOT native VerifyImport or original engine mount determination. Lookup time was approximately 2.2 seconds for the genuine 250-row page.
+
+Read-only acceptance passed 28 actual HTTP routes across five engines, including three physical ExportMap targets, zero default highlighted Imports and one explicit targeted Import; five Chrome original HTML/CSS/JS geometry and navigation checks; six source/UI/game regressions; and SHA-256 hashes of original UEDB5 snapshots. Evidence: tests/evidence/file-examine-exact-export-navigation-and-highlight-20261107.json. Driver: tests/tools/verify_file_examine_export_path_links_20261107.php. No source package, UEDB5 or production catalogue record was modified; HTTP GET may generate access telemetry.
+
+---
+
+
+
 ## 7 November 2026 — Uniform source-table fonts and verified UE2 Outer path construction
 
 The user asked why original Unreal II Imports #1253000 row 18 shows Mission_02T rather than Mission_02T.Mission_02T; row 20 Mission_02T.Terrain rather than repeating its root; and row 27 Engine.Camera instead of Engine.Engine.Camera. The correct source-shaped OuterIndex traversal includes each node once: row 18 is a root with OuterIndex 0, row 20 points to row 18, row 21 points to row 20, and row 27 traces to Engine. The original package paths are not repeated artificially. Verified in Chrome from genuine PHP-rendered original data, including row 21 Mission_02T.Terrain.StonWall_U02A023v3.

@@ -239,6 +239,42 @@ final class PdoPackageTablePageQuery
         return $rows;
     }
     /**
+     * Exact original ExportMap rows, by physical provider and zero-based index.
+     * Used exclusively for bounded read-only navigational candidate validation.
+     * Every returned path was reconstructed from this actual provider's
+     * serialized parent references, rather than assumed from its leaf name.
+     *
+     * @param list<int> $indexes
+     * @return array<int,array<string,mixed>>
+     */
+    public static function exportRowsByOriginalIndex(
+        PDO $db, int $fileId, array $indexes, string $packageName
+    ): array {
+        if ($fileId < 1 || count($indexes) > 2500) return [];
+        $reader = self::reader($db, $fileId);
+        $raw = [];
+        foreach (array_values(array_unique(array_map('intval', $indexes))) as $index) {
+            if ($index < 0) continue;
+            $page = $reader->page($fileId, 'exports', $index, 1);
+            $entry = $page[0] ?? null;
+            if (!is_array($entry) || (int)($entry['index'] ?? -1) !== $index) {
+                continue;
+            }
+            $raw[] = $entry;
+        }
+        if ($raw === []) return [];
+        $rows = self::presentV5Rows($raw, 'exports');
+        $rows = self::withSerializedObjectPaths(
+            $db, $fileId, 'exports', $rows, $packageName
+        );
+        $result = [];
+        foreach ($rows as $row) {
+            $result[(int)$row['export_index']] = $row;
+        }
+        return $result;
+    }
+
+    /**
      * Build display paths from the serialized Unreal FObjectImport/FObjectExport
      * object names and signed PackageIndex outer references. UEDB5 stores the
      * original records, not derived full-path strings.
@@ -282,6 +318,7 @@ final class PdoPackageTablePageQuery
             $ref = $table === 'imports' ? -($ownIndex + 1) : $ownIndex + 1;
             $complete = true;
             $externalRoot = false;
+            $hasNumberedName = false;
             $immediateOuterRef = (int)($row['outer_index'] ?? 0);
             $immediateOuterName = '';
             for ($depth = 0; $ref !== 0; $depth++) {
@@ -301,6 +338,11 @@ final class PdoPackageTablePageQuery
                     break;
                 }
                 $chain[] = $name;
+                $sourceName = $record['__serialized_source_fields']['object_name']
+                    ?? $record['object_name'] ?? null;
+                if (is_array($sourceName) && (int)($sourceName['number'] ?? 0) !== 0) {
+                    $hasNumberedName = true;
+                }
                 if ($depth === 1 && $ref === $immediateOuterRef) {
                     // The name comes from the indexed source record *at* the
                     // actual OuterIndex, not from splitting a guessed path.
@@ -319,6 +361,10 @@ final class PdoPackageTablePageQuery
             }
             $chain = array_reverse($chain);
             $local = implode('.', $chain);
+            // A textual path omits the numeric FName suffix in this reader.
+            // Do not equate such paths to exact FName identities for export
+            // links when any source-chain element has Number != 0.
+            $row['derived_path_has_numbered_fname'] = $hasNumberedName;
             if ($table === 'imports') {
                 $row['root_package'] = $chain[0];
                 $row['outer_name'] = $immediateOuterName;

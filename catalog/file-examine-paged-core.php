@@ -422,6 +422,15 @@ try {
         ))));
         $packageFiles = PdoPackageTablePageQuery::packageFiles($db, (int)$file['game_id'], $roots);
     }
+    $exactExportPaths = [];
+    if ($table === 'imports' && !$isZen && $packageFiles !== [] && $rows !== []) {
+        // A path match is navigational evidence, not a selected native
+        // provider or a successful engine VerifyImport. All physical matching
+        // files and their original source ExportMap indices are retained.
+        $exactExportPaths = \UnrealDb\Catalog\Infrastructure\Persistence\PdoClassicImportExportPathLookup::match(
+            $db, (int)$file['game_id'], $rows, $packageFiles
+        );
+    }
     $dependencyCurrentRow = catalog_one(
         $db,
         'SELECT ' . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentFilePredicate('f')
@@ -712,6 +721,10 @@ try {
 #package-tables .examine-source-table th:nth-child(3),
 #package-tables .examine-source-table td:nth-child(3){width:98px}
 #package-tables .examine-source-table .examine-outer-name{white-space:nowrap}
+#package-tables .examine-source-table .examine-export-options{min-width:170px}
+#package-tables .examine-source-table .examine-export-options summary{cursor:pointer;color:var(--ui-info,#93c5fd);white-space:normal}
+#package-tables .examine-source-table .examine-export-options .examine-matched-export{display:block;white-space:nowrap;margin:5px 0}
+#package-tables .examine-source-table .examine-matched-export{overflow-wrap:anywhere}
 #package-tables .examine-source-table .examine-derived-col{background:rgba(130,165,220,.055)}
 /* Match fonts for original and derived fields throughout the same source
    table. Some global link/path rules previously rendered decoded paths bold
@@ -891,7 +904,7 @@ try {
         } else {
             examine_classic_full_source_table(
                 'imports',$rows,$file,$fileId,$pageSize,$target,
-                $dependencyCurrent,$packageFiles
+                $dependencyCurrent,$packageFiles,$exactExportPaths
             );
         }
     } else {

@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Exact source ExportMap matches and no accidental row highlighting - 7 November 2026
+
+Use php tests/tools/verify_file_examine_export_path_links_20261107.php with the original PRD UEDB5 metadata and read-only catalogue DB. The test proves original provider ExportMap index + source Outer-chain full path for genuine Unreal II import rows. It checks both unique and duplicate provider records, a nested same-name wrong path, a nonzero numbered FName, wrong game, and root-only imports. The 28-route HTTP test checks 24 base engine tabs, explicit import #41 and three physical target ExportMap rows, with zero defaults highlighted. Chrome additionally verifies row 41 and row 58, unique-link navigation, two-option export disclosure, original FName links, and no table overlap. Evidence: tests/evidence/file-examine-exact-export-navigation-and-highlight-20261107.json. These are navigational catalogue candidates, not native engine loader outcomes.
+
+---
+
+
 ## Uniform font and original UE2 Outer chain — 7 November 2026
 
 Chrome rendered five genuine PHP source-table pages with actual CSS/JS and compared every first-row column's computed font. All body values use Consolas 13px weight 400, including linked FNames and decoded Full Paths. It also confirms actual Unreal II path values for original import rows 18, 20, 21 and 27, without artificial repeated roots. Evidence: tests/evidence/source-table-uniform-font-20261107.json. Headings remain bold and navigation remains link-coloured.

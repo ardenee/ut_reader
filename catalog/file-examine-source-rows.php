@@ -155,6 +155,7 @@ function examine_source_value(
  *
  * @param list<array<string,mixed>> $rows
  * @param array<string,list<int>> $packageFiles
+ * @param array<int,list<array{file_id:int,export_index:int,path:string}>> $exactExportPaths
  */
 function examine_classic_full_source_table(
     string $table,
@@ -164,7 +165,8 @@ function examine_classic_full_source_table(
     int $pageSize,
     string $target,
     bool $dependencyCurrent,
-    array $packageFiles
+    array $packageFiles,
+    array $exactExportPaths = []
 ): void {
     if (!in_array($table, ['names','imports','exports'], true)) {
         throw new RuntimeException('Invalid source table.');
@@ -218,7 +220,9 @@ function examine_classic_full_source_table(
         . 'Outer ref displays the original signed number, with its field width '
         . 'available on hover. Ref identifies this import row, not an external file. '
         . ($table === 'imports'
-            ? 'Amber rows have no indexed package candidate. '
+            ? 'Gold means a selected reference; muted orange means a missing '
+              . 'catalogue package candidate. A linked Full path has an exact '
+              . 'source ExportMap path candidate, not a certified native provider. '
             : '')
         . 'Scroll the table horizontally for more fields.</p>'
         . '<div class="examine-table-region examine-source-scroll" role="region" '
@@ -291,10 +295,10 @@ function examine_classic_full_source_table(
                         $value = '<span class="mono examine-source-outer-ref"'
                             . $extra . '>0</span>';
                     } else {
-                        $target = $ref < 0 ? 'import-' . ((-$ref) - 1)
+                        $outerTarget = $ref < 0 ? 'import-' . ((-$ref) - 1)
                             : 'export-' . ($ref - 1);
                         $value = '<a class="xref mono examine-source-outer-ref" href="'
-                            . catalog_h(examine_href($fileId, $target, $pageSize))
+                            . catalog_h(examine_href($fileId, $outerTarget, $pageSize))
                             . '"' . $extra . '>' . $ref . '</a>';
                     }
                 } else {
@@ -315,13 +319,51 @@ function examine_classic_full_source_table(
                 } elseif ($outer === '') {
                     $value = '<span class="muted" title="Parent identity is not resolved">Unknown</span>';
                 } else {
-                    $target = $ref < 0 ? 'import-' . ((-$ref) - 1)
+                    $outerTarget = $ref < 0 ? 'import-' . ((-$ref) - 1)
                         : 'export-' . ($ref - 1);
                     $value = '<a class="xref mono examine-outer-name" href="'
-                        . catalog_h(examine_href($fileId,$target,$pageSize))
+                        . catalog_h(examine_href($fileId,$outerTarget,$pageSize))
                         . '" title="Outer ref ' . $ref . ': open the referenced '
                         . ($ref < 0 ? 'Import' : 'Export')
                         . ' row">' . catalog_h($outer) . '</a>';
+                }
+            } elseif ($table === 'imports' && $key === 'full_path') {
+                $path = (string)($row[$key] ?? '');
+                $targets = $exactExportPaths[$index] ?? [];
+                if ($path === '' || $targets === []) {
+                    $value = '<span class="mono examine-source-value">'
+                        . catalog_h($path) . '</span>';
+                } elseif (count($targets) === 1) {
+                    $match = $targets[0];
+                    $value = '<a class="xref mono examine-matched-export" href="'
+                        . catalog_h(examine_href(
+                            (int)$match['file_id'],
+                            'export-' . (int)$match['export_index'], $pageSize
+                        ))
+                        . '" title="Exact indexed ExportMap path in file #'
+                        . (int)$match['file_id'] . ', Export #'
+                        . (int)$match['export_index']
+                        . '. Catalogue match only; runtime mount/VerifyImport not proven">'
+                        . catalog_h($path) . '</a>';
+                } else {
+                    // Multiple physical providers (or more than one identical
+                    // export) are real ambiguity, not licence to choose one.
+                    $value = '<details class="examine-export-options">'
+                        . '<summary class="mono" title="Multiple exact source '
+                        . 'ExportMap paths; choose a physical file">'
+                        . catalog_h($path) . ' <span class="muted">('
+                        . count($targets) . ' exports)</span></summary>';
+                    foreach ($targets as $match) {
+                        $value .= '<a class="xref mono examine-matched-export" href="'
+                            . catalog_h(examine_href(
+                                (int)$match['file_id'],
+                                'export-' . (int)$match['export_index'], $pageSize
+                            ))
+                            . '" title="Exact indexed path only; not a native provider selection">'
+                            . 'File #' . (int)$match['file_id']
+                            . ' / Export #' . (int)$match['export_index'] . '</a>';
+                    }
+                    $value .= '</details>';
                 }
             } else {
                 $value = '<span class="mono examine-source-value">'
