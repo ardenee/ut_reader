@@ -1,0 +1,241 @@
+{
+  "schema": "unrealdb-file-examine-actual-http-route-regression-v1",
+  "date": "2026-11-07",
+  "trigger": "User reported missing PdoPackageTablePageQuery class at Unreal II Imports 250",
+  "root_cause": "file-examine-source-rows.php references PdoPackageTablePageQuery::packageReferenceHtml() in the global namespace, but the class lives under UnrealDb/Catalog/Infrastructure/Persistence and the import was missing.",
+  "fix": "Explicit namespace use import added at file-examine-source-rows.php top level.",
+  "original_weak_test": "The prior isolated table renderer test replaced other helper functions; PHP lint cannot resolve class names, and the actual HTTP entry point was not exercised.",
+  "new_regression": "tests/tools/verify-file-examine-http-routes.ps1 runs the PHP localhost HTTP server against genuine production catalogue records with eight sample files across UE1–UE5 and three tabs per file, including the exact reported Unreal II 250-import URL.",
+  "test_conditions": "Executed from DEV against PRD catalogue data and original PRD source files via a scoped config. HTTP GET may emit normal access telemetry.",
+  "results": {
+    "pass": true,
+    "routes_checked": 24,
+    "failed_routes": 0,
+    "original_file_sample_count": 8,
+    "entries": [
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 31706,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 25961,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT99",
+        "file_id": 113253,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 28808,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 31690,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 25947,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal",
+        "file_id": 110902,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 29299,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 136301,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "imports",
+        "page_size": 250,
+        "http_status": 200,
+        "html_bytes": 684427,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Unreal2",
+        "file_id": 1253000,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 580480,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 110643,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 103582,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2003",
+        "file_id": 148919,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 291121,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 24554,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 25773,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT2004",
+        "file_id": 111460,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 22967,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 30984,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 27922,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT3",
+        "file_id": 112300,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 35394,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 26708,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 24143,
+        "source_table_rendered": true
+      },
+      {
+        "game": "UT4",
+        "file_id": 113526,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 24121,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "names",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 42395,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "imports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 27750,
+        "source_table_rendered": true
+      },
+      {
+        "game": "Satisfactory",
+        "file_id": 1390232,
+        "tab": "exports",
+        "page_size": 20,
+        "http_status": 200,
+        "html_bytes": 19543,
+        "source_table_rendered": true
+      }
+    ]
+  },
+  "source_sha256": {
+    "catalog/file-examine-source-rows.php": "8f3b50508c14f873e03fc761eee8493664e7659bf368a4af4c6de5a2dcd75a56",
+    "tests/tools/verify-file-examine-http-routes.ps1": "d55e50c81eb483b6ae436861cdb5a4b4c35a89ccb7d4af1a50564f287df05df8"
+  },
+  "metadata_rewrites": 0,
+  "game_source_changes": 0,
+  "browser_layout_visual_verified": false
+}

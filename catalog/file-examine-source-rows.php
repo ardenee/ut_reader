@@ -9,6 +9,8 @@
  */
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
+
 /** @param list<array<string,mixed>> $rows @return list<string> */
 function examine_source_columns(array $rows): array
 {

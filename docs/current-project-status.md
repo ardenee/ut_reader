@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 7 November 2026 — File examiner HTTP class-autoload regression
+
+The first UE1–UE5 complete source-table deployment contained a real error when rendering Unreal II Imports (file #1253000, 250 rows): the PdoPackageTablePageQuery class was not found. The source-table helper referenced a namespaced class from the global namespace without importing the class. PHP lint and the prior isolated formatter test missed this dependency.
+
+Fixed by adding the namespace import to catalog/file-examine-source-rows.php, without altering source rows or original binary readers. Added a real HTTP acceptance under tests/tools/verify-file-examine-http-routes.ps1 using a PHP localhost server and original catalogue data: eight original files (UE1 Unreal and UT99, UE2 Unreal II UT2003 UT2004, UE3 UT3, UE4 UT4, UE5 Satisfactory), and Names/Imports/Exports for each = 24 real HTTP requests. Includes the precise reported Unreal II Imports page with page_size=250. All returned HTTP 200 with source table rendered, and no page errors or PHP fatals.
+
+Evidence: tests/evidence/file-examine-http-class-autoload-regression-20261107.json. Scoped test GET requests can emit ordinary site access telemetry, but no source package or UEDB5 metadata was rewritten. This is a route-level acceptance, not a graphical browser inspection or native VerifyImport certificate.
+
+---
+
+
+
 ## 7 November 2026 — Source-complete Names, Imports and Exports
 
 The classic UE1–UE4 examiner now builds table columns from actual source-shaped indexed records, not a shared subset that omitted fields. UE1/UE2 exports display source encoding and serial offset presence, UE3 exports display archetype/component map/export flags/generation counts/package flags, and UE4 exports display template/preload dependencies and client/server/editor-gated values. Source FName raw name indices, number and text are retained before any presentation flattening. Large nested maps remain accessible via a full-value expandable disclosure. Decoded root/local/full paths are visually separated from source fields.

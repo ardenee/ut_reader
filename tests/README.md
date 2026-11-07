@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## File-examine real HTTP regression — 7 November 2026
+
+Set UNREALDB_CATALOG_CONFIG to a scoped config pointing at the original PRD catalogue DB and source storage. Run powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/tools/verify-file-examine-http-routes.ps1. This starts a localhost PHP web server, checks eight original packages across UE1–UE5 and all three Names/Imports/Exports tabs (24 HTTP GET requests), and stops the server. It specifically checks the Unreal II Imports 250-row route and fails on HTML errors, missing source tables or PHP fatal logs. Evidence: tests/evidence/file-examine-http-class-autoload-regression-20261107.json.
+
+---
+
+
 ## Complete original Names/Imports/Exports fields on UE1–UE5 — 7 November 2026
 
 Read-only acceptance: php tests/tools/verify_package_table_all_source_fields_20261107.php. Uses 8 original source-hashed UEDB5 snapshots and production Zen SQL projection for 21 classic + 3 Zen table checks; any source key absent from the renderer, changed composite, missing Zen raw Number word, or missing UE5 schema field fails. Covers UE1 Unreal and UT99; UE2 Unreal II, UT2003 and UT2004; UE3 UT3; UE4 UT4; and UE5 Satisfactory. Source-shaped nested records are fully available in expandable cells, with decoded paths separate from source records. Evidence: tests/evidence/package-table-source-completeness-20261107.json. No engine runtime VerifyImport conclusion or binary modification.
