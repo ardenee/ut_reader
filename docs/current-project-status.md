@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 7 November 2026 — Source-complete Names, Imports and Exports
+
+The classic UE1–UE4 examiner now builds table columns from actual source-shaped indexed records, not a shared subset that omitted fields. UE1/UE2 exports display source encoding and serial offset presence, UE3 exports display archetype/component map/export flags/generation counts/package flags, and UE4 exports display template/preload dependencies and client/server/editor-gated values. Source FName raw name indices, number and text are retained before any presentation flattening. Large nested maps remain accessible via a full-value expandable disclosure. Decoded root/local/full paths are visually separated from source fields.
+
+The distinct UE5 Zen tables remain specialized: every NameMap key is displayed; ImportMap shows the original 64-bit FPackageObjectIndex plus all source-indexed script/package/hash attributes; and ExportMap displays the complete original 72-byte, 11-field FExportMapEntry. FMappedName.RawIndex and Number are separately visible as two uint32 source words. All four outer/class/super/template object indices, cooked offset/size, public hash, object/filter flags and three raw padding bytes are shown. Derived decimal offset/size, local/full path and class identity appear afterward. Horizontal scrolling preserves wide engine-specific records. Client JavaScript does not hide source columns.
+
+Read-only original UEDB5 SHA-256-pinned acceptance passed for UE1 Unreal and UT99, UE2 Unreal II UT2003 and UT2004, UE3 UT3, UE4 UT4, and UE5 Satisfactory: 21 genuine classic table checks plus 3 Zen checks across 8 original source snapshots, with zero indexed source-record fields omitted. All existing file examination, licence sorting, UT4 script and all-game catalogue regressions passed. Evidence: tests/evidence/package-table-source-completeness-20261107.json; driver tests/tools/verify_package_table_all_source_fields_20261107.php. This verifies indexed source-record display completeness, not any undecoded or unknown binary field or native VerifyImport outcome. No .uedb5, game binary or production SQL record changed.
+
+---
+
+
+
 ## 6 November 2026 — Game file Licence sorting, exports source columns and metadata alignment
 
 The game file list's Dependencies column no longer shows the confusing **sort unresolved** link. The **Version / Lic** column has two independent header controls: Version sorts the original package version and Lic sorts the original licensee version. Sorting uses stable SQL ordering and matching original-file cursors, without combining two unrelated version numbers. The value is centred directly above the file-type badge.

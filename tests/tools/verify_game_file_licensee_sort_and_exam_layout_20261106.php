@@ -19,12 +19,14 @@ ensure(str_contains($gameUi,"game_files_sort_link('Version', 'version'")
  && str_contains($gameUi,'game-files-version-type { display: flex; justify-content: center')
  && !str_contains($gameUi,"game_files_sort_link('unresolved', 'deps'"),
  'Game files version sorts, type centring or dependency header not corrected.');
-ensure(str_contains($examUi,'data-catalog-identity-skip="1"')
- && str_contains($examUi,'<th>Package ref</th><th>Class</th><th>Object</th>')
+$complete=(string)file_get_contents($root.'/catalog/file-examine-source-rows.php');
+ensure(str_contains($examUi,'examine_classic_full_source_table(')
+ && str_contains($complete,"'package_index' => 'Package ref'")
+ && str_contains($complete,'data-catalog-identity-skip="1"')
  && str_contains($zenExports,'data-catalog-identity-skip="1"')
  && str_contains($script,"querySelectorAll('.examine-imports-table')")
  && !str_contains($script,"querySelectorAll('.examine-imports-table, .examine-exports-table')"),
- 'Browser code still alters Exports columns from original HTML.');
+ 'Browser code removes source columns from the engine/version-adaptive tables.');
 $start=strpos($examUi,"'<div class=\"two-col\"><table>'");
 $met=strpos($examUi,'<th>Dependencies met</th>');
 $firstTableEnd=strpos($examUi,"echo '</table><table>'",$start);

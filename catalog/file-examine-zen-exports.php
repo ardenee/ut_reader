@@ -14,34 +14,48 @@ function zen_exam_exports(
     array $external,int $fileId,int $size,string $target
 ):void {
     echo '<h2>Exports — serialized FExportMapEntry</h2>'
-        .'<p class="muted">The first twelve columns preserve the actual serialized '
+        .'<p class="muted">The first twelve columns (row index + 11 fields) preserve the actual serialized '
         .'FExportMapEntry fields, including the two uint32 FMappedName words. '
-        .'Reference links go to exact ImportMap/ExportMap indices. The last three '
+        .'Reference links go to exact ImportMap/ExportMap indices. The last four '
         .'columns are decoded information, not extra header fields.</p>'
-        .'<div class="examine-table-region"><table class="examine-exports-table examine-zen-exports" '
+        .'<div class="examine-table-region examine-zen-exports-scroll" '
+        .'role="region" aria-label="Zen Exports: all serialized fields; scroll horizontally" '
+        .'tabindex="0"><table class="examine-exports-table examine-zen-exports" '
         .'data-catalog-identity-skip="1"><thead>'
         .'<tr><th colspan="12">Serialized ExportMap fields</th>'
-        .'<th colspan="3">Decoded identities and catalogue paths</th></tr>'
+        .'<th colspan="4">Decoded identities, catalogue paths and decimal values</th></tr>'
         .'<tr><th>Index</th><th>CookedSerialOffset (uint64)</th>'
-        .'<th>CookedSerialSize (uint64)</th><th>ObjectName (FMappedName, 2 × uint32)</th>'
-        .'<th>OuterIndex (uint64)</th><th>ClassIndex (uint64)</th>'
-        .'<th>SuperIndex (uint64)</th><th>TemplateIndex (uint64)</th>'
+        .'<th>CookedSerialSize (uint64)</th>'
+        .'<th>ObjectName (FMappedName: RawIndex uint32 + Number uint32)</th>'
+        .'<th>OuterIndex (FPackageObjectIndex, uint64)</th><th>ClassIndex (FPackageObjectIndex, uint64)</th>'
+        .'<th>SuperIndex (FPackageObjectIndex, uint64)</th><th>TemplateIndex (FPackageObjectIndex, uint64)</th>'
         .'<th>PublicExportHash (uint64)</th><th>ObjectFlags (uint32)</th>'
         .'<th>FilterFlags (uint8)</th><th>Padding (3 bytes)</th>'
-        .'<th>Object</th><th>Class</th><th>Path (derived)</th></tr></thead><tbody>';
+        .'<th>Object</th><th>Class</th><th>Local path (derived)</th>'
+        .'<th>Full path (derived)</th></tr></thead><tbody>';
     foreach($rows as $row){
         $index=(int)$row['export_index'];
         $id='export-'.$index;
         $mapped=(array)($row['object_name_mapped']??[]);
         $nameIndex=isset($mapped['name_index'])?(int)$mapped['name_index']:null;
-        $mappedHtml=zen_exam_hex((string)($mapped['raw_index']??''),8);
+        // FMappedName is exactly two serialized uint32 words. Showing only
+        // RawIndex while treating Number as a decoded annotation loses one
+        // of the 8 source bytes; expose both words explicitly.
+        $rawIndex=(string)($mapped['raw_index']??'');
+        $numberRaw=isset($mapped['number'])
+            ? sprintf('%08X',(int)$mapped['number']) : '';
+        $mappedHtml='<div class="examine-zen-raw-word">'
+            . '<span class="examine-zen-secondary">RawIndex (uint32): </span>'
+            . zen_exam_hex($rawIndex,8).'</div>'
+            . '<div class="examine-zen-raw-word">'
+            . '<span class="examine-zen-secondary">Number (uint32): </span>'
+            . zen_exam_hex($numberRaw,8).'</div>';
         if($nameIndex!==null){
-            $mappedHtml.='<div class="examine-zen-secondary">NameIndex: <a class="xref mono" href="'
+            $mappedHtml.='<div class="examine-zen-secondary">'
+                . 'Decoded name index: <a class="xref mono" href="'
                 .catalog_h(examine_href($fileId,'name-'.$nameIndex,$size))
-                .'">'.$nameIndex.'</a></div>';
-            $mappedHtml.='<div class="examine-zen-secondary">Type: '
-                .(int)($mapped['type']??0).' · Number: '
-                .(int)($mapped['number']??0).'</div>';
+                .'">'.$nameIndex.'</a> · type: '.(int)($mapped['type']??0)
+                .'</div>';
         }
         $object=examine_name_index_link(
             (string)($row['object_name']??''),$nameIndex,$fileId,$size
@@ -52,8 +66,14 @@ function zen_exam_exports(
         $path=(string)($row['full_path']??'');
         echo '<tr id="'.$id.'"'.($target===$id?' class="is-reference-target"':'').'>'
             .'<td class="mono">'.$index.'</td>'
-            .'<td>'.zen_exam_hex((string)($row['cooked_serial_offset_u64']??'')).'</td>'
-            .'<td>'.zen_exam_hex((string)($row['cooked_serial_size_u64']??'')).'</td>'
+            . '<td>'.zen_exam_hex((string)($row['cooked_serial_offset_u64']??''))
+            .'<div class="examine-zen-secondary">Decimal: '
+            .(isset($row['cooked_serial_offset']) ? (string)$row['cooked_serial_offset']
+                : 'uint64 above signed range').'</div></td>'
+            . '<td>'.zen_exam_hex((string)($row['cooked_serial_size_u64']??''))
+            .'<div class="examine-zen-secondary">Decimal: '
+            .(isset($row['cooked_serial_size']) ? (string)$row['cooked_serial_size']
+                : 'uint64 above signed range').'</div></td>'
             .'<td>'.$mappedHtml.'</td>';
         foreach(['outer_index','class_index','super_index','template_index'] as $field){
             $ref=(array)($row[$field]??[]);
@@ -65,6 +85,7 @@ function zen_exam_exports(
             .'<td>'.zen_exam_hex((string)($row['pad']??''),6).'</td>'
             .'<td>'.$object.'</td>'
             .'<td>'.$class.'</td>'
+            .'<td class="mono path">'.catalog_h((string)($row['local_path']??'')).'</td>'
             .'<td class="mono path">'.($path!==''?catalog_h($path):'—').'</td></tr>';
     }
     echo '</tbody></table></div>';

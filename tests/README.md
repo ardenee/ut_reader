@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Complete original Names/Imports/Exports fields on UE1–UE5 — 7 November 2026
+
+Read-only acceptance: php tests/tools/verify_package_table_all_source_fields_20261107.php. Uses 8 original source-hashed UEDB5 snapshots and production Zen SQL projection for 21 classic + 3 Zen table checks; any source key absent from the renderer, changed composite, missing Zen raw Number word, or missing UE5 schema field fails. Covers UE1 Unreal and UT99; UE2 Unreal II, UT2003 and UT2004; UE3 UT3; UE4 UT4; and UE5 Satisfactory. Source-shaped nested records are fully available in expandable cells, with decoded paths separate from source records. Evidence: tests/evidence/package-table-source-completeness-20261107.json. No engine runtime VerifyImport conclusion or binary modification.
+
+---
+
+
 ## Game-files Version / Lic and metadata/export rendering acceptance — 6 November 2026
 
 Run php tests/tools/verify_game_file_licensee_sort_and_exam_layout_20261106.php from DEV, read-only against the original production Unreal II corpus. It checks package-version and licensee-version sorts (asc/desc), stable keyset/numbered pagination, numeric version aligned over the type badge, and removal of the obsolete sort unresolved text. File Examine Exports now keep original PHP-rendered Package ref/class/path/flags/size/offset columns: the client-side imports-only formatting must never mutate exports. Dependency metrics are part of the existing two metadata tables rather than a third pair. Evidence: tests/evidence/game-files-licensee-exam-metadata-20261106.json. No runtime VerifyImport proof or content rewrites involved.

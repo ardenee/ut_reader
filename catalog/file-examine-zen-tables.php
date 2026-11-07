@@ -99,16 +99,36 @@ function zen_exam_names(array $rows,array $reverse,?int $headerNameIndex,int $fi
  */
 function zen_exam_imports(array $rows,array $matches,array $scripts,int $fileId,int $size,string $target):void
 {
+    // ImportMap serializes one uint64 FPackageObjectIndex; its decoded
+    // source row contains version/type-specific indexed package/hash fields.
+    // Expose every indexed source key as a named column, never just as a
+    // link or a hover tooltip.
+    $serializedKeys = ['index','raw_type_and_id','type_tag','value_u62','type'];
+    $extra = [];
+    foreach ($rows as $item) {
+        $original = (array)($item['__serialized_source_fields'] ?? $item);
+        foreach (array_keys($original) as $field) {
+            if (!in_array($field,$serializedKeys,true)) $extra[$field] = true;
+        }
+    }
+    $extraKeys = array_keys($extra);
     echo '<h2>Imports — serialized FPackageObjectIndex</h2>'
         .'<p class="muted">Every ImportMap row contains one serialized uint64 '
         .'FPackageObjectIndex (2-bit TypeTag and 62-bit Value). The indexed '
         .'provider, cooked script name, class and outer relationships on the right '
         .'are <strong>decoded or catalogue-derived</strong>.</p>'
         .'<div class="examine-table-region"><table class="examine-imports-table examine-zen-imports" data-catalog-identity-skip="1">'
-        .'<thead><tr><th colspan="5">Serialized ImportMap fields</th>'
-        .'<th colspan="4">Decoded identities and catalogue references</th></tr>'
+        .'<thead><tr><th colspan="5">Serialized ImportMap value and decoded bitfields</th>';
+    if($extraKeys!==[]) echo '<th colspan="'.count($extraKeys).'">'
+        .'Additional indexed source fields — all values</th>';
+    echo '<th colspan="4">Decoded identities and catalogue references</th></tr>'
         .'<tr><th>Index</th><th>FPackageObjectIndex (uint64)</th><th>TypeTag (uint2)</th>'
-        .'<th>Value (uint62)</th><th>Type</th><th>Decoded indices / identity</th>'
+        .'<th>Value (uint62)</th><th>Type</th>';
+    foreach($extraKeys as $field){
+        echo '<th title="Complete indexed source field; not an additional serialized uint64">'
+            .catalog_h(examine_source_label($field)).'</th>';
+    }
+    echo '<th>Decoded indices / identity</th>'
         .'<th>Catalogue match</th><th>Object / class</th><th>Object path / outer</th>'
         .'</tr></thead><tbody>';
     $local=[];
@@ -202,8 +222,16 @@ function zen_exam_imports(array $rows,array $matches,array $scripts,int $fileId,
             .'<td>'.zen_exam_raw_ref($row,[],$scripts,[$raw=>$match],$fileId,$size).'</td>'
             .'<td class="mono">'.(int)($row['type_tag']??0).'</td>'
             .'<td>'.zen_exam_hex((string)($row['value_u62']??'')).'</td>'
-            .'<td>'.catalog_h($kind).'</td>'
-            .'<td class="mono">'.($decoded
+            .'<td>'.catalog_h($kind).'</td>';
+        $rawOriginal = (array)($row['__serialized_source_fields'] ?? $row);
+        foreach ($extraKeys as $field) {
+            echo '<td class="examine-source-cell">'
+                . (array_key_exists($field,$rawOriginal)
+                    ? examine_source_value($rawOriginal[$field],$fileId,$size,'imports',$field)
+                    : '<span class="muted">Not serialized</span>')
+                . '</td>';
+        }
+        echo '<td class="mono">'.($decoded
                 ? '<div class="examine-zen-secondary">'.implode('</div><div class="examine-zen-secondary">',$decoded).'</div>'
                 : '—').'</td>'
             .'<td>'.$status.'</td>'

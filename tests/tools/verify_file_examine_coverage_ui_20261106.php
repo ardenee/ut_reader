@@ -57,12 +57,17 @@ ensure(!str_contains($games,'>Files Missing Dependencies</th>')
     && !str_contains($games,"'dep_filter' => 'unindexed'")
     && !str_contains($listing,"'unindexed' => 'Missing dependencies'"),
     'Obsolete public missing-dependency filter or header');
-ensure(str_contains($ui,'<th>Class</th><th>Outer ref</th><th>Root</th><th>Object</th><th>Full path</th>')
-    && str_contains($ui,'examine-import-missing')
+$sourceTable=(string)file_get_contents($repository.'/catalog/file-examine-source-rows.php');
+ensure(str_contains($ui,"examine_classic_full_source_table(")
+    && str_contains($sourceTable,'examine_source_columns(')
+    && str_contains($sourceTable,"'outer_index'")
+    && str_contains($sourceTable,"'full_path'")
+    && str_contains($sourceTable,"'root_package'")
+    && str_contains($sourceTable,'examine-import-missing')
     && !str_contains($ui,'examine-export-unreferenced')
     && str_contains($zenImports,'examine-import-missing')
     && !str_contains($zenExports,'examine-export-unreferenced'),
-    'Original export table reverted or import highlighting/column order absent');
+    'Version-adaptive complete source fields, import highlighting or clean exports regressed');
 ensure(str_contains($ui,'<div id="examine-header-slot"></div>')
     && str_contains($outer,"'<div id=\"examine-header-slot\"></div>'")
     && str_contains($ui,'<details class="examine-scanner-notes">')

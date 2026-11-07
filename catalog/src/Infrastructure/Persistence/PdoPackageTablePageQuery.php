@@ -202,6 +202,10 @@ final class PdoPackageTablePageQuery
             ? (string)($value['text'] ?? '')
             : (string)($value ?? '');
         foreach ($rows as &$row) {
+            // Keep the original source-shaped record *before* flattening
+            // FName composites for convenient hyperlinks. The examiner must
+            // never lose a serialized FName Number or version-gated field.
+            $row['__serialized_source_fields'] = $row;
             if ($table === 'names') {
                 $row['name_index'] = (int)($row['name_index'] ?? $row['index'] ?? 0);
                 $row['name_text'] = (string)($row['name_text'] ?? $row['text'] ?? '');
