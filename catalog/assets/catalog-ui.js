@@ -187,6 +187,10 @@
 
     function removeSelfReferenceLinks(packageTables) {
         packageTables.querySelectorAll('a.xref, a[data-reference-targets], a[data-xref-target]').forEach(function (link) {
+            // Explicit Ref cells intentionally link to their own ImportMap row
+            // to expose the signed identity and permit normal highlight/copy
+            // navigation. Do not silently unwrap them in the browser.
+            if (link.classList.contains('examine-import-self-ref')) return;
             var row = link.closest('tr');
             if (!row || !row.id) return;
             var targets = targetIdsFor(link);

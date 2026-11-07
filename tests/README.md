@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Exact signed Outer references and Ref self-navigation — 7 November 2026
+
+Original Unreal II #1253000 HTTP acceptance requires OuterIndex to show only -1 or 0, and its 32-bit width in a tooltip, without visible suffix. Ref -2 links to current Import row 1; Chrome verifies clicking highlights that row and changes the URL fragment to #import-1. Root and full path come from source OuterIndex chains. Evidence tests/evidence/file-examine-ref-root-original-20261107.json.
+
+---
+
+
 ## UE2 Imports Ref/Outer link and compact column acceptance — 7 November 2026
 
 The existing live HTTP driver tests/tools/verify-file-examine-http-routes.ps1 now asserts the 250-row Unreal II Imports page uses Index/Ref/Offset/Class/Type and Root/Outer/Object name/Full path headings, shows serialized 32-bit Outer width as a compact inline 32b, and resolves signed -1 and -5 Outer refs to real imported Engine and Surface_Floor rows respectively. Original-source field parity, all-game dependency counters, and game-file sorts remain independent regressions. Real PHP-captured HTML rendered in Chrome with production CSS/JS passed five layout geometry checks (no overlap, correct links and no page-wide overflow). Evidence: tests/evidence/imports-ref-outer-compact-layout-20261107.json.

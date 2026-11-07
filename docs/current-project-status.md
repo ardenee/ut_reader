@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 7 November 2026 — Original OuterIndex, Ref link and Root explanation
+
+The user reported confusing Outer refs and missing Ref links. The signed source OuterIndex did not change; the UI had appended its 32-bit width to the visible reference, making -1 look like -132b. Now the cell displays exactly -1 or 0 while original width stays in tooltip/data attributes. Ref identifies this signed ImportMap entry (row i => -(i+1)), not an external physical provider; its explicit link highlights the original row on click. Browser JavaScript previously removed same-row links; this exception is now narrowly disabled for these Ref links.
+
+Root is reconstructed by following actual indexed OuterIndex links to 0 using PdoPackageTablePageQuery::withSerializedObjectPaths, reversing original object-name parts. It does not depend on choosing a physical provider, and incomplete/cyclic chains stay unknown. Unreal II #1253000 has Mission_09T.Surface_Floor.PlasFloorUO9E400mtv1 as a verified original example.
+
+Read-only tests: 24 actual HTTP routes, five Chrome HTML/CSS/JS fixture layouts, true browser click on Ref -2 highlighting row #import-1, original Outer -1 and 0 unmodified, original 32-bit width preserved on hover. Evidence tests/evidence/file-examine-ref-root-original-20261107.json. No original source packages, UEDB5 metadata or production catalogue records were rewritten.
+
+---
+
+
+
 ## 7 November 2026 — UE2 Imports compact Ref/Outer layout and original parent references
 
 On the actual Unreal II Imports table the old Index / Package ref / Byte offset / Class package / Class / Outer ref / Outer bits / Root / Object name / Full path layout was too wide and obscured the direct parent value. The source-preserving layout now reads **Index, Ref, Offset, Class, Type, Outer ref, Root (derived), Outer, Object name, Full path (derived)**. Original OuterIndex serialization width (32 bits on the original UE2 example) remains explicitly visible as a compact 32b suffix next to the clickable Outer ref; it was not discarded from UEDB5 metadata. Compact first-three-column widths apply without distorting long engine-specific columns.

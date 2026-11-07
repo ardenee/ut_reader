@@ -64,8 +64,20 @@ try{
      if($html -notmatch '<th[^>]*>Root \(derived\)</th>\s*<th[^>]*>Outer</th>\s*<th[^>]*>Object name</th>\s*<th[^>]*>Full path \(derived\)</th>'){
        throw 'UE2 Imports Root/Outer/Object/Path columns are not adjacent'
      }
-     if($html -notmatch 'data-outer-width-bits="32">32b</small>'){
-       throw 'UE2 original 32-bit Outer serialization width was lost'
+     if($html -match '>32b</small>' -or $html -match '<small class="examine-outer-width'){
+       throw 'OuterIndex serial width was incorrectly appended to the visible ref'
+     }
+     if($html -notmatch 'class="xref mono examine-source-outer-ref" href="[^"]*target=import-0[^"]*" title="Original OuterIndex: -1; serialized width: 32 bits[^"]*" data-outer-width-bits="32">-1</a>'){
+       throw 'UE2 original OuterIndex must remain -1, clickable with its 32-bit width only on hover'
+     }
+     if($html -notmatch 'class="xref mono examine-import-self-ref" href="[^"]*target=import-1[^"]*"[^>]*>-2</a>'){
+       throw 'UE2 Ref -2 must link to its original ImportMap row 1'
+     }
+     if($html -notmatch 'class="mono examine-source-outer-ref" title="Original OuterIndex: 0; serialized width: 32 bits[^"]*" data-outer-width-bits="32">0</span>'){
+       throw 'UE2 null original OuterIndex must show the actual serialized zero'
+     }
+     if($html -notmatch 'Mission_09T.Surface_Floor.PlasFloorUO9E400mtv1'){
+       throw 'Reconstructed UE2 Root/Outer/Object chain lost actual source-derived full path'
      }
      if($html -notmatch 'class="xref mono examine-outer-name" href="[^"]*target=import-0[^"]*"[^>]*>Engine</a>'){
        throw 'UE2 Outer reference -1 must display linked Engine target from Import row 0'

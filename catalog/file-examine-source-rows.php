@@ -53,12 +53,12 @@ function examine_source_description(string $field, string $table): string
 {
     $detail = match ($field) {
         'index' => 'Zero-based position in this ' . $table . ' table (index metadata).',
-        'package_index' => 'Signed reference identifying this row: Import row 0 is -1; Import row 1 is -2, etc. Other objects use this number to refer to this import. A self-link is not useful.',
+        'package_index' => 'Signed reference identifying this ImportMap row: row 0 is -1, row 1 is -2, etc. Click to highlight this row. This is not a direct pointer to an external package or file.',
         'serialized_offset' => 'Original byte position of the table entry in the package file (provenance).',
         'class_package' => 'FName of the package defining the imported object class; click the text to open the exact Name-table entry.',
         'class_name' => 'FName of the imported object type; click to open its original Name-table entry.',
         'object_name' => 'FName of the imported object; click to open its original Name-table entry.',
-        'outer_index' => 'Signed outer reference: zero means none, negative targets another Import row, positive an Export row. Click the number to open its target. The adjacent small suffix is serialized width in bits.',
+        'outer_index' => 'Original serialized OuterIndex value: 0 means no outer; negative values reference Import rows and positive values reference Export rows. Hover for the serialized field width.',
         'outer_index_serialized_width_bits' => 'Width, in bits, of the serialized OuterIndex field. 32 means a four-byte integer.',
         default => 'Source-record field: ' . $field,
     };
@@ -213,8 +213,10 @@ function examine_classic_full_source_table(
         . '<p class="muted">Every indexed source field is retained. '
         . 'FName cells show the original text; hover for its name index and '
         . 'number, or click to open the Name table. '
-        . 'Root, Outer and Full path are derived; the small Outer ref suffix '
-        . 'preserves its serialized bit width. '
+        . 'Root, Outer and Full path are reconstructed by following serialized '
+        . 'OuterIndex references; they are not separate serialized fields. '
+        . 'Outer ref displays the original signed number, with its field width '
+        . 'available on hover. Ref identifies this import row, not an external file. '
         . ($table === 'imports'
             ? 'Amber rows have no indexed package candidate. '
             : '')
@@ -260,17 +262,45 @@ function examine_classic_full_source_table(
             $key = $column['key'];
             if ($column['kind'] === 'source') {
                 $present = array_key_exists($key, $raw);
-                $value = $present ? examine_source_value(
-                    $raw[$key], $fileId, $pageSize, $table, $key
-                ) : '<span class="muted" title="Not serialized in this source version">—</span>';
-                if ($table === 'imports' && $key === 'outer_index'
-                    && array_key_exists('outer_index_serialized_width_bits',$raw)
-                    && $raw['outer_index_serialized_width_bits'] !== null) {
-                    $bits = (int)$raw['outer_index_serialized_width_bits'];
-                    $value .= '<small class="examine-outer-width mono"'
-                        . ' title="Serialized OuterIndex width: ' . $bits . ' bits"'
-                        . ' data-outer-width-bits="' . $bits . '">'
-                        . $bits . 'b</small>';
+                if ($table === 'imports' && $key === 'package_index' && $present) {
+                    // Ref is a signed *local ImportMap index*, not a file or
+                    // dependency provider. Make it navigable to its own exact
+                    // row without inventing an external package target.
+                    $ref = (int)$raw[$key];
+                    $value = '<a class="xref mono examine-import-self-ref" href="'
+                        . catalog_h(examine_href($fileId, $rowId, $pageSize))
+                        . '" title="Ref ' . $ref
+                        . ' identifies this ImportMap row ' . $index
+                        . '; this is not an external file link">'
+                        . $ref . '</a>';
+                } elseif ($table === 'imports' && $key === 'outer_index' && $present) {
+                    // Display the signed serialized reference byte-for-byte as
+                    // a number. Field width must *only* appear in tooltip/data,
+                    // never concatenated to the visible reference.
+                    $ref = (int)$raw[$key];
+                    $bits = isset($raw['outer_index_serialized_width_bits'])
+                        ? (int)$raw['outer_index_serialized_width_bits'] : null;
+                    $description = 'Original OuterIndex: ' . $ref
+                        . ($bits !== null ? '; serialized width: ' . $bits . ' bits' : '')
+                        . ($ref < 0 ? '; opens Import row ' . (-$ref - 1)
+                            : ($ref > 0 ? '; opens Export row ' . ($ref - 1)
+                                : '; null parent (no reference)'));
+                    $extra = ' title="' . catalog_h($description) . '"'
+                        . ($bits !== null ? ' data-outer-width-bits="' . $bits . '"' : '');
+                    if ($ref === 0) {
+                        $value = '<span class="mono examine-source-outer-ref"'
+                            . $extra . '>0</span>';
+                    } else {
+                        $target = $ref < 0 ? 'import-' . ((-$ref) - 1)
+                            : 'export-' . ($ref - 1);
+                        $value = '<a class="xref mono examine-source-outer-ref" href="'
+                            . catalog_h(examine_href($fileId, $target, $pageSize))
+                            . '"' . $extra . '>' . $ref . '</a>';
+                    }
+                } else {
+                    $value = $present ? examine_source_value(
+                        $raw[$key], $fileId, $pageSize, $table, $key
+                    ) : '<span class="muted" title="Not serialized in this source version">—</span>';
                 }
             } elseif ($key === 'root_package') {
                 $root = (string)($row[$key] ?? '');

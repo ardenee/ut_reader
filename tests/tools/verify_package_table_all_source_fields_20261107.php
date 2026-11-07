@@ -100,6 +100,12 @@ try{
                 requireTrue(str_contains($html,examine_source_label($field)),
                     $source['game_name'].' '.$table.': heading missing '.$field);
             }
+            if($table==='imports' && $source['id']===1253000) {
+                requireTrue(str_contains($html,'class="xref mono examine-import-self-ref"')
+                    && str_contains($html,'data-outer-width-bits="32">-1</a>')
+                    && !str_contains($html,'>32b</small>'),
+                    'UE2 Ref/OuterIndex must show original signed raw values while width is hover-only');
+            }
             if($table==='exports') {
                 foreach(array_keys($original[0]) as $field) {
                     if (!in_array($field,$displayed,true)) {

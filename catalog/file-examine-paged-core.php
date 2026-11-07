@@ -711,7 +711,6 @@ try {
 #package-tables .examine-source-table td:nth-child(2){width:52px}
 #package-tables .examine-source-table th:nth-child(3),
 #package-tables .examine-source-table td:nth-child(3){width:98px}
-#package-tables .examine-source-table .examine-outer-width{font-size:10px;opacity:.65;white-space:nowrap;margin-left:5px}
 #package-tables .examine-source-table .examine-outer-name{white-space:nowrap}
 #package-tables .examine-source-table .examine-derived-col{background:rgba(130,165,220,.055)}
 .examine-zen-exports-scroll{overflow-x:auto;max-width:100%}
