@@ -176,7 +176,11 @@ final class CatalogDirectEntryGate
         if (!in_array(strtoupper((string)($_SERVER['REQUEST_METHOD']??'GET')),['GET','HEAD'],true)) return;
         if (!self::eligibleRoute(basename((string)($_SERVER['SCRIPT_NAME']??'')))) return;
         if (self::internalClient((string)($_SERVER['REMOTE_ADDR']??''))) return;
-        if (self::trustedReferer((string)($_SERVER['HTTP_REFERER']??''))) return;
+        // Referer is client-controlled; never trust it for the most expensive
+        // public reader. Verified signing is required for external File Examine.
+        $route = basename((string)($_SERVER['SCRIPT_NAME']??''));
+        if ($route !== 'file-examine.php'
+            && self::trustedReferer((string)($_SERVER['HTTP_REFERER']??''))) return;
         try {
             if (self::checkToken((string)($_COOKIE[self::PASS]??''),'pass',0,self::PASS_TTL)) return;
         } catch (Throwable $error) {

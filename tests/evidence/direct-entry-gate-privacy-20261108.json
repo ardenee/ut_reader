@@ -10,7 +10,7 @@
   ],
   "gate": "Apache redirects anonymous external direct GET/HEAD requests to static minimal HTML before PHP/DB. Three-second manual Continue with signed UA-bound HttpOnly issue and pass cookies; issue TTL 300 seconds, pass TTL 1800 seconds.",
   "page_recovery": "Preserves original destination, query, and safe #package-tables fragment. Rejects external redirects, premature or forged passes.",
-  "allowed_referers": "Known same-site and search engine referrers bypass; unknown/no referer is gated. HTTP Referer can be spoofed by scripted clients, so not complete bot proof.",
+  "allowed_referers": "Only game-files and access-matrix accept known same-site/search referrals; external file-examine always requires signed pass. Referer is not trusted for its expensive package reader.",
   "cookie_ui": "Necessary only or Allow site-improvement analytics. Choice can be changed/withdrawn using always-visible Privacy settings control. No public accounts.",
   "analytics_enforcement": "The JavaScript event sender, PHP access-event handler and PHP page-view recorder require affirmative analytics choice. Apache access logs and CrowdSec security events are separate necessary security processing.",
   "crowdsec": "May share detected attacker IP and security signal metadata with CrowdSec CAPI. Firewall bouncer NOT installed/verified.",
@@ -71,14 +71,14 @@
     }
   },
   "source_sha256": {
-    "catalog/.htaccess": "9150a718a8a3c67de0235b67e10dde85c3b61e0108da5a26bac80ef900354120",
+    "catalog/.htaccess": "c26a22cecfe7c2c7d25a11715d6ad1f5400a772cb7955bf6ff100fbc88c285f2",
     "catalog/file-examine.php": "5a2d797de37914bfb8fbda1268bb4b36fcb666e94fdcd81dbc281882bc07e3d7",
     "catalog/game-files.php": "669480dad16a0e07c51a83c28bd70eb992c1dda0350f2d23c2a395f97e9c6910",
     "catalog/access-matrix.php": "5f953c23fd1a8f80f8494f3871db38200300a250593a53794cddd5537dde7e3c",
-    "catalog/direct-entry.html": "c28bacdb829e1f2102ae4f9ef67d96c5434f2cbe135a9c1f886e3fecb9acba8b",
+    "catalog/direct-entry.html": "9aedf61cd8868e9d7f891dd5196b4e8834b74799cd18a53c663b612de7f1497d",
     "catalog/direct-entry-token.php": "2a95230aae8f371f5145446b22ad00b18bc689914ac60c018da25d551f409b9f",
     "catalog/direct-entry-continue.php": "3b8466be54502079c91e7e90fc20f1fc3c487179622ec516359c6e121ebd694a",
-    "catalog/lib/CatalogDirectEntryGate.php": "0dc4e33c82414e80d7ada84610c9d504be78640ae207a136f3e200f15117f594",
+    "catalog/lib/CatalogDirectEntryGate.php": "55a1479d952bcfe86b80c93f49377821338338b737d70be43662989834e6e947",
     "catalog/lib/CatalogSupportCore.php": "ff43c438e7df9c7291faa5bd7909ad7c83cbc3608eb3ced68133d011c6f4c644",
     "catalog/assets/privacy-notice.js": "0d0a13c4e19adb5dfcba2a4ac319c39c73b9388eb6d710f0c5889b1a14625a90",
     "catalog/assets/catalog-access-matrix.js": "bc7325c520c8481bf7bf79caf12635add34a2e62f2816540c90a44d25faf71d1",
@@ -97,5 +97,13 @@
     "fix": "Absolute URL path /catalog/direct-entry.html in .htaccess rewrite substitution.",
     "verification": "Actual Apache local virtual-host fixture with simulated external IP checks HTTP 302 and exact /catalog/direct-entry.html Location, alongside static file, trusted search and spoofed-host tests.",
     "status": "PASS"
+  },
+  "strict_external_file_examine_hotfix": {
+    "reason": "Production traffic sample after loose Referer gate showed 1633/1800 successful file-examine requests and renewed saturation of all 100 Apache worker threads. Referer is client-controlled and must not bypass the most expensive reader.",
+    "rule": "All external GET/HEAD file-examine requests require a valid server-signed pass regardless of claimed Referer. Local/LAN requests retain exemption.",
+    "lighter_pages": "game-files.php and access-matrix.php keep the original limited same-site/search referral exemption.",
+    "viewer_account_policy": "The public site remains view-only, without user registration/login. Temporary signed pass lasts 30 minutes, not an auth session.",
+    "predeploy_tests": "Actual Apache with simulated external IP: direct File Examine redirected, even when Referer claims Google; Game Files still permits legitimate Google; forged Google-like host denied; LAN exempt. Actual PHP entry point: forged cookie and search Referer denied without signed pass.",
+    "test_result": "PASS"
   }
 }

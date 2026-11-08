@@ -1,5 +1,15 @@
 # UnrealDB current project status
 
+## 8 November 2026 — Tightened external File Examine gate after real PRD load evidence
+
+After deploying the initially referral-aware anti-scraping gate, Apache still exhausted its 100 worker threads; 1633 of the most recent 1800 logged requests were HTTP 200 File Examine requests. A Referer header is client-controlled and cannot prove a human visitor, even when it names Google or UnrealDB. Therefore, external File Examine GET/HEAD requests now require a genuine signed three-second gate pass regardless of claimed Referer. Local/LAN visits remain exempt. This policy means a visitor opening File Examine directly from search results completes the check once, then has a 30-minute pass; the public site still has no visitor login or accounts.
+
+Less expensive Game Files and Access Matrix routes retain the known same-site/search referral exemption. Apache intercepts File Examine before PHP unless a pass cookie exists; the PHP entry guard verifies any supplied cookie before expensive database work, rejecting forged ones. Actual Apache and PHP tests with simulated external source confirm Google Referer can no longer bypass File Examine, whereas trusted Google referral for Game Files still works. Evidence and source hashes are appended in tests/evidence/direct-entry-gate-privacy-20261108.json. This is still a friction control: a script can wait three seconds and programmatically POST, so CrowdSec firewall bouncer and upstream WAF remain separate infrastructure priorities.
+
+---
+
+
+
 ## 8 November 2026 — Windows Apache absolute-URL redirect correction
 
 After initial deployment of the static direct-entry gate, the PRD Apache error log showed a malformed redirect of a public request to a filesystem-shaped C:/Apache24/.../catalog/direct-entry.html URI. This was caused by a relative mod_rewrite substitution in an Apache .htaccess file on Windows. Replaced it with an explicit /catalog/direct-entry.html web URL. An isolated actual Apache mod_rewrite fixture now requires the exact redirected public /catalog/ path, not merely a matching direct-entry.html substring. PRD's live signing endpoint separately returned HTTP 200 with a valid challenge. This fix changes only the website rewrite and its acceptance evidence; no original files or UEDB5 changed.
