@@ -71,7 +71,7 @@
     }
   },
   "source_sha256": {
-    "catalog/.htaccess": "d410853e3e3988121ce239512dda6bdaf40ebde710b932394b433fff115d2846",
+    "catalog/.htaccess": "9150a718a8a3c67de0235b67e10dde85c3b61e0108da5a26bac80ef900354120",
     "catalog/file-examine.php": "5a2d797de37914bfb8fbda1268bb4b36fcb666e94fdcd81dbc281882bc07e3d7",
     "catalog/game-files.php": "669480dad16a0e07c51a83c28bd70eb992c1dda0350f2d23c2a395f97e9c6910",
     "catalog/access-matrix.php": "5f953c23fd1a8f80f8494f3871db38200300a250593a53794cddd5537dde7e3c",
@@ -91,5 +91,11 @@
   "original_package_files_modified": false,
   "uedb5_metadata_modified": false,
   "production_database_written": false,
-  "production_public_endpoint_browser_verified": false
+  "production_public_endpoint_browser_verified": false,
+  "windows_apache_redirect_hotfix": {
+    "root_cause": "Windows Apache per-directory mod_rewrite with relative redirect target exposed a filesystem-like C:/Apache24/... redirect URL to public clients.",
+    "fix": "Absolute URL path /catalog/direct-entry.html in .htaccess rewrite substitution.",
+    "verification": "Actual Apache local virtual-host fixture with simulated external IP checks HTTP 302 and exact /catalog/direct-entry.html Location, alongside static file, trusted search and spoofed-host tests.",
+    "status": "PASS"
+  }
 }

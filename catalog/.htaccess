@@ -10,7 +10,7 @@ RewriteCond %{REMOTE_ADDR} !^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\
 RewriteCond %{HTTP_COOKIE} !(^|;\s*)UEDB_GATE_PASS= [NC]
 RewriteCond %{HTTP_REFERER} !^https?://(www\.)?(unrealdb\.com|192\.168\.0\.55|192\.168\.0\.51)(:[0-9]+)?(/|$) [NC]
 RewriteCond %{HTTP_REFERER} !^https?://((www\.)?google\.(com|ie|co\.uk|de|fr|es|it|ca|com\.au|co\.jp|nl|be|ch|pl|pt|com\.br|co\.in)|((www\.)?bing\.com)|((www\.)?duckduckgo\.com)|(search\.yahoo\.com)|((www\.|search\.)?brave\.com)|((www\.)?ecosia\.org))(/|$) [NC]
-RewriteRule ^(file-examine|game-files|access-matrix)\.php$ direct-entry.html?to=$1.php [R=302,L,QSA,NE]
+RewriteRule ^(file-examine|game-files|access-matrix)\.php$ /catalog/direct-entry.html?to=$1.php [R=302,L,QSA,NE]
 
 
 # Catalog pages contain session-specific admin controls and CSRF tokens. Never

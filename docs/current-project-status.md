@@ -1,5 +1,13 @@
 # UnrealDB current project status
 
+## 8 November 2026 — Windows Apache absolute-URL redirect correction
+
+After initial deployment of the static direct-entry gate, the PRD Apache error log showed a malformed redirect of a public request to a filesystem-shaped C:/Apache24/.../catalog/direct-entry.html URI. This was caused by a relative mod_rewrite substitution in an Apache .htaccess file on Windows. Replaced it with an explicit /catalog/direct-entry.html web URL. An isolated actual Apache mod_rewrite fixture now requires the exact redirected public /catalog/ path, not merely a matching direct-entry.html substring. PRD's live signing endpoint separately returned HTTP 200 with a valid challenge. This fix changes only the website rewrite and its acceptance evidence; no original files or UEDB5 changed.
+
+---
+
+
+
 ## 8 November 2026 — Public, no-login anti-scraping gate and consent notice
 
 The website is publicly view-only; visitors do not register or log in. Administrator authentication is the only login path. A lightweight Apache-level anti-scraping gate now intercepts anonymous external direct GET/HEAD requests to file-examine.php, game-files.php, and access-matrix.php and redirects to static direct-entry.html without invoking PHP, SQL or the package reader. The landing page explains continuous automated scraping and requires a three-second manual Continue. An actual server-validated token prevents a forged pass or zero-second submission; ISSUE lasts up to 5 minutes and PASS lasts 30 minutes. The per-host signing secret lives exclusively in ignored storage/security, never Git. Original URL, query and a safe fragment such as #package-tables are preserved. Known search-result referrals and same-site links pass directly. Missing/unknown referrer visitors can proceed after the delay.
