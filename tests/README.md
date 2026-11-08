@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Public privacy footer, no visitor analytics or cookie wall - 8 November 2026
+
+Use php tests/tools/verify_privacy_footer_no_tracking_20261108.php to assert that optional analytics and the modal/acknowledgement are retired and the shared footer links to the disclosed CrowdSec/privacy policy. Tests include real PHP HTTP pages (Unreal II file-examine footer, privacy policy, no-op analytics endpoint, static verification page), Chrome real HTML link and popup checks, signed gate behaviour, and 28 UE1-UE5 HTTP routes. See tests/evidence/privacy-footer-without-analytics-20261108.json. No public visitor login, optional tracking consent, or new privacy cookie is required.
+
+---
+
+
 ## Public direct entry and cookie consent — 8 November 2026
 
 PHP unit driver: tests/tools/verify_direct_entry_gate_privacy_20261108.php. Its real HTTP, Apache mod_rewrite, and Chrome full-stack fixtures were run on DEV from D:/Temp/UnrealDB (test evidence at tests/evidence/direct-entry-gate-privacy-20261108.json). The signed gate is no-login for public visitors. It rejects premature/tampered passes and unsafe returns; verifies original query/fragment, real search referrals and spoofed search-host rejection. Analytics records require affirmative preference at both client and server. Per-host signing secrets must not be committed or published. Do not report Cloudflare WAF or the CrowdSec Windows Firewall remediation component as active until separately deployed and verified.

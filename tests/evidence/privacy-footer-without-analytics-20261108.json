@@ -1,0 +1,890 @@
+{
+  "date": "2026-11-08",
+  "result": "PASS_DEV_BEFORE_DEPLOY",
+  "scope": "Remove public privacy modal, nonessential analytics choice and cookie; add permanent footer privacy policy link; preserve signed three-second gate.",
+  "public_site": "Anonymous view-only; admin authentication unchanged.",
+  "privacy": "Accessible Privacy & Security footer link, and policy disclosing Apache access/security processing and CrowdSec threat data sharing.",
+  "retired": "UEDB_PRIVACY_NOTICE and UEDB_PRIVACY_CHOICE are no longer set; cached privacy-notice.js is inert and expires old cookies.",
+  "analytics": "Legacy client event script inert, source HTML no longer injects it, HTTP access-event endpoint returns 204 without database writes, shared header no longer records optional page views.",
+  "essential_security": "Existing signed direct-entry gate retained and independently verifies token age/signature/redirect.",
+  "tests": {
+    "actual_http": {
+      "pass": true,
+      "actual_file_examine_http": 200,
+      "privacy_footer": true,
+      "no_privacy_popup": true,
+      "static_privacy_policy_http": 200,
+      "analytics_endpoint_http": 204,
+      "direct_entry_http": 200
+    },
+    "chrome_browser_on_original_php_html": {
+      "state": {
+        "footerVisible": true,
+        "privacyLinkText": "Privacy & Security",
+        "privacyLink": "privacy.html",
+        "modalCount": 0,
+        "obsoletePrivacyScriptCount": 0,
+        "tablePresent": true,
+        "bodyScrollWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "policy": {
+        "title": "Privacy and cookies | UnrealDB",
+        "crowdsec": true,
+        "modalCount": 0,
+        "privacyPath": "/catalog/privacy.html"
+      }
+    },
+    "source_checks": {
+      "pass": true,
+      "no_db_queries": true,
+      "public_footer_link": true,
+      "privacy_popup_removed": true,
+      "acknowledgement_cookie_not_created": true,
+      "obsolete_cookies_retired": true,
+      "public_tracking_disabled": true,
+      "analytics_endpoint_no_op": true,
+      "server_side_direct_gate_preserved": true,
+      "privacy_discloses_crowdsec": true
+    },
+    "signed_gate": {
+      "pass": true,
+      "no_db_used": true,
+      "routes": 3,
+      "actual_wait_sec": 3,
+      "issue_ttl_sec": 300,
+      "pass_ttl_sec": 1800,
+      "original_query_preserved": true,
+      "open_redirect_rejected": true,
+      "unknown_referrers_not_trusted": true,
+      "spoofed_search_referrers_rejected": true,
+      "genuine_search_referrers_allowed": true,
+      "tampered_cookie_rejected": true,
+      "expired_cookie_rejected": true,
+      "UA_binding": true,
+      "site_data_changed": false
+    },
+    "cross_engine_28_route_http": {
+      "pass": true,
+      "routes_checked": 28,
+      "failed_routes": 0,
+      "original_file_sample_count": 8,
+      "verified_export_target_count": 3,
+      "entries": [
+        {
+          "game": "UT99",
+          "file_id": 113253,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 34132,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT99",
+          "file_id": 113253,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 31229,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT99",
+          "file_id": 113253,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 29887,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal",
+          "file_id": 110902,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 34116,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal",
+          "file_id": 110902,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 29455,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal",
+          "file_id": 110902,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 30392,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 1253000,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 138727,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 1253000,
+          "tab": "imports",
+          "page_size": 250,
+          "http_status": 200,
+          "html_bytes": 611635,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 1253000,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 503067,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2003",
+          "file_id": 148919,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 113069,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2003",
+          "file_id": 148919,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 110524,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2003",
+          "file_id": 148919,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 256468,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2004",
+          "file_id": 111460,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 26980,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2004",
+          "file_id": 111460,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 27875,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2004",
+          "file_id": 111460,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 25029,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT3",
+          "file_id": 112300,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 33410,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT3",
+          "file_id": 112300,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 29671,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT3",
+          "file_id": 112300,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 35744,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT4",
+          "file_id": 113526,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 29114,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT4",
+          "file_id": 113526,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 26277,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT4",
+          "file_id": 113526,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 26779,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Satisfactory",
+          "file_id": 1390232,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 44767,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Satisfactory",
+          "file_id": 1390232,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 30122,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Satisfactory",
+          "file_id": 1390232,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 21915,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 1253000,
+          "tab": "imports",
+          "target": "import-41",
+          "http_status": 200,
+          "selected_rows": 1
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 111140,
+          "tab": "exports",
+          "target": "export-425",
+          "http_status": 200,
+          "source_export_path": "AtlantisT.Floor"
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 111198,
+          "tab": "exports",
+          "target": "export-6548",
+          "http_status": 200,
+          "source_export_path": "Engine.StaticMeshActor"
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 149518,
+          "tab": "exports",
+          "target": "export-10183",
+          "http_status": 200,
+          "source_export_path": "Engine.StaticMeshActor"
+        }
+      ]
+    },
+    "source_regressions": {
+      "all-source-fields": {
+        "pass": true,
+        "read_only": true,
+        "original_ue1_ue4_table_checks": [
+          {
+            "engine": "UE1",
+            "game": "UT99",
+            "file": 113253,
+            "section": "names",
+            "sampled_rows": 15,
+            "source_columns": 5,
+            "columns": [
+              "index",
+              "serialized_offset",
+              "text",
+              "flags",
+              "flags_serialized_width_bits"
+            ]
+          },
+          {
+            "engine": "UE1",
+            "game": "UT99",
+            "file": 113253,
+            "section": "imports",
+            "sampled_rows": 4,
+            "source_columns": 8,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_package",
+              "class_name",
+              "outer_index",
+              "outer_index_serialized_width_bits",
+              "object_name"
+            ]
+          },
+          {
+            "engine": "UE1",
+            "game": "UT99",
+            "file": 113253,
+            "section": "exports",
+            "sampled_rows": 6,
+            "source_columns": 15,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_index",
+              "super_index",
+              "outer_index",
+              "outer_index_serialized_width_bits",
+              "object_name",
+              "object_flags",
+              "object_flags_serialized_width_bits",
+              "serial_size",
+              "serial_size_encoding",
+              "serial_offset_present",
+              "serial_offset",
+              "serial_offset_encoding"
+            ]
+          },
+          {
+            "engine": "UE1",
+            "game": "Unreal",
+            "file": 110902,
+            "section": "names",
+            "sampled_rows": 15,
+            "source_columns": 5,
+            "columns": [
+              "index",
+              "serialized_offset",
+              "text",
+              "flags",
+              "flags_serialized_width_bits"
+            ]
+          },
+          {
+            "engine": "UE1",
+            "game": "Unreal",
+            "file": 110902,
+            "section": "imports",
+            "sampled_rows": 4,
+            "source_columns": 8,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_package",
+              "class_name",
+              "outer_index",
+              "outer_index_serialized_width_bits",
+              "object_name"
+            ]
+          },
+          {
+            "engine": "UE1",
+            "game": "Unreal",
+            "file": 110902,
+            "section": "exports",
+            "sampled_rows": 6,
+            "source_columns": 16,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_index",
+              "super_index",
+              "outer_index",
+              "outer_index_serialized",
+              "outer_index_serialized_width_bits",
+              "object_name",
+              "object_flags",
+              "object_flags_serialized_width_bits",
+              "serial_size",
+              "serial_size_encoding",
+              "serial_offset_present",
+              "serial_offset",
+              "serial_offset_encoding"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "Unreal II",
+            "file": 1253000,
+            "section": "names",
+            "sampled_rows": 15,
+            "source_columns": 5,
+            "columns": [
+              "index",
+              "serialized_offset",
+              "text",
+              "flags",
+              "flags_serialized_width_bits"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "Unreal II",
+            "file": 1253000,
+            "section": "imports",
+            "sampled_rows": 15,
+            "source_columns": 8,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_package",
+              "class_name",
+              "outer_index",
+              "outer_index_serialized_width_bits",
+              "object_name"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "Unreal II",
+            "file": 1253000,
+            "section": "exports",
+            "sampled_rows": 15,
+            "source_columns": 16,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_index",
+              "super_index",
+              "outer_index",
+              "outer_index_serialized",
+              "outer_index_serialized_width_bits",
+              "object_name",
+              "object_flags",
+              "object_flags_serialized_width_bits",
+              "serial_size",
+              "serial_size_encoding",
+              "serial_offset_present",
+              "serial_offset",
+              "serial_offset_encoding"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "UT2003",
+            "file": 148919,
+            "section": "names",
+            "sampled_rows": 15,
+            "source_columns": 5,
+            "columns": [
+              "index",
+              "serialized_offset",
+              "text",
+              "flags",
+              "flags_serialized_width_bits"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "UT2003",
+            "file": 148919,
+            "section": "imports",
+            "sampled_rows": 15,
+            "source_columns": 8,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_package",
+              "class_name",
+              "outer_index",
+              "outer_index_serialized_width_bits",
+              "object_name"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "UT2003",
+            "file": 148919,
+            "section": "exports",
+            "sampled_rows": 15,
+            "source_columns": 16,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_index",
+              "super_index",
+              "outer_index",
+              "outer_index_serialized",
+              "outer_index_serialized_width_bits",
+              "object_name",
+              "object_flags",
+              "object_flags_serialized_width_bits",
+              "serial_size",
+              "serial_size_encoding",
+              "serial_offset_present",
+              "serial_offset",
+              "serial_offset_encoding"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "UT2004",
+            "file": 111460,
+            "section": "names",
+            "sampled_rows": 15,
+            "source_columns": 5,
+            "columns": [
+              "index",
+              "serialized_offset",
+              "text",
+              "flags",
+              "flags_serialized_width_bits"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "UT2004",
+            "file": 111460,
+            "section": "imports",
+            "sampled_rows": 4,
+            "source_columns": 8,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_package",
+              "class_name",
+              "outer_index",
+              "outer_index_serialized_width_bits",
+              "object_name"
+            ]
+          },
+          {
+            "engine": "UE2",
+            "game": "UT2004",
+            "file": 111460,
+            "section": "exports",
+            "sampled_rows": 3,
+            "source_columns": 16,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_index",
+              "super_index",
+              "outer_index",
+              "outer_index_serialized",
+              "outer_index_serialized_width_bits",
+              "object_name",
+              "object_flags",
+              "object_flags_serialized_width_bits",
+              "serial_size",
+              "serial_size_encoding",
+              "serial_offset_present",
+              "serial_offset",
+              "serial_offset_encoding"
+            ]
+          },
+          {
+            "engine": "UE3",
+            "game": "UT3",
+            "file": 112300,
+            "section": "names",
+            "sampled_rows": 15,
+            "source_columns": 5,
+            "columns": [
+              "index",
+              "serialized_offset",
+              "text",
+              "flags",
+              "flags_serialized_width_bits"
+            ]
+          },
+          {
+            "engine": "UE3",
+            "game": "UT3",
+            "file": 112300,
+            "section": "imports",
+            "sampled_rows": 5,
+            "source_columns": 7,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_package",
+              "class_name",
+              "outer_index",
+              "object_name"
+            ]
+          },
+          {
+            "engine": "UE3",
+            "game": "UT3",
+            "file": 112300,
+            "section": "exports",
+            "sampled_rows": 8,
+            "source_columns": 17,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_index",
+              "super_index",
+              "outer_index",
+              "object_name",
+              "archetype_index",
+              "object_flags",
+              "object_flags_serialized_width_bits",
+              "serial_size",
+              "serial_offset",
+              "component_map",
+              "export_flags",
+              "generation_net_object_count",
+              "package_guid",
+              "package_flags"
+            ]
+          },
+          {
+            "engine": "UE4",
+            "game": "UT4",
+            "file": 113526,
+            "section": "names",
+            "sampled_rows": 15,
+            "source_columns": 5,
+            "columns": [
+              "index",
+              "serialized_offset",
+              "text",
+              "non_case_hash",
+              "case_hash"
+            ]
+          },
+          {
+            "engine": "UE4",
+            "game": "UT4",
+            "file": 113526,
+            "section": "imports",
+            "sampled_rows": 2,
+            "source_columns": 9,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_package",
+              "class_name",
+              "outer_index",
+              "object_name",
+              "package_name_present",
+              "package_name"
+            ]
+          },
+          {
+            "engine": "UE4",
+            "game": "UT4",
+            "file": 113526,
+            "section": "exports",
+            "sampled_rows": 1,
+            "source_columns": 25,
+            "columns": [
+              "index",
+              "package_index",
+              "serialized_offset",
+              "class_index",
+              "super_index",
+              "template_index_present",
+              "template_index",
+              "outer_index",
+              "object_name",
+              "object_flags",
+              "object_flags_serialized_width_bits",
+              "serial_size",
+              "serial_offset",
+              "serial_range_serialized_width_bits",
+              "forced_export",
+              "not_for_client",
+              "not_for_server",
+              "not_for_editor_game_present",
+              "not_for_editor_game",
+              "is_asset_present",
+              "is_asset",
+              "package_guid",
+              "package_flags",
+              "preload_present",
+              "preload"
+            ]
+          }
+        ],
+        "original_ue5_zen_table_checks": {
+          "names": {
+            "rows": 76,
+            "source_columns": [
+              "index",
+              "hash_version",
+              "hash",
+              "is_utf16",
+              "length",
+              "raw",
+              "text"
+            ],
+            "markup_source_fields_valid": true
+          },
+          "imports": {
+            "rows": 10,
+            "source_columns": [
+              "index",
+              "dependency_class",
+              "raw_type_and_id",
+              "type_tag",
+              "type",
+              "value_u62",
+              "script_import_hash",
+              "imported_package_index",
+              "imported_public_export_hash_index",
+              "provider_package_id",
+              "provider_public_export_hash"
+            ],
+            "markup_source_fields_valid": true
+          },
+          "exports": {
+            "rows": 3,
+            "source_columns": [
+              "index",
+              "cooked_serial_offset_u64",
+              "cooked_serial_offset",
+              "cooked_serial_size_u64",
+              "cooked_serial_size",
+              "object_name",
+              "outer_index",
+              "class_index",
+              "super_index",
+              "template_index",
+              "public_export_hash",
+              "object_flags",
+              "filter_flags",
+              "pad",
+              "local_path",
+              "full_path"
+            ],
+            "markup_source_fields_valid": true
+          }
+        },
+        "original_uedb5_snapshot_sha256": {
+          "UT99 #113253": "8ced9a1ced305d7f1133d1fcbeac67a903e83046c93a5be8bd14302305279f0d",
+          "Unreal #110902": "b8cffa712bf2d1d839442f0c795671577c5490c10702bbc3cd906c0218e3c7de",
+          "Unreal II #1253000": "a54381e5bf6371e055e9cf7d94afd75d4ad229b2a3d6345ac13aa23b797e8c10",
+          "UT2003 #148919": "32e66e8388813012654e16deadfa6317691a587fd07db8091cf1bf31b2363020",
+          "UT2004 #111460": "02c60890c841c2ce7d505b36aff43c80e77b702da6275667fae05b5f5147c531",
+          "UT3 #112300": "20f6e1319622d0298ae34900a624c81cb847125b6e5ea7b1407d4b789e715ff0",
+          "UT4 #113526": "2355711bd5226b035a786d1e1f2c1d56656b098c92dd0007fdd01bbaba2df7e9",
+          "Satisfactory #1390232": "b5c276cd91dedd64c6c2a1c6d166776a401b50fe37cdc328a90a63d36044589f"
+        },
+        "classic_source_fields_dropped": 0,
+        "zen_source_fields_dropped": 0,
+        "engine_version_specific_presentation": true,
+        "selected_runtime_mount_assumed": false,
+        "production_database_changes": 0
+      },
+      "file-examine-ui": {
+        "pass": true,
+        "read_only": true,
+        "original_package_headers": [
+          {
+            "source_file": "storage/games/ut99/verified/2aa9a951613309c83ffbe0f90a08aea7.utx",
+            "sha256": "50edfe60fcf99c61f369cf8100079351bd75eb0a23febc77aa891142086dbbc0",
+            "raw_fields": 12
+          },
+          {
+            "source_file": "storage/games/unreal2/verified/05a4c4138b95620f110abb60d8e6e3fd.un2",
+            "sha256": "9e944f8c30da071b7d3b29e7154e4882036651d227d45a7c384c7160a7f8695f",
+            "raw_fields": 11
+          }
+        ],
+        "blocked_unsafe_paths": 4,
+        "field_search_matches": [
+          {
+            "table": "imports",
+            "needle": "-1",
+            "matches": 1
+          },
+          {
+            "table": "imports",
+            "needle": "Engine",
+            "matches": 2
+          },
+          {
+            "table": "exports",
+            "needle": "504",
+            "matches": 1
+          },
+          {
+            "table": "exports",
+            "needle": "00070000",
+            "matches": 3
+          },
+          {
+            "table": "zen_exports",
+            "needle": "712438030E5C1A50",
+            "matches": 1
+          },
+          {
+            "table": "zen_imports",
+            "needle": "49159F3AC1005A8F",
+            "matches": 1
+          }
+        ],
+        "unreal2_missing_file_filter_count": 2,
+        "ui_columns_header_collapse_and_source_semantics_checked": true,
+        "native_runtime_verifyimport_inferred": false
+      }
+    }
+  },
+  "source_sha256": {
+    "catalog/access-event.php": "62213fe9542ea22c90a99015bb600e7b6be641823f27d7dff4001cca2ae2523b",
+    "catalog/assets/catalog-access-matrix.js": "b0b18709dc2cb37d7bb401aeb7aa076f643c81ca871a3140144a1172a21df4b6",
+    "catalog/assets/catalog-ui.css": "bfff462500ca0b27fc6225a3262d4ce886546f01ba3eadf645fd4c7f17c90866",
+    "catalog/assets/privacy-notice.js": "d6f761b37689ce4e2732f7e1cefc95bfcdd9943710e57f79c99a931a29f369d6",
+    "catalog/direct-entry.html": "274ea61d2933a19b79f3e0a1aaa339ffb0f9ef225cbfffb600f79d15582eb6f3",
+    "catalog/lib/CatalogSupportCore.php": "ca9637e48af010ad42c7c62355b4464034b54317933496cb8d8bc2262d99dc97",
+    "catalog/privacy.html": "08a2852fa13c00ce9d3b1fb57e28c1b0fa09b8d769bb478f201869f322fe6424",
+    "catalog/src/Presentation/Http/CatalogPageResponseTransform.php": "64b0efbf5ead5ddc3949ada1bd66ada07438c2a0e8324f46ef9acd2a9d5be0db",
+    "tests/tools/verify_privacy_footer_no_tracking_20261108.php": "506bc855f7b393f679633e16f0ca792e85ab9ac533985a87fdc3bb2b5ec88faa"
+  },
+  "db_writes": 0,
+  "original_package_or_uedb5_changes": 0,
+  "direct_protected_prd_apache_visual_verified": false
+}

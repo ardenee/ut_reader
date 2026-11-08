@@ -31,7 +31,6 @@ final class CatalogPageResponseTransform
             'catalog-identities.js',
             'catalog-layout-fixes.js',
             'catalog-table-sort.js',
-            'catalog-access-matrix.js',
         ] as $asset) {
             $path = dirname(__DIR__, 3) . '/assets/' . $asset;
             $source = $assetPrefix . $asset;

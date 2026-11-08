@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 8 November 2026 - Public privacy footer and retired visitor analytics
+
+The public UnrealDB catalogue is view-only and only administrators log in. The previously introduced privacy modal, optional analytics choice and acknowledgement cookie were unnecessary. Actual production data inspection showed no current stream of opt-in visitor events. The new presentation removes that modal, puts an accessible Privacy & Security link in the shared catalog_foot() footer, and retains a readable policy disclosing essential Apache/CrowdSec security data processing without suggesting that visitors have accounts.
+
+The obsolete browser event analytics collector is inert and no longer injected by CatalogPageResponseTransform. The access-event endpoint returns HTTP 204 without a database connection, and the shared catalog_head() no longer records optional visitor page views. Old UEDB_PRIVACY_CHOICE and UEDB_PRIVACY_NOTICE cookies are no longer created, and a cached HTML compatibility script only deletes these old cookies. No privacy acknowledgement is required. Signed three-second direct-entry verification continues to use strictly necessary security cookies.
+
+DEV validation: actual Unreal II PHP HTTP page 200 with footer link/no modal, static privacy policy 200, retired analytics endpoint 204 and static direct-entry page 200; Chrome opened genuine PHP-rendered HTML, found no modal and successfully followed footer to the policy; signed security-gate token tests, 28 actual UE1-UE5 HTTP routes and source-field regressions passed. Evidence tests/evidence/privacy-footer-without-analytics-20261108.json. No original game packages, metadata snapshots or production data were modified. Direct protected PRD browser rendering remains separately unverified.
+
+---
+
+
+
 ## 8 November 2026 — Tightened external File Examine gate after real PRD load evidence
 
 After deploying the initially referral-aware anti-scraping gate, Apache still exhausted its 100 worker threads; 1633 of the most recent 1800 logged requests were HTTP 200 File Examine requests. A Referer header is client-controlled and cannot prove a human visitor, even when it names Google or UnrealDB. Therefore, external File Examine GET/HEAD requests now require a genuine signed three-second gate pass regardless of claimed Referer. Local/LAN visits remain exempt. This policy means a visitor opening File Examine directly from search results completes the check once, then has a 30-minute pass; the public site still has no visitor login or accounts.

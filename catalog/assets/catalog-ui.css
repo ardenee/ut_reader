@@ -325,3 +325,8 @@ pre.mono {
     .ui-section__body { padding: 14px; }
     .ui-alert { grid-template-columns: auto minmax(0, 1fr) auto; }
 }
+
+/* Discoverable privacy transparency; never blocks public navigation. */
+.catalog-privacy-footer{margin:28px auto 0;padding:16px 20px 26px;text-align:center;border-top:1px solid var(--line-color,#343d47);font:13px/1.5 system-ui,sans-serif}
+.catalog-privacy-footer a{color:var(--link-color,#9ec8ee);text-decoration:underline;text-underline-offset:2px}
+.catalog-privacy-footer a:focus-visible{outline:2px solid currentColor;outline-offset:4px}

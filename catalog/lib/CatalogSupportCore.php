@@ -509,19 +509,8 @@ function catalog_head(string $title): void
 {
     catalog_support_is_admin();
 
-    static $accessMatrixPageLogged = false;
-    if (!$accessMatrixPageLogged
-        && ($_COOKIE['UEDB_PRIVACY_CHOICE'] ?? '') === 'analytics'
-        && class_exists('UnrealDb\\Catalog\\Infrastructure\\Telemetry\\CatalogAccessEventRecorder')) {
-        try {
-            $accessMatrixPageLogged = true;
-            (new \UnrealDb\Catalog\Infrastructure\Telemetry\CatalogAccessEventRecorder(
-                catalog_db(catalog_config())
-            ))->recordPageView();
-        } catch (Throwable $error) {
-            error_log('[UnrealDB access matrix] page-view logging failed: ' . $error->getMessage());
-        }
-    }
+    // Public pages do not collect optional per-visitor analytics.
+    // Apache/CrowdSec security logging is separate from this page renderer.
 
     $root = catalog_support_root_prefix();
     $uiScriptPath = __DIR__ . '/../assets/catalog-ui.js';
@@ -539,9 +528,6 @@ function catalog_head(string $title): void
     echo '<link rel="stylesheet" href="'
         . catalog_h($root . 'assets/catalog-ui.css?v=' . $uiStylesheetVersion) . '">';
     echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js?v=' . $uiScriptVersion) . '" defer></script>';
-    $privacyScript = __DIR__ . '/../assets/privacy-notice.js';
-    $privacyVersion = is_file($privacyScript) ? (string)filemtime($privacyScript) : '1';
-    echo '<script src="' . catalog_h($root . 'assets/privacy-notice.js?v=' . $privacyVersion) . '" defer></script>';
     if ($scriptName === 'unverified-files.php') {
         $timeoutRecoveryPath = __DIR__ . '/../assets/unverified-import-timeout-recovery.js';
         $timeoutRecoveryVersion = is_file($timeoutRecoveryPath) ? (string)filemtime($timeoutRecoveryPath) : '1';
@@ -580,7 +566,10 @@ function catalog_head(string $title): void
 function catalog_foot(): void
 {
     catalog_performance_finish();
-    echo '</main></body></html>';
+    echo '</main><footer class="catalog-privacy-footer" role="contentinfo">'
+        . '<a href="' . catalog_h(catalog_support_root_prefix() . 'privacy.html')
+        . '">Privacy &amp; Security</a>'
+        . '</footer></body></html>';
 }
 
 function catalog_config(): array
