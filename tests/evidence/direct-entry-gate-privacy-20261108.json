@@ -1,0 +1,95 @@
+{
+  "schema": "unrealdb-static-direct-entry-gate-consent-v1",
+  "date": "2026-11-08",
+  "status": "PASS_PRE_DEPLOYMENT",
+  "site": "Public read-only catalogue. Visitors have no account or login; only administrators authenticate.",
+  "routes": [
+    "file-examine.php",
+    "game-files.php",
+    "access-matrix.php"
+  ],
+  "gate": "Apache redirects anonymous external direct GET/HEAD requests to static minimal HTML before PHP/DB. Three-second manual Continue with signed UA-bound HttpOnly issue and pass cookies; issue TTL 300 seconds, pass TTL 1800 seconds.",
+  "page_recovery": "Preserves original destination, query, and safe #package-tables fragment. Rejects external redirects, premature or forged passes.",
+  "allowed_referers": "Known same-site and search engine referrers bypass; unknown/no referer is gated. HTTP Referer can be spoofed by scripted clients, so not complete bot proof.",
+  "cookie_ui": "Necessary only or Allow site-improvement analytics. Choice can be changed/withdrawn using always-visible Privacy settings control. No public accounts.",
+  "analytics_enforcement": "The JavaScript event sender, PHP access-event handler and PHP page-view recorder require affirmative analytics choice. Apache access logs and CrowdSec security events are separate necessary security processing.",
+  "crowdsec": "May share detected attacker IP and security signal metadata with CrowdSec CAPI. Firewall bouncer NOT installed/verified.",
+  "cloudflare": "DNS remains on HostGator. Cloudflare WAF NOT configured.",
+  "gdpr_law_note": "Irish DPC says analytics consent is required, strictly necessary cookies exempt. Full privacy compliance needs accurate data retention and site-controller contact details.",
+  "tests": {
+    "php_unit": {
+      "pass": true,
+      "no_db_used": true,
+      "routes": 3,
+      "actual_wait_sec": 3,
+      "issue_ttl_sec": 300,
+      "pass_ttl_sec": 1800,
+      "original_query_preserved": true,
+      "open_redirect_rejected": true,
+      "unknown_referrers_not_trusted": true,
+      "spoofed_search_referrers_rejected": true,
+      "genuine_search_referrers_allowed": true,
+      "tampered_cookie_rejected": true,
+      "expired_cookie_rejected": true,
+      "UA_binding": true,
+      "site_data_changed": false
+    },
+    "php_issue_and_continue": {
+      "pass": true,
+      "challenge_http": 200,
+      "early_continue_http": 429,
+      "elapsed_continue_http": 303,
+      "invalid_return_http": 400,
+      "query_preserved": true,
+      "strictly_necessary_cookies": true
+    },
+    "external_origin_gate": {
+      "pass": true,
+      "google_search_http": 200,
+      "new_external_direct_http": 302,
+      "lookalike_referrer_http": 302,
+      "forged_cookie_http": 302
+    },
+    "real_apache_rewrite": {
+      "search_bypass": true,
+      "pass": true,
+      "real_apache_rewrite": true,
+      "external_direct": 302,
+      "lan_bypass": true,
+      "static_landing": true,
+      "lookalike_rejected": true
+    },
+    "chrome": {
+      "pass": true,
+      "no_public_login": true,
+      "banner_default": true,
+      "necessary_only": true,
+      "analytics_opt_in": true,
+      "consent_withdrawal": true,
+      "three_second_wait": true,
+      "screenshot_sha256": "093d0fe828c7393c20e60f46320d44b6cfe738f33c19752b7dbd33af10a9ffe3"
+    }
+  },
+  "source_sha256": {
+    "catalog/.htaccess": "d410853e3e3988121ce239512dda6bdaf40ebde710b932394b433fff115d2846",
+    "catalog/file-examine.php": "5a2d797de37914bfb8fbda1268bb4b36fcb666e94fdcd81dbc281882bc07e3d7",
+    "catalog/game-files.php": "669480dad16a0e07c51a83c28bd70eb992c1dda0350f2d23c2a395f97e9c6910",
+    "catalog/access-matrix.php": "5f953c23fd1a8f80f8494f3871db38200300a250593a53794cddd5537dde7e3c",
+    "catalog/direct-entry.html": "c28bacdb829e1f2102ae4f9ef67d96c5434f2cbe135a9c1f886e3fecb9acba8b",
+    "catalog/direct-entry-token.php": "2a95230aae8f371f5145446b22ad00b18bc689914ac60c018da25d551f409b9f",
+    "catalog/direct-entry-continue.php": "3b8466be54502079c91e7e90fc20f1fc3c487179622ec516359c6e121ebd694a",
+    "catalog/lib/CatalogDirectEntryGate.php": "0dc4e33c82414e80d7ada84610c9d504be78640ae207a136f3e200f15117f594",
+    "catalog/lib/CatalogSupportCore.php": "ff43c438e7df9c7291faa5bd7909ad7c83cbc3608eb3ced68133d011c6f4c644",
+    "catalog/assets/privacy-notice.js": "0d0a13c4e19adb5dfcba2a4ac319c39c73b9388eb6d710f0c5889b1a14625a90",
+    "catalog/assets/catalog-access-matrix.js": "bc7325c520c8481bf7bf79caf12635add34a2e62f2816540c90a44d25faf71d1",
+    "catalog/privacy.html": "a2504be443d9503be5b534ecd4fdac33782083111477e4420bf86d0110b145cf",
+    "catalog/access-event.php": "1436e081ae8659e6fdffc8ae47578e3a705d415244e6b9cc471e8e01a1904b4b",
+    "robots.txt": "1509e6b558a2f6926bebeab2e0cd81f990684cd390f46b1cfa944f290e8e8cb8",
+    "tests/tools/verify_direct_entry_gate_privacy_20261108.php": "7c22332f7eb2850f42c3702f7b3004b947a4d4ec62e1d8ce40ffdacb4b3cbfdd"
+  },
+  "signing_secrets_are_per_host_not_committed": true,
+  "original_package_files_modified": false,
+  "uedb5_metadata_modified": false,
+  "production_database_written": false,
+  "production_public_endpoint_browser_verified": false
+}

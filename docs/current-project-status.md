@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## 8 November 2026 — Public, no-login anti-scraping gate and consent notice
+
+The website is publicly view-only; visitors do not register or log in. Administrator authentication is the only login path. A lightweight Apache-level anti-scraping gate now intercepts anonymous external direct GET/HEAD requests to file-examine.php, game-files.php, and access-matrix.php and redirects to static direct-entry.html without invoking PHP, SQL or the package reader. The landing page explains continuous automated scraping and requires a three-second manual Continue. An actual server-validated token prevents a forged pass or zero-second submission; ISSUE lasts up to 5 minutes and PASS lasts 30 minutes. The per-host signing secret lives exclusively in ignored storage/security, never Git. Original URL, query and a safe fragment such as #package-tables are preserved. Known search-result referrals and same-site links pass directly. Missing/unknown referrer visitors can proceed after the delay.
+
+A site-wide cookie banner offers Necessary only or Allow site-improvement analytics, plus an always-available Privacy settings button that permits withdrawal. The JavaScript sender and PHP recording endpoints now independently suppress optional telemetry without affirmative analytics consent. Essential session, admin authentication, web server and security logs remain separately categorised. CrowdSec community telemetry may share attacking IP addresses, times and detection metadata with its Central API; the privacy page does not falsely claim zero external disclosure.
+
+Pre-deployment acceptance: 3-route and signed-token PHP unit coverage, original-depth PHP HTTP signed-continue flow including premature 429 and rejected external return; simulated external-IP direct-route 302 and search allowlist; actual Apache mod_rewrite with static landing and spoofed-search rejection; Chrome tests for three-second button and reversible necessary/optional cookies. Evidence: tests/evidence/direct-entry-gate-privacy-20261108.json.
+
+Not yet certified: CrowdSec Windows Firewall remediation service, Cloudflare DNS/WAF migration, global dynamic load shedding, and full response caching of session-specific PHP pages. Referer headers can be spoofed, so this is an additional friction gate rather than complete DDoS prevention. The privacy policy still needs the operator's contact and verified retention/transfer details to be a complete GDPR document. Original packages, UEDB5 metadata, and production DB records were not rewritten.
+
+---
+
+
+
 ## 7 November 2026 - Actual ExportMap path links and accidental Imports highlights
 
 The Unreal II package #1253000 rendered Imports #41 and #58 highlighted even without a target. Root cause: the per-row Outer reference link builder overwrote the function's requested target parameter. The renderer now uses a separate outerTarget variable, so a plain Imports page has zero selected rows while target=import-41 selects exactly one. The legend differentiates gold selected-reference highlights from subtle missing-provider warnings.

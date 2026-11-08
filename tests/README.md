@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Public direct entry and cookie consent — 8 November 2026
+
+PHP unit driver: tests/tools/verify_direct_entry_gate_privacy_20261108.php. Its real HTTP, Apache mod_rewrite, and Chrome full-stack fixtures were run on DEV from D:/Temp/UnrealDB (test evidence at tests/evidence/direct-entry-gate-privacy-20261108.json). The signed gate is no-login for public visitors. It rejects premature/tampered passes and unsafe returns; verifies original query/fragment, real search referrals and spoofed search-host rejection. Analytics records require affirmative preference at both client and server. Per-host signing secrets must not be committed or published. Do not report Cloudflare WAF or the CrowdSec Windows Firewall remediation component as active until separately deployed and verified.
+
+---
+
+
 ## Exact source ExportMap matches and no accidental row highlighting - 7 November 2026
 
 Use php tests/tools/verify_file_examine_export_path_links_20261107.php with the original PRD UEDB5 metadata and read-only catalogue DB. The test proves original provider ExportMap index + source Outer-chain full path for genuine Unreal II import rows. It checks both unique and duplicate provider records, a nested same-name wrong path, a nonzero numbered FName, wrong game, and root-only imports. The 28-route HTTP test checks 24 base engine tabs, explicit import #41 and three physical target ExportMap rows, with zero defaults highlighted. Chrome additionally verifies row 41 and row 58, unique-link navigation, two-option export disclosure, original FName links, and no table overlap. Evidence: tests/evidence/file-examine-exact-export-navigation-and-highlight-20261107.json. These are navigational catalogue candidates, not native engine loader outcomes.

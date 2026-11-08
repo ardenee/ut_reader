@@ -13,6 +13,11 @@ use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogAccessEventRecorder;
 
 try {
+    // Never create optional usage telemetry without affirmative consent.
+    if (($_COOKIE['UEDB_PRIVACY_CHOICE'] ?? '') !== 'analytics') {
+        http_response_code(204);
+        exit;
+    }
     if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
         http_response_code(405);
         exit;

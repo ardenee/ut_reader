@@ -511,6 +511,7 @@ function catalog_head(string $title): void
 
     static $accessMatrixPageLogged = false;
     if (!$accessMatrixPageLogged
+        && ($_COOKIE['UEDB_PRIVACY_CHOICE'] ?? '') === 'analytics'
         && class_exists('UnrealDb\\Catalog\\Infrastructure\\Telemetry\\CatalogAccessEventRecorder')) {
         try {
             $accessMatrixPageLogged = true;
@@ -538,6 +539,9 @@ function catalog_head(string $title): void
     echo '<link rel="stylesheet" href="'
         . catalog_h($root . 'assets/catalog-ui.css?v=' . $uiStylesheetVersion) . '">';
     echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js?v=' . $uiScriptVersion) . '" defer></script>';
+    $privacyScript = __DIR__ . '/../assets/privacy-notice.js';
+    $privacyVersion = is_file($privacyScript) ? (string)filemtime($privacyScript) : '1';
+    echo '<script src="' . catalog_h($root . 'assets/privacy-notice.js?v=' . $privacyVersion) . '" defer></script>';
     if ($scriptName === 'unverified-files.php') {
         $timeoutRecoveryPath = __DIR__ . '/../assets/unverified-import-timeout-recovery.js';
         $timeoutRecoveryVersion = is_file($timeoutRecoveryPath) ? (string)filemtime($timeoutRecoveryPath) : '1';

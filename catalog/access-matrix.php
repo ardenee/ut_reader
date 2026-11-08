@@ -8,6 +8,9 @@
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/lib/CatalogDirectEntryGate.php';
+CatalogDirectEntryGate::enforce();
+
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogCountryFlag.php';
 

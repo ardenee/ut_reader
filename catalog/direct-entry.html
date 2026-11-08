@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Access verification | UnrealDB</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{font:16px/1.55 system-ui,sans-serif;background:#101721;color:#edf3fa;margin:0;min-height:100vh;display:grid;place-items:center}
+main{max-width:660px;margin:28px;padding:36px;border-radius:14px;background:#1a2431;border:1px solid #394553;box-shadow:0 20px 60px #05090e77}
+h1{font-size:1.6rem;margin:0 0 12px}p{color:#d2dce5}button{background:#3c86ce;border:0;border-radius:7px;padding:12px 24px;font:600 15px system-ui;color:white;cursor:pointer}button:disabled{background:#425469;cursor:not-allowed}
+small{display:block;margin-top:20px;color:#9eaebe}a{color:#8bc7ff}#error{color:#ffbbaf}
+</style>
+<script src="/catalog/assets/privacy-notice.js" defer></script>
+</head><body>
+<main>
+<h1>Manual access verification</h1>
+<p>UnrealDB is experiencing continuous automated scraping and bot traffic. To keep the site available for visitors, direct links to resource-intensive catalogue pages require a short manual verification.</p>
+<p>No account or login is needed. This check may also appear when opening a bookmark or when your browser omits referral information. Recognised search-engine results and links within UnrealDB can continue normally.</p>
+<p id="status" role="status">Preparing verification…</p>
+<form action="/catalog/direct-entry-continue.php" method="post" id="gate">
+<input type="hidden" name="return" id="return" value="">
+<input type="hidden" name="anchor" id="anchor" value="">
+<button id="continue" type="submit" disabled>Continue to the requested page (3)</button>
+</form>
+<p id="error" role="alert"></p>
+<small>The verification uses a strictly necessary short-lived security cookie. It does not enable optional site analytics. <a href="/catalog/privacy.html">Privacy and cookies</a>.</small>
+</main>
+<script>
+(function(){
+'use strict';
+const button=document.getElementById('continue'), status=document.getElementById('status'), error=document.getElementById('error');
+const u=new URL(location.href);
+const route=u.searchParams.get('to');
+const allowed=['file-examine.php','game-files.php','access-matrix.php'];
+if(!allowed.includes(route)){status.textContent='Invalid destination.';error.textContent='Return to the UnrealDB home page.';return;}
+u.searchParams.delete('to');
+const target='/catalog/'+route+(u.searchParams.toString()?'?'+u.searchParams.toString():'');
+document.getElementById('return').value=target;
+// Redirects may inherit the original URL fragment. Restore it safely after
+// the manual gate (important for #package-tables and exact import links).
+if(/^#[A-Za-z0-9_-]{1,80}$/.test(u.hash)){
+document.getElementById('anchor').value=u.hash;
+}
+let seconds=3;let ready=false;
+fetch('/catalog/direct-entry-token.php',{method:'GET',cache:'no-store',credentials:'same-origin'})
+.then(r=>{if(!r.ok)throw new Error('Cannot start verification');return r.json();})
+.then(data=>{
+if(!data.ok)throw new Error('Verification unavailable');
+status.textContent='Please wait three seconds, then click Continue.';
+const timer=setInterval(function(){
+seconds=Math.max(0,seconds-1);
+if(seconds===0){clearInterval(timer);ready=true;button.disabled=false;button.textContent='Continue to the requested page';status.textContent='Ready to continue.';}
+else button.textContent='Continue to the requested page ('+seconds+')';
+},1000);
+}).catch(()=>{status.textContent='Verification is temporarily unavailable.';error.textContent='Please try reloading this page.';});
+document.getElementById('gate').addEventListener('submit',function(e){if(!ready){e.preventDefault();}});
+})();
+</script>
+</body></html>

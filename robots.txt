@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /catalog/file-examine.php
+Disallow: /catalog/game-files.php
+Disallow: /catalog/access-matrix.php
+Disallow: /catalog/direct-entry.html
+Disallow: /catalog/direct-entry-token.php
+Disallow: /catalog/direct-entry-continue.php

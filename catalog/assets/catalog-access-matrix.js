@@ -43,6 +43,10 @@
     }
 
     function send(fields) {
+        // Site-improvement telemetry is OPTIONAL on this public view-only
+        // website. Do not even send the event request before affirmative
+        // consent (the PHP endpoint independently enforces the same choice).
+        if (!/(?:^|;\s*)UEDB_PRIVACY_CHOICE=analytics(?:;|$)/.test(document.cookie)) return;
         var body = new URLSearchParams();
         body.set('event_type', fields.event_type || '');
         body.set('page_key', pageKey());
@@ -71,6 +75,9 @@
     function trackPageView() {
         send({event_type: 'page_view'});
     }
+    window.addEventListener('unrealdb:privacy-choice', function (event) {
+        if (event.detail && event.detail.analytics) trackPageView();
+    });
 
     function trackSections() {
         if (typeof IntersectionObserver === 'undefined') return;
