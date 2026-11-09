@@ -1,4 +1,7 @@
-# UnrealDB file-behaviour parity — current testing authority
+
+## Emergency public File Examine admission — 9 November 2026
+
+Run php tests/tools/verify_file_examine_overload_guard_20261109.php (no DB) to confirm source-IP-bound manual verification and global public reader admission. The fifth concurrent expensive external PHP request is rejected before DB; existing manual 3-second Continue remains necessary. Apache .htaccess additionally blocks the observed concentrated crawler IP range for expensive routes only. Review before removing temporary network denial. No original UEDB5 or game package mutations.# UnrealDB file-behaviour parity — current testing authority
 
 ## Public privacy footer, no visitor analytics or cookie wall - 8 November 2026
 

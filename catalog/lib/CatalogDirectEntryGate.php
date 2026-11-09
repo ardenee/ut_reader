@@ -77,7 +77,12 @@ final class CatalogDirectEntryGate
 
     private static function agent(): string
     {
-        return substr(hash('sha256',(string)($_SERVER['HTTP_USER_AGENT']??'')),0,24);
+        // Pin a proof to the observed connection source and user agent. A
+        // single completed verification must not be reusable across unrelated
+        // public IPs in a coordinated distributed scraping campaign.
+        $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+        return substr(hash('sha256',
+            (string)($_SERVER['HTTP_USER_AGENT'] ?? '') . "\n" . $ip), 0, 24);
     }
 
     public static function issueToken(string $kind, int $timestamp, string $nonce): string
@@ -174,17 +179,32 @@ final class CatalogDirectEntryGate
     public static function enforce(): void
     {
         if (!in_array(strtoupper((string)($_SERVER['REQUEST_METHOD']??'GET')),['GET','HEAD'],true)) return;
-        if (!self::eligibleRoute(basename((string)($_SERVER['SCRIPT_NAME']??'')))) return;
-        if (self::internalClient((string)($_SERVER['REMOTE_ADDR']??''))) return;
-        // Referer is client-controlled; never trust it for the most expensive
-        // public reader. Verified signing is required for external File Examine.
-        $route = basename((string)($_SERVER['SCRIPT_NAME']??''));
+        $route = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
+        if (!self::eligibleRoute($route)) return;
+        if (self::internalClient((string)($_SERVER['REMOTE_ADDR'] ?? ''))) return;
+        // An HTTP Referer is client-controlled and cannot authenticate the
+        // expensive File Examine reader. Other public routes keep their
+        // existing same-site/search navigation behaviour.
         if ($route !== 'file-examine.php'
-            && self::trustedReferer((string)($_SERVER['HTTP_REFERER']??''))) return;
+            && self::trustedReferer((string)($_SERVER['HTTP_REFERER'] ?? ''))) return;
         try {
-            if (self::checkToken((string)($_COOKIE[self::PASS]??''),'pass',0,self::PASS_TTL)) return;
+            $signedPass = (string)($_COOKIE[self::PASS] ?? '');
+            if (self::checkToken($signedPass, 'pass', 0, self::PASS_TTL)) {
+                if ($route === 'file-examine.php') {
+                    require_once __DIR__ . '/CatalogPublicPageAdmission.php';
+                    if (!CatalogPublicPageAdmission::admit($signedPass)) {
+                        http_response_code(429);
+                        header('Cache-Control: no-store');
+                        header('Retry-After: 5');
+                        header('Content-Type: text/plain; charset=utf-8');
+                        echo 'The public catalogue is busy. Please retry in a few seconds.';
+                        exit;
+                    }
+                }
+                return;
+            }
         } catch (Throwable $error) {
-            error_log('[entry gate] unavailable: '.$error->getMessage());
+            error_log('[entry gate] unavailable: ' . $error->getMessage());
             self::block();
         }
         $original=(string)($_SERVER['REQUEST_URI']??'/catalog/');

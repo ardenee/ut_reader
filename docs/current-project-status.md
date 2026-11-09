@@ -1,4 +1,11 @@
 # UnrealDB current project status
+## 9 November 2026 — Emergency public File Examine overload protection
+
+At 11:15–11:21 UTC live PRD Apache logs showed repeated expensive file-examine requests with HTTP 200, around 454–552 requests/minute, hundreds of unique IPs and a concentrated 47.79.200–207.* rotation. Apache reported 100 worker threads exhausted. PRD still had historical .htaccess and CatalogDirectEntryGate.php allowing forged Referer to bypass verification although strict source changes had been committed previously. The source now strictly requires a signed manual Continue pass for external File Examine calls, binds the token to observed peer IP and user-agent, and admits at most four concurrent heavy public PHP requests with a short rate cap through locked filesystem state. The gate's three-second timer NEVER automatically navigates; only a manual POST sends the visitor to the original query/anchor. A narrow Apache rewrite rule denies only known abusive 47.79.200–207.* source IPs on expensive catalogue routes before PHP. LAN/admin traffic is not affected by the guard. These emergency values are subject to removal/review when flood subsides.
+
+Focused test driver tests/tools/verify_file_examine_overload_guard_20261109.php verifies signed IP isolation, age/Continue requirements, concurrent fifth-request rejection and recovery, and static Apache rule presence with no DB/package mutations. The existing 20261108 direct-entry HTTP and signature regressions also passed. PRD CPU, Apache HTTP and deployed hash verification must be recorded after deployment, independently of code tests.
+
+---
 
 ## 8 November 2026 - Public privacy footer and retired visitor analytics
 

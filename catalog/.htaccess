@@ -1,6 +1,13 @@
 Options -Indexes
 RewriteEngine On
 
+# Emergency 2026-11-09: source network observed making >800 heavy catalogue
+# requests per 5 minutes from hundreds of rotating hosts. This rule has
+# a deliberately narrow route scope and should be reviewed after the flood.
+# Windows Apache executes this BEFORE the PHP package reader.
+RewriteCond %{REMOTE_ADDR} ^47\.79\.20[0-7]\.[0-9]{1,3}$ [NC]
+RewriteRule ^(file-examine|file-examine-export|feedback|package-coverage)\.php$ - [F,L]
+
 # Resource-intensive File Examine pages always require a signed manual gate
 # for EXTERNAL visitors, even when Referer claims to be Google or the site.
 # Bots can forge Referer. Internal/LAN users retain unrestricted access.
