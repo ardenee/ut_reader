@@ -35,6 +35,13 @@ function examine_zen_table_reference(array $ref,array $scripts,array $local,int 
 function requireTrue(bool $ok,string $label):void{
     if (!$ok) throw new RuntimeException($label);
 }
+$pathLink = examine_export_import_search('artistalp', 12, 'artifx2.artistalp');
+requireTrue(str_contains($pathLink, 'q=artifx2.artistalp')
+    && str_contains($pathLink, 'scope%5B0%5D=imports'),
+    'Local export path must search by full import identity');
+requireTrue(str_contains(examine_export_reference(0,'super_index',[],1,250),
+    'signed reference: 0 (null)">-</span>'),
+    'Null export index must show dash, not none');
 $config=catalog_config();
 $config['db']['host']=(string)(getenv('PACKAGE_TABLE_COVERAGE_DB_HOST')?:'192.168.0.55');
 $db=catalog_db($config);
@@ -97,8 +104,25 @@ try{
                         .': compact Outer ref cell lost the serialized width');
                     continue;
                 }
+                if ($table === 'exports'
+                    && in_array($field, examine_export_format_fields(), true)) {
+                    requireTrue(str_contains($html, 'data-source-field="' . $field . '"')
+                        && str_contains($html, '>Format</th>'),
+                        $source['game_name'].' exports: source format metadata not disclosed '.$field);
+                    continue;
+                }
                 requireTrue(str_contains($html,examine_source_label($field)),
                     $source['game_name'].' '.$table.': heading missing '.$field);
+            }
+            if ($table === 'exports') {
+                requireTrue(str_contains($html, '>Local path</th>')
+                    && str_contains($html, '>Full path</th>')
+                    && str_contains($html, '>Format</th>'),
+                    $source['game_name'] . ': compact export headings/disclosure missing');
+                requireTrue(str_contains($html, 'examine-export-reference'),
+                    $source['game_name'] . ': export reference name links missing');
+                requireTrue(str_contains($html, 'signed reference: 0 (null)">-</span>'),
+                    $source['game_name'] . ': null export reference must display a dash');
             }
             if($table==='imports' && $source['id']===1253000) {
                 requireTrue(str_contains($html,'class="xref mono examine-import-self-ref"')

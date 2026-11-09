@@ -312,6 +312,24 @@ final class PdoPackageTablePageQuery
         };
 
         foreach ($rows as &$row) {
+            if ($table === 'exports') {
+                // Display-only reference names resolved from the actual signed
+                // ImportMap/ExportMap indices. Never modify the serialized data.
+                $names = [];
+                foreach (['class_index','super_index','outer_index','template_index',
+                    'archetype_index'] as $field) {
+                    if (!isset($row[$field]) || !is_int($row[$field])) continue;
+                    $signed = (int)$row[$field];
+                    if ($signed === 0) continue;
+                    $refRow = $find($signed);
+                    if (!is_array($refRow)) continue;
+                    $sourceName = $refRow['object_name'] ?? null;
+                    $display = is_array($sourceName)
+                        ? (string)($sourceName['text'] ?? '') : (string)$sourceName;
+                    if ($display !== '') $names[$field] = $display;
+                }
+                $row['__reference_labels'] = $names;
+            }
             $chain = [];
             $seen = [];
             $ownIndex = (int)$row[$table === 'imports' ? 'import_index' : 'export_index'];

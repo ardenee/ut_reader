@@ -34,9 +34,22 @@ function examine_source_label(string $field): string
         'object_name' => 'Object name',
         'class_package' => 'Class',
         'class_name' => 'Type',
-        'outer_index' => 'Outer ref',
-        'outer_index_serialized_width_bits' => 'Width',
-        'object_flags' => 'Object flags',
+        'outer_index' => 'Outer',
+        'class_index' => 'Class',
+        'super_index' => 'Super',
+        'template_index' => 'Template',
+        'archetype_index' => 'Archetype',
+        'outer_index_serialized' => 'Outer stored?',
+        'outer_index_serialized_width_bits' => 'Outer width',
+        'object_flags' => 'Flags',
+        'object_flags_serialized_width_bits' => 'Flags width',
+        'serial_size_encoding' => 'Size encoding',
+        'serial_offset_present' => 'Offset stored?',
+        'serial_offset_encoding' => 'Offset encoding',
+        'serial_size' => 'Size',
+        'serial_offset' => 'Data offset',
+        'local_path' => 'Local path',
+        'full_path' => 'Full path',
         'flags' => 'Name flags',
         'package_guid' => 'Package GUID',
         'serial_size' => 'Serial size',
@@ -58,8 +71,13 @@ function examine_source_description(string $field, string $table): string
         'class_package' => 'FName of the package defining the imported object class; click the text to open the exact Name-table entry.',
         'class_name' => 'FName of the imported object type; click to open its original Name-table entry.',
         'object_name' => 'FName of the imported object; click to open its original Name-table entry.',
-        'outer_index' => 'Original serialized OuterIndex value: 0 means no outer; negative values reference Import rows and positive values reference Export rows. Hover for the serialized field width.',
+        'outer_index' => 'Original signed OuterIndex: 0 means no outer; negative values reference imports and positive values reference exports. In Exports the referenced name is displayed with the signed value on hover.',
         'outer_index_serialized_width_bits' => 'Width, in bits, of the serialized OuterIndex field. 32 means a four-byte integer.',
+        'outer_index_serialized' => 'Whether the source-version ExportMap actually serialized an OuterIndex value; it is a format/version gate, not a new object index.',
+        'object_flags_serialized_width_bits' => 'Bit width (normally 32 or 64) of the source ObjectFlags field.',
+        'serial_size_encoding' => 'The source-version integer encoding used for SerialSize, such as UE1 CompactIndex.',
+        'serial_offset_present' => 'Whether the source ExportMap serialized a SerialOffset. This depends on the engine/version and size gate.',
+        'serial_offset_encoding' => 'Integer encoding used for SerialOffset, when serialized.',
         default => 'Source-record field: ' . $field,
     };
     return 'Source key: ' . $field . '. ' . $detail;
@@ -181,6 +199,88 @@ function examine_package_candidate_fallback(string $path, string $root, int $gam
         . 'not a matching serialized export"> package only' . $suffix . '</span>';
 }
 
+/**
+ * Original signed FPackageIndex is preserved in the tooltip. Text is read
+ * from the pointed-to ImportMap or ExportMap row in this same physical file.
+ */
+/** Compact source-format fields hidden from the wide ExportMap table. */
+function examine_export_format_fields(): array
+{
+    return [
+        'outer_index_serialized', 'outer_index_serialized_width_bits',
+        'object_flags_serialized_width_bits', 'serial_size_encoding',
+        'serial_offset_present', 'serial_offset_encoding',
+        'serial_range_serialized_width_bits',
+    ];
+}
+
+/** Lossless row-level disclosure of original format/version serialization fields. */
+function examine_export_format_disclosure(array $source): string
+{
+    $parts = [];
+    foreach (examine_export_format_fields() as $field) {
+        if (!array_key_exists($field, $source)) continue;
+        $value = $source[$field];
+        if (is_bool($value)) {
+            $display = $value ? 'true' : 'false';
+        } elseif ($value === null) {
+            $display = 'null';
+        } elseif (is_scalar($value)) {
+            $display = (string)$value;
+        } else {
+            $display = json_encode($value,
+                JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
+        }
+        $parts[] = '<div data-source-field="' . catalog_h($field)
+            . '" title="' . catalog_h(examine_source_description($field,'exports'))
+            . '"><strong>' . catalog_h($field) . ':</strong> '
+            . catalog_h($display) . '</div>';
+    }
+    if ($parts === []) return '<span class="muted">-</span>';
+    return '<details class="examine-source-composite examine-export-format">'
+        . '<summary class="mono">' . count($parts) . ' fields</summary>'
+        . '<div class="mono">' . implode('', $parts) . '</div></details>';
+}
+
+function examine_export_reference(int $reference, string $field, array $labels, int $fileId, int $pageSize): string
+{
+    if ($reference === 0) {
+        return '<span class="muted" title="Original '.catalog_h($field)
+            .' signed reference: 0 (null)">-</span>';
+    }
+    $target = $reference < 0 ? 'import-' . (-$reference - 1)
+        : 'export-' . ($reference - 1);
+    $name = (string)($labels[$field] ?? '');
+    $display = $name !== '' ? $name : (string)$reference;
+    $title = 'Original '. $field . ' signed reference: '. $reference
+        . '; points to ' . ($reference < 0 ? 'ImportMap' : 'ExportMap')
+        . ' index ' . (abs($reference) - 1);
+    if ($name === '') $title .= '; referenced name unavailable';
+    return '<a class="xref mono examine-export-reference" href="'
+        . catalog_h(examine_href($fileId, $target, $pageSize))
+        . '" title="' . catalog_h($title) . '" data-original-reference="'
+        . $reference . '">' . catalog_h($display) . '</a>';
+}
+
+/**
+ * An export path can be used to *search* for importers. Search hits are not
+ * proven reverse engine dependencies: source mount and VerifyImport are separate.
+ */
+function examine_export_import_search(string $path, int $gameId, ?string $lookupPath = null): string
+{
+    if ($path === '' || $gameId < 1) {
+        return '<span class="mono examine-source-value">' . catalog_h($path) . '</span>';
+    }
+    $lookupPath = $lookupPath !== null && $lookupPath !== '' ? $lookupPath : $path;
+    return '<a class="xref mono examine-export-import-search" href="'
+        . catalog_h('index.php?' . http_build_query([
+            'page'=>'search', 'q'=>$lookupPath, 'game_id'=>$gameId, 'scope'=>['imports']
+        ]))
+        . '" title="Search same-game indexed ImportMaps for this path. '
+        . 'Search results are not verified reverse dependencies">'
+        . catalog_h($path) . '</a>';
+}
+
 function examine_classic_full_source_table(
     string $table,
     array $rows,
@@ -200,8 +300,8 @@ function examine_classic_full_source_table(
         'imports' => ['root_package' => 'Root (derived)',
             'outer_name' => 'Outer',
             'full_path' => 'Full path (derived)'],
-        'exports' => ['local_path' => 'Local path (derived)',
-            'full_path' => 'Full path (derived)'],
+        'exports' => ['local_path' => 'Local path',
+            'full_path' => 'Full path'],
         default => [],
     };
     $engine = strtoupper((string)($file['profile_engine'] ?? $file['engine_key'] ?? ''));
@@ -211,6 +311,12 @@ function examine_classic_full_source_table(
     $columns = [];
     $placedDerived = [];
     foreach ($sourceKeys as $key) {
+        if ($table === 'exports'
+            && in_array($key, examine_export_format_fields(), true)) {
+            // These are important source metadata, available on the related
+            // value's tooltip rather than seven repetitive table columns.
+            continue;
+        }
         if ($table === 'imports' && $key === 'outer_index_serialized_width_bits'
             && in_array('outer_index',$sourceKeys,true)) {
             // Keep the original serialized width visible beside its Outer ref,
@@ -234,6 +340,10 @@ function examine_classic_full_source_table(
             $columns[] = ['kind'=>'derived','key'=>$key];
         }
     }
+    if ($table === 'exports'
+        && array_intersect(examine_export_format_fields(), $sourceKeys) !== []) {
+        $columns[] = ['kind'=>'format','key'=>'__source_format'];
+    }
     echo '<h2>' . catalog_h(ucfirst($table)) . ' — '
         . catalog_h($label) . ' source fields</h2>'
         . '<p class="muted">Every indexed source field is retained. '
@@ -241,8 +351,14 @@ function examine_classic_full_source_table(
         . 'number, or click to open the Name table. '
         . 'Root, Outer and Full path are reconstructed by following serialized '
         . 'OuterIndex references; they are not separate serialized fields. '
-        . 'Outer ref displays the original signed number, with its field width '
-        . 'available on hover. Ref identifies this import row, not an external file. '
+        . ($table === 'exports'
+            ? 'Class, Super and Outer display pointed-to object names; '
+              . 'hover for the exact original signed reference. Flags, serial '
+              . 'size and data offset retain original encoding details on hover. '
+              . 'Local/Full path links search for potential importers, not '
+              . 'certified reverse dependencies. '
+            : 'Outer ref displays the original signed number, with its field width '
+              . 'available on hover. Ref identifies this import row, not an external file. ')
         . ($table === 'imports'
             ? 'Gold means a selected reference; muted orange means a missing '
               . 'catalogue package candidate. A linked Full path has an exact '
@@ -257,11 +373,14 @@ function examine_classic_full_source_table(
     foreach ($columns as $column) {
         $key = $column['key'];
         $isDerived = $column['kind'] === 'derived';
-        $heading = $isDerived ? $derived[$key] : examine_source_label($key);
-        $tooltip = $isDerived
-            ? ('Derived from the original Outer reference chain: ' . $key
-                . '. Not an additional serialized field.')
-            : examine_source_description($key, $table);
+        $heading = $column['kind'] === 'format' ? 'Format'
+            : ($isDerived ? $derived[$key] : examine_source_label($key));
+        $tooltip = $column['kind'] === 'format'
+            ? 'Original version-gated serialization fields, preserved per row.'
+            : ($isDerived
+                ? ('Derived from the original Outer reference chain: ' . $key
+                    . '. Not an additional serialized field.')
+                : examine_source_description($key, $table));
         echo '<th title="' . catalog_h($tooltip) . '"'
             . ($isDerived ? ' class="examine-derived-col"' : '')
             . '>' . catalog_h($heading) . '</th>';
@@ -289,7 +408,9 @@ function examine_classic_full_source_table(
         $raw = (array)($row['__serialized_source_fields'] ?? $row);
         foreach ($columns as $column) {
             $key = $column['key'];
-            if ($column['kind'] === 'source') {
+            if ($column['kind'] === 'format') {
+                $value = examine_export_format_disclosure($raw);
+            } elseif ($column['kind'] === 'source') {
                 $present = array_key_exists($key, $raw);
                 if ($table === 'imports' && $key === 'package_index' && $present) {
                     // Ref is a signed *local ImportMap index*, not a file or
@@ -326,11 +447,43 @@ function examine_classic_full_source_table(
                             . catalog_h(examine_href($fileId, $outerTarget, $pageSize))
                             . '"' . $extra . '>' . $ref . '</a>';
                     }
+                } elseif ($table === 'exports' && $present
+                    && in_array($key,['class_index','super_index','outer_index',
+                        'template_index','archetype_index'],true)
+                    && is_int($raw[$key])) {
+                    $value = examine_export_reference(
+                        (int)$raw[$key],$key,(array)($row['__reference_labels']??[]),
+                        $fileId,$pageSize
+                    );
+                    if ($key === 'outer_index') {
+                        $value = str_replace(' title="', ' title="'.catalog_h(
+                            'OuterIndex serialized: '.(array_key_exists('outer_index_serialized',$raw)
+                                ? (!empty($raw['outer_index_serialized'])?'yes':'no'):'not separately recorded')
+                            .'; width: '.($raw['outer_index_serialized_width_bits']??'n/a')
+                            .' bits; '
+                        ), $value);
+                    }
+                } elseif ($table === 'exports' && $present
+                    && in_array($key,['object_flags','serial_size','serial_offset'],true)) {
+                    $extra = match($key) {
+                        'object_flags' => 'Serialized width: '.($raw['object_flags_serialized_width_bits']??'unknown').' bits',
+                        'serial_size' => 'Encoding: '.($raw['serial_size_encoding']??'version-dependent'),
+                        default => 'Present: '.(array_key_exists('serial_offset_present',$raw)
+                            ? (!empty($raw['serial_offset_present'])?'yes':'no'):'version-dependent')
+                            .'; encoding: '.($raw['serial_offset_encoding']??'version-dependent')
+                    };
+                    $value = '<span class="mono examine-source-value" title="'
+                        .catalog_h($extra).'">'.catalog_h((string)$raw[$key]).'</span>';
                 } else {
                     $value = $present ? examine_source_value(
                         $raw[$key], $fileId, $pageSize, $table, $key
                     ) : '<span class="muted" title="Not serialized in this source version">—</span>';
                 }
+            } elseif ($table === 'exports' && in_array($key,['local_path','full_path'],true)) {
+                $value = examine_export_import_search(
+                    (string)($row[$key]??''), (int)$file['game_id'],
+                    (string)($row['full_path']??'')
+                );
             } elseif ($key === 'root_package') {
                 $root = (string)($row[$key] ?? '');
                 $value = $root !== '' ? PdoPackageTablePageQuery::packageReferenceHtml(
