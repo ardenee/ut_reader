@@ -1,0 +1,63 @@
+{
+  "result": "LIVE_PRD_HTTP_VERIFIED",
+  "measured_at_utc": "2026-11-09T11:47:55.040266+00:00",
+  "from_logs": "PRD Apache access.log, rotated 2026-11-09",
+  "before_utc": "2026-11-09 11:41:00-11:43:00",
+  "before": {
+    "total": 990,
+    "unique_ips": 869,
+    "all_status": {
+      "200": 980,
+      "302": 10
+    },
+    "file_examine_count": 938,
+    "file_examine_status": {
+      "200": 937,
+      "302": 1
+    },
+    "expensive_file_examine_200": 927,
+    "static_gate_requests": 0,
+    "observed_attack_cidr_activity": 344
+  },
+  "after_utc": "2026-11-09 11:44:00-11:46:00",
+  "after": {
+    "total": 972,
+    "unique_ips": 951,
+    "all_status": {
+      "302": 499,
+      "200": 464,
+      "403": 6,
+      "304": 2,
+      "303": 1
+    },
+    "file_examine_count": 505,
+    "file_examine_status": {
+      "302": 498,
+      "403": 6,
+      "200": 1
+    },
+    "expensive_file_examine_200": 1,
+    "static_gate_requests": 417,
+    "observed_attack_cidr_activity": 4
+  },
+  "source_to_prd_sha256": {
+    "catalog/.htaccess": {
+      "source": "0b5408c7eb5a0fbfe10ac15867057170ef248d775e5df1f74866551e8a515f76",
+      "prd": "0b5408c7eb5a0fbfe10ac15867057170ef248d775e5df1f74866551e8a515f76"
+    },
+    "catalog/lib/CatalogDirectEntryGate.php": {
+      "source": "f4e1d9e89bcf70c750015c33a40db8db83f653133bf0fae0e4e9a1cbaf9f6d10",
+      "prd": "f4e1d9e89bcf70c750015c33a40db8db83f653133bf0fae0e4e9a1cbaf9f6d10"
+    },
+    "catalog/lib/CatalogPublicPageAdmission.php": {
+      "source": "2f4262e83919772006228c92092a5d2a26e00d3239f7cd44c898ed89a48d22b7",
+      "prd": "2f4262e83919772006228c92092a5d2a26e00d3239f7cd44c898ed89a48d22b7"
+    }
+  },
+  "manual_click": "3-second wait does not redirect; only POST Continue grants signed pass",
+  "normal_internal_lan": "File Examine with browser user-agent returned HTTP 200 in 1.43 seconds",
+  "static_landing": "Direct-entry static landing returned HTTP 200 in 0.013 seconds",
+  "live_apache_cpu_percent": "NOT_AVAILABLE_OVER_REMOTE_COUNTER",
+  "limitations": "HTTP results demonstrate reduced expensive application entry; they do not independently measure Apache process CPU. Total HTTP requests and static landing traffic may remain high.",
+  "source_commit": "c0b0e7d72f3a7ee4208d6fdf74b34d9a1d148c8b"
+}
