@@ -221,21 +221,6 @@ function examine_source_name_flags(string $flags, array $raw): string
         . '">' . catalog_h($flags) . '</span>';
 }
 
-/** Search indexed uses without treating a matching name string as an exact FName-index reference. */
-function examine_name_usage_search(string $name, int $gameId): string
-{
-    if ($name === '' || $gameId < 1 || mb_strlen($name,'UTF-8') < 3)
-        return '<span class="mono">'
-        . catalog_h($name) . '</span>';
-    return '<a class="xref mono examine-name-usage-search" href="'
-        . catalog_h('index.php?' . http_build_query([
-            'page'=>'search','q'=>$name,'game_id'=>$gameId,
-            'scope'=>['imports','exports']
-        ])) . '" title="Search same-game indexed imports and exports containing this name; '
-        . 'not a proof of the exact local FName index being referenced">'
-        . catalog_h($name) . '</a>';
-}
-
 function examine_export_format_fields(): array
 {
     return [
@@ -398,8 +383,7 @@ function examine_classic_full_source_table(
         . 'number, or click to open the Name table. '
         . ($table === 'names'
             ? 'Index is the original zero-based NameMap position. '
-              . 'Name links search for import/export uses in this game; '
-              . 'text matches do not prove an exact FName index reference. '
+              . 'Names and indices are displayed without search/self links. '
               . 'Original flags width is shown on hover. '
             : 'Root, Outer and Full path are reconstructed by following serialized '
               . 'OuterIndex references; they are not separate serialized fields. ')
@@ -420,7 +404,9 @@ function examine_classic_full_source_table(
         . 'Scroll the table horizontally for more fields.</p>'
         . '<div class="examine-table-region examine-source-scroll" role="region" '
         . 'aria-label="' . catalog_h(ucfirst($table)) . ' full source columns" tabindex="0">'
-        . '<table class="examine-source-table" data-catalog-identity-skip="1">'
+        . '<table class="examine-source-table'
+        . ($table === 'names' ? ' examine-names-table' : '')
+        . '" data-catalog-identity-skip="1">'
         . '<thead><tr>';
     foreach ($columns as $column) {
         $key = $column['key'];
@@ -466,17 +452,12 @@ function examine_classic_full_source_table(
                 $present = array_key_exists($key, $raw);
                 if ($table === 'names' && $key === 'flags' && $present) {
                     $value = examine_source_name_flags((string)$raw[$key],$raw);
-                } elseif ($table === 'names' && $key === 'text' && $present) {
-                    $value = examine_name_usage_search((string)$raw[$key],
-                        (int)$file['game_id']);
-                } elseif ($table === 'names' && $key === 'index' && $present) {
-                    // Unlike signed package references, this is the zero-based
-                    // local NameMap position; preserve it exactly.
-                    $value = '<a class="xref mono examine-name-self-ref" href="'
-                        . catalog_h(examine_href($fileId,$rowId,$pageSize))
-                        . '" title="NameMap index ' . $index
-                        . '; click to highlight this exact local name row">'
-                        . $index . '</a>';
+                } elseif ($table === 'names' && in_array($key,['text','index'],true)
+                    && $present) {
+                    // Plain serialized NameMap index and decoded text, no self-link
+                    // or global search. Other tables retain direct NameMap links.
+                    $value = '<span class="mono examine-source-value">'
+                        . catalog_h((string)$raw[$key]) . '</span>';
                 } elseif ($table === 'imports' && $key === 'package_index' && $present) {
                     // Ref is a signed *local ImportMap index*, not a file or
                     // dependency provider. Make it navigable to its own exact

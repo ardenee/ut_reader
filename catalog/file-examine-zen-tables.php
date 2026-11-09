@@ -111,9 +111,7 @@ function zen_exam_names(array $rows,array $reverse,?int $headerNameIndex,int $fi
                 .(int)$related['count'].' ExportMap references</a>';
         }
         echo '<tr id="'.$id.'"'.($target===$id?' class="is-reference-target"':'').'>'
-            .'<td><a class="xref mono examine-name-self-ref" href="'
-            .catalog_h(examine_href($fileId,$id,$size))
-            .'" title="Local Zen NameMap index '.$index.'">'.$index.'</a></td>'
+            .'<td class="mono">'.$index.'</td>'
             .'<td class="mono path">'.catalog_h((string)($row['name_text']??$row['text']??'')).'</td>'
             .'<td>'.zen_exam_hex((string)($row['hash']??'')).'</td>'
             .'<td>'.$linked.'</td>'

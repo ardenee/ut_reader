@@ -191,8 +191,7 @@
             // so the signed identity remains clickable for highlighting/copying.
             // Do not silently unwrap either one during browser initialization.
             if (link.classList.contains('examine-import-self-ref')
-                || link.classList.contains('examine-export-self-ref')
-                || link.classList.contains('examine-name-self-ref')) return;
+                || link.classList.contains('examine-export-self-ref')) return;
             var row = link.closest('tr');
             if (!row || !row.id) return;
             var targets = targetIdsFor(link);

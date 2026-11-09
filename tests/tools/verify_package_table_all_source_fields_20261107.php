@@ -117,9 +117,9 @@ try{
                     $source['game_name'].' '.$table.': heading missing '.$field);
             }
             if ($table === 'names') {
-                requireTrue(str_contains($html, 'examine-name-self-ref')
-                    && str_contains($html, 'examine-name-usage-search'),
-                    $source['game_name'] . ': name navigation missing');
+                requireTrue(!str_contains($html,'examine-name-self-ref')
+                    && !str_contains($html,'examine-name-usage-search'),
+                    $source['game_name'] . ': NameMap index and Name must be plain text');
                 if (in_array('flags_serialized_width_bits',$displayed,true)) {
                     requireTrue(str_contains($html,'serialized width: 32 bits')
                         || str_contains($html,'serialized width: 64 bits'),
@@ -196,8 +196,8 @@ try{
                 requireTrue(str_contains($html,'data-source-field="'.$field.'"'),
                     'Zen NameMap missing serialized source field '.$field);
             }
-            requireTrue(str_contains($html,'examine-name-self-ref'),
-                'Zen NameMap index self-link missing');
+            requireTrue(!str_contains($html,'examine-name-self-ref'),
+                'Zen NameMap index must be plain text');
         }elseif($table==='imports') {
             $sourceBase=['index','raw_type_and_id','type_tag','value_u62','type'];
             foreach(array_keys($originalKeys) as $field){
