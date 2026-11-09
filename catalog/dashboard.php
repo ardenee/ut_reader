@@ -41,19 +41,19 @@ try {
     );
 
     echo '<div class="grid">';
-    catalog_stat_card('Games', $stats['games']);
-    catalog_stat_card('Total files', $stats['files']);
-    catalog_stat_card('Verified files', $stats['verified'], '', 'good');
-    catalog_stat_card('Failed files', $stats['failed'], 'Need review', $stats['failed'] > 0 ? 'warning' : '');
+    catalog_stat_card('Games', $stats['games'], '', '', 'games.php');
+    catalog_stat_card('Total files', $stats['files'], '', '', 'dashboard-detail.php?metric=files');
+    catalog_stat_card('Verified files', $stats['verified'], '', 'good', 'dashboard-detail.php?metric=verified');
+    catalog_stat_card('Failed files', $stats['failed'], 'Need review', $stats['failed'] > 0 ? 'warning' : '', 'dashboard-detail.php?metric=failed');
     $depsCurrent = (int)($stats['dependency_current'] ?? 0) === 1;
-    catalog_stat_card('Missing dependency rows', $depsCurrent ? $stats['missing'] : 'Unavailable', $depsCurrent ? 'Current-source dependency rows' : 'Rebuild under the current Epic source policy', $depsCurrent ? ($stats['missing'] > 0 ? 'attention' : 'good') : 'warning');
-    catalog_stat_card('Resolved dependency rows', $depsCurrent ? $stats['resolved'] : 'Unavailable');
-    catalog_stat_card('Queued federation jobs', $stats['fedQueued']);
-    catalog_stat_card('Downloaded waiting import', $stats['fedDownloaded'], '', $stats['fedDownloaded'] > 0 ? 'attention' : '');
-    catalog_stat_card('Failed federation jobs', $stats['fedFailed'], '', $stats['fedFailed'] > 0 ? 'warning' : '');
-    catalog_stat_card('Mirror jobs waiting', $stats['mirrorWaiting'], '', $stats['mirrorWaiting'] > 0 ? 'attention' : '');
-    catalog_stat_card('Active mirror links', $stats['mirrorActive']);
-    catalog_stat_card('Pending join requests', $stats['joinPending'], '', $stats['joinPending'] > 0 ? 'attention' : '');
+    catalog_stat_card('Missing dependency rows', $depsCurrent ? $stats['missing'] : 'Unavailable', $depsCurrent ? 'Current-source dependency rows' : 'Rebuild under the current Epic source policy', $depsCurrent ? ($stats['missing'] > 0 ? 'attention' : 'good') : 'warning', 'missing.php');
+    catalog_stat_card('Resolved dependency rows', $depsCurrent ? $stats['resolved'] : 'Unavailable', '', '', 'missing.php');
+    catalog_stat_card('Queued federation jobs', $stats['fedQueued'], '', '', 'dashboard-detail.php?metric=fedQueued');
+    catalog_stat_card('Downloaded waiting import', $stats['fedDownloaded'], '', $stats['fedDownloaded'] > 0 ? 'attention' : '', 'dashboard-detail.php?metric=fedDownloaded');
+    catalog_stat_card('Failed federation jobs', $stats['fedFailed'], '', $stats['fedFailed'] > 0 ? 'warning' : '', 'dashboard-detail.php?metric=fedFailed');
+    catalog_stat_card('Mirror jobs waiting', $stats['mirrorWaiting'], '', $stats['mirrorWaiting'] > 0 ? 'attention' : '', 'dashboard-detail.php?metric=mirrorWaiting');
+    catalog_stat_card('Active mirror links', $stats['mirrorActive'], '', '', 'dashboard-detail.php?metric=mirrorActive');
+    catalog_stat_card('Pending join requests', $stats['joinPending'], '', $stats['joinPending'] > 0 ? 'attention' : '', 'dashboard-detail.php?metric=joinPending');
     echo '</div>';
 
     echo '<div class="two-col"><div class="card"><h2>Primary workflow</h2><div class="grid">';

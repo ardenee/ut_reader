@@ -1,0 +1,281 @@
+{
+  "date": "2026-11-09",
+  "schema": "unrealdb-dashboard-stat-drilldown-evidence-v1",
+  "status": "PASS_DEV_PREDEPLOY",
+  "scope": "Make all 12 administrator dashboard statistic cards linked, with genuine status-exact paginated drilldowns, preserving previous nonlinked stat cards.",
+  "dashboard_links": {
+    "Games": "games.php",
+    "Total files": "dashboard-detail.php?metric=files",
+    "Verified files": "dashboard-detail.php?metric=verified",
+    "Failed files": "dashboard-detail.php?metric=failed",
+    "Missing dependency rows": "missing.php",
+    "Resolved dependency rows": "missing.php",
+    "Queued federation jobs": "dashboard-detail.php?metric=fedQueued",
+    "Downloaded waiting import": "dashboard-detail.php?metric=fedDownloaded",
+    "Failed federation jobs": "dashboard-detail.php?metric=fedFailed",
+    "Mirror jobs waiting": "dashboard-detail.php?metric=mirrorWaiting",
+    "Active mirror links": "dashboard-detail.php?metric=mirrorActive",
+    "Pending join requests": "dashboard-detail.php?metric=joinPending"
+  },
+  "genuine_prd_readonly": {
+    "pass": true,
+    "read_only": true,
+    "metric_pages_checked": 9,
+    "metrics": {
+      "files": {
+        "expected": 262307,
+        "source_count": 262307,
+        "first_page_rows": 50,
+        "first_row_id": 1390452
+      },
+      "verified": {
+        "expected": 262073,
+        "source_count": 262073,
+        "first_page_rows": 50,
+        "first_row_id": 1390452
+      },
+      "failed": {
+        "expected": 102,
+        "source_count": 102,
+        "first_page_rows": 50,
+        "first_row_id": 1362983
+      },
+      "fedQueued": {
+        "expected": 19,
+        "source_count": 19,
+        "first_page_rows": 19,
+        "first_row_id": 19
+      },
+      "fedDownloaded": {
+        "expected": 0,
+        "source_count": 0,
+        "first_page_rows": 0,
+        "first_row_id": null
+      },
+      "fedFailed": {
+        "expected": 0,
+        "source_count": 0,
+        "first_page_rows": 0,
+        "first_row_id": null
+      },
+      "mirrorWaiting": {
+        "expected": 707,
+        "source_count": 707,
+        "first_page_rows": 50,
+        "first_row_id": 707
+      },
+      "mirrorActive": {
+        "expected": 0,
+        "source_count": 0,
+        "first_page_rows": 0,
+        "first_row_id": null
+      },
+      "joinPending": {
+        "expected": 0,
+        "source_count": 0,
+        "first_page_rows": 0,
+        "first_row_id": null
+      }
+    },
+    "exhaustive_pages": {
+      "failed": {
+        "rows_recovered": 102,
+        "pages_at_100": 2,
+        "all_ids_unique": true
+      },
+      "mirrorWaiting": {
+        "rows_recovered": 707,
+        "pages_at_100": 8,
+        "all_ids_unique": true
+      },
+      "fedQueued": {
+        "rows_recovered": 19,
+        "pages_at_100": 1,
+        "all_ids_unique": true
+      }
+    },
+    "malformed_and_unbounded_queries_rejected": true,
+    "source_records_unchanged": true
+  },
+  "actual_admin_php_http_with_isolated_synthetic_dev_session": {
+    "pass": true,
+    "admin_test_session_only": true,
+    "http_cards": 12,
+    "failed_file_rows": 102,
+    "mirror_rows": 707,
+    "queued_federation": 19,
+    "last_mirror_job_link": 7,
+    "anonymous_blocked": true,
+    "unrecognised_metric_404": true,
+    "db_writes": 0
+  },
+  "headless_chrome_real_php_css_js_interactions": {
+    "pass": true,
+    "admin_test_session_only": true,
+    "linked_cards": [
+      {
+        "label": "View Games details",
+        "href": "games.php",
+        "value": "8",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Total files details",
+        "href": "dashboard-detail.php?metric=files",
+        "value": "262307",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Verified files details",
+        "href": "dashboard-detail.php?metric=verified",
+        "value": "262073",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Failed files details",
+        "href": "dashboard-detail.php?metric=failed",
+        "value": "102",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Missing dependency rows details",
+        "href": "missing.php",
+        "value": "0",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Resolved dependency rows details",
+        "href": "missing.php",
+        "value": "0",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Queued federation jobs details",
+        "href": "dashboard-detail.php?metric=fedQueued",
+        "value": "19",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Downloaded waiting import details",
+        "href": "dashboard-detail.php?metric=fedDownloaded",
+        "value": "0",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Failed federation jobs details",
+        "href": "dashboard-detail.php?metric=fedFailed",
+        "value": "0",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Mirror jobs waiting details",
+        "href": "dashboard-detail.php?metric=mirrorWaiting",
+        "value": "707",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Active mirror links details",
+        "href": "dashboard-detail.php?metric=mirrorActive",
+        "value": "0",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      },
+      {
+        "label": "View Pending join requests details",
+        "href": "dashboard-detail.php?metric=joinPending",
+        "value": "0",
+        "action": "View details",
+        "cursor": "pointer",
+        "color": "rgb(238, 245, 255)"
+      }
+    ],
+    "failed_file_first_page": {
+      "header": "Failed files",
+      "rowCount": 50,
+      "firstFileHref": "file-info.php?id=1362983",
+      "pagination": "1 2 3 Next Last",
+      "pageWidth": 1366,
+      "viewportWidth": 1366,
+      "tableOverflow": 1288
+    },
+    "mirror_page_1": {
+      "count": 50,
+      "firstJob": "mirror-job.php?id=707",
+      "pageCount": "1 2 3 … 15 Next Last",
+      "pageWidth": 1366,
+      "viewportWidth": 1366
+    },
+    "mirror_page_15": {
+      "count": 7,
+      "jobs": [
+        "mirror-job.php?id=7",
+        "mirror-job.php?id=6",
+        "mirror-job.php?id=5",
+        "mirror-job.php?id=4",
+        "mirror-job.php?id=3",
+        "mirror-job.php?id=2",
+        "mirror-job.php?id=1"
+      ],
+      "currentPage": "15",
+      "overflow": 0
+    },
+    "queued_federation": {
+      "rows": 19,
+      "sourceLink": true,
+      "overflow": 0
+    },
+    "games_destination": {
+      "path": "/catalog/games.php",
+      "gameCards": 0,
+      "title": "Games"
+    },
+    "actual_php_html_css_browser": true,
+    "production_login_used": false
+  },
+  "directly_affected_regressions": {
+    "source-table-ui": {
+      "pass": true
+    },
+    "game-indexed-coverage": {
+      "pass": true
+    },
+    "game-files-sorting": {
+      "pass": true
+    }
+  },
+  "source_sha256": {
+    "catalog/dashboard.php": "de74f1fee2580b22bb14095c4f9e0fa3781756033d1173cdc710869d58d4357c",
+    "catalog/dashboard-detail.php": "34f9d18e6c5a7e511a1dbf9a5bdeec0a1b3fc452dca4a70d1f866482de9a16b2",
+    "catalog/lib/CatalogSupportCore.php": "9ff86b7261c54e57e3233762a94b7060a06e118b38cdc45ccf3d0f1689aa66b8",
+    "catalog/assets/catalog.css": "38d60d8af18c3fc98849d0c0a0781b07f1695831623cf2ec8c7a5a997d6e3065",
+    "catalog/federation/connections.php": "01e551625b6f79052d283ab5910b1b2a03cf6d25b5648ba4f3cb3d87093a4671",
+    "catalog/src/Infrastructure/Persistence/PdoDashboardDetailPageQuery.php": "9c8468ee6d67caad8ee163ea52a3b37d531f55e17a1e7454edb15c2b39258d31",
+    "tests/tools/verify_dashboard_card_drilldown_20261109.php": "2ff0b8afe9e4b4b68c3284b89167b3d68046ed1b9f21af3b09f8233a57e2ed82"
+  },
+  "cross_game_reader_mutations": 0,
+  "production_db_writes": 0,
+  "uedb5_snapshots_or_original_files_modified": false,
+  "real_prd_admin_session_used": false,
+  "protected_prd_apache_browser_tested": false
+}

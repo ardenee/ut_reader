@@ -122,7 +122,7 @@ try {
         }
         echo '</div>';
 
-        echo '<div class="card"><h2>Incoming Child Join Requests</h2>';
+        echo '<div class="card" id="incoming-child-join-requests"><h2>Incoming Child Join Requests</h2>';
         if (!$incoming) {
             echo '<p class="muted">No child join requests have been received.</p>';
         } else {

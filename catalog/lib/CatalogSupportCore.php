@@ -442,13 +442,26 @@ function catalog_tool_card(string $title, string $href, string $description, str
     echo '<a class="stat tool-card" href="' . catalog_h($href) . '"><h2>' . catalog_h($title) . ' ' . $badgeHtml . '</h2><p>' . catalog_h($description) . '</p></a>';
 }
 
-function catalog_stat_card(string $title, string|int $value, string $description = '', string $class = ''): void
+function catalog_stat_card(string $title, string|int $value, string $description = '', string $class = '', string $href = ''): void
 {
-    echo '<div class="stat ' . catalog_h($class) . '"><h2>' . catalog_h($value) . '</h2><p>' . catalog_h($title) . '</p>';
+    // Dashboard counters use an accessible whole-card link. All existing
+    // four-argument cards remain non-interactive to preserve their behavior.
+    $linked = $href !== '';
+    if ($linked) {
+        echo '<a class="stat tool-card dashboard-stat-link ' . catalog_h($class) . '" href="'
+            . catalog_h($href) . '" aria-label="View ' . catalog_h($title) . ' details">';
+    } else {
+        echo '<div class="stat ' . catalog_h($class) . '">';
+    }
+    echo '<h2>' . catalog_h($value) . '</h2><p>' . catalog_h($title) . '</p>';
     if ($description !== '') {
         echo '<p class="muted small">' . catalog_h($description) . '</p>';
     }
-    echo '</div>';
+    if ($linked) {
+        echo '<span class="dashboard-stat-action">View details</span></a>';
+    } else {
+        echo '</div>';
+    }
 }
 
 function catalog_page_links(array $links): void

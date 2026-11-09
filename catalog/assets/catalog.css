@@ -213,6 +213,15 @@ main {
     border-color: var(--blue);
     background: rgba(118, 169, 255, .10);
 }
+/* Dashboard statistics are proper links (mouse and keyboard), while ordinary
+   stat counters throughout admin pages retain their previous static display. */
+a.dashboard-stat-link{color:inherit;text-decoration:none;display:flex;flex-direction:column;min-height:140px}
+a.dashboard-stat-link:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+a.dashboard-stat-link .dashboard-stat-action{display:block;margin-top:auto;padding-top:12px;color:var(--blue);font-size:12px;font-weight:600}
+.dashboard-detail-table{min-width:900px}
+.dashboard-detail-table td{vertical-align:top}
+.dashboard-detail-table td.path{overflow-wrap:anywhere;max-width:460px}
+
 
 .warning {
     border-color: rgba(255, 107, 122, .65);
