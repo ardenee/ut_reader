@@ -2,7 +2,7 @@
 
 ## Dashboard statistic drilldowns — 9 November 2026
 
-Run php tests/tools/verify_dashboard_card_drilldown_20261109.php with the original read-only catalogue configuration. It cross-checks nine administrator dashboard detail status predicates against the same underlying counts, and exhaustively fetches all 102 failed files, 707 waiting mirror jobs and 19 queued federation jobs with no duplicate/omitted IDs. The PHP-rendered browser acceptance uses a disposable DEV-only synthetic admin session; no actual admin credentials or PRD sessions. It verifies all 12 cards have correct links, 15 mirror pages of 50, the final seven jobs, all 19 federation queued records, the three-page failed-file list, anonymous access blocking and zero document horizontal overflow. Evidence: tests/evidence/dashboard-stat-drilldown-20261109.json.
+Run php tests/tools/verify_dashboard_card_drilldown_20261109.php with the original read-only catalogue configuration. It cross-checks nine administrator dashboard detail status predicates against the same underlying counts, and exhaustively fetches all 102 failed files, 707 waiting mirror jobs and 19 queued federation jobs with no duplicate/omitted IDs. The PHP-rendered browser acceptance uses a disposable DEV-only synthetic admin session; no actual admin credentials or PRD sessions. It verifies all 12 cards have correct links, 15 mirror pages of 50, the final seven jobs, all 19 federation queued records, the three-page failed-file list, anonymous access blocking and zero document horizontal overflow. Evidence: tests/evidence/dashboard-stat-drilldown-20261109.json. Post-deployment HTTP acceptance also passed using the actual PRD PHP files mounted read-only through DEV; no production account credentials were used.
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "date": "2026-11-09",
   "schema": "unrealdb-dashboard-stat-drilldown-evidence-v1",
-  "status": "PASS_DEV_PREDEPLOY",
+  "status": "PASS_DEV_AND_PRD_DEPLOYED",
   "scope": "Make all 12 administrator dashboard statistic cards linked, with genuine status-exact paginated drilldowns, preserving previous nonlinked stat cards.",
   "dashboard_links": {
     "Games": "games.php",
@@ -277,5 +277,52 @@
   "production_db_writes": 0,
   "uedb5_snapshots_or_original_files_modified": false,
   "real_prd_admin_session_used": false,
-  "protected_prd_apache_browser_tested": false
+  "protected_prd_apache_browser_tested": false,
+  "deployment": {
+    "source_code_commit": "d4cf6e0c59be43321fb80e37de6e08159e72d93f",
+    "deploy_preflight": 10,
+    "dev_prd_files_sha_verified": 20,
+    "deployed_product_code_hashes": {
+      "catalog/dashboard.php": {
+        "dev_sha256": "de74f1fee2580b22bb14095c4f9e0fa3781756033d1173cdc710869d58d4357c",
+        "prd_sha256": "de74f1fee2580b22bb14095c4f9e0fa3781756033d1173cdc710869d58d4357c"
+      },
+      "catalog/dashboard-detail.php": {
+        "dev_sha256": "34f9d18e6c5a7e511a1dbf9a5bdeec0a1b3fc452dca4a70d1f866482de9a16b2",
+        "prd_sha256": "34f9d18e6c5a7e511a1dbf9a5bdeec0a1b3fc452dca4a70d1f866482de9a16b2"
+      },
+      "catalog/lib/CatalogSupportCore.php": {
+        "dev_sha256": "9ff86b7261c54e57e3233762a94b7060a06e118b38cdc45ccf3d0f1689aa66b8",
+        "prd_sha256": "9ff86b7261c54e57e3233762a94b7060a06e118b38cdc45ccf3d0f1689aa66b8"
+      },
+      "catalog/assets/catalog.css": {
+        "dev_sha256": "38d60d8af18c3fc98849d0c0a0781b07f1695831623cf2ec8c7a5a997d6e3065",
+        "prd_sha256": "38d60d8af18c3fc98849d0c0a0781b07f1695831623cf2ec8c7a5a997d6e3065"
+      },
+      "catalog/federation/connections.php": {
+        "dev_sha256": "01e551625b6f79052d283ab5910b1b2a03cf6d25b5648ba4f3cb3d87093a4671",
+        "prd_sha256": "01e551625b6f79052d283ab5910b1b2a03cf6d25b5648ba4f3cb3d87093a4671"
+      },
+      "catalog/src/Infrastructure/Persistence/PdoDashboardDetailPageQuery.php": {
+        "dev_sha256": "9c8468ee6d67caad8ee163ea52a3b37d531f55e17a1e7454edb15c2b39258d31",
+        "prd_sha256": "9c8468ee6d67caad8ee163ea52a3b37d531f55e17a1e7454edb15c2b39258d31"
+      },
+      "tests/tools/verify_dashboard_card_drilldown_20261109.php": {
+        "dev_sha256": "2ff0b8afe9e4b4b68c3284b89167b3d68046ed1b9f21af3b09f8233a57e2ed82",
+        "prd_sha256": "2ff0b8afe9e4b4b68c3284b89167b3d68046ed1b9f21af3b09f8233a57e2ed82"
+      }
+    },
+    "actual_prd_php_source_readonly_http": {
+      "pass": true,
+      "origin": "PRD deployed PHP from UNC read-only over DEV temporary server",
+      "dashboard_cards": 12,
+      "failed": 102,
+      "mirror": 707,
+      "mirror_page": 15,
+      "fedQueued": 19,
+      "anon_blocked": true,
+      "session_scope": "DEV ephemeral only"
+    },
+    "direct_authenticated_prd_apache_browser_verified": false
+  }
 }
