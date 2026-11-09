@@ -157,6 +157,30 @@ function examine_source_value(
  * @param array<string,list<int>> $packageFiles
  * @param array<int,list<array{file_id:int,export_index:int,path:string}>> $exactExportPaths
  */
+/**
+ * Navigation-only fallback when the exact ExportMap object is not indexed.
+ * A matching physical package is useful to inspect, but is NOT a native
+ * VerifyImport resolution or proof that the requested object exists.
+ * @param list<int> $ids
+ */
+function examine_package_candidate_fallback(string $path, string $root, int $gameId, array $ids): string
+{
+    $plain = '<span class="mono examine-source-value">' . catalog_h($path) . '</span>';
+    if ($path === '' || $root === '' || $gameId < 1 || $ids === []) return $plain;
+    $ids = array_values(array_unique(array_filter(array_map('intval', $ids),
+        static fn(int $id): bool => $id > 0)));
+    if ($ids === []) return $plain;
+    $href = count($ids) === 1
+        ? 'file-info.php?id=' . $ids[0]
+        : 'game-files.php?id=' . $gameId . '&file_filter=' . rawurlencode($root);
+    $suffix = count($ids) > 1 ? ' (' . count($ids) . ' files)' : '';
+    return '<a class="xref mono examine-package-candidate" href="' . catalog_h($href)
+        . '" title="Indexed package candidate only; no exact serialized ExportMap object matched. '
+        . 'This is not a selected engine mount or verified dependency">'
+        . catalog_h($path) . '</a><span class="muted small" title="Package candidate, '
+        . 'not a matching serialized export"> package only' . $suffix . '</span>';
+}
+
 function examine_classic_full_source_table(
     string $table,
     array $rows,
@@ -223,6 +247,7 @@ function examine_classic_full_source_table(
             ? 'Gold means a selected reference; muted orange means a missing '
               . 'catalogue package candidate. A linked Full path has an exact '
               . 'source ExportMap path candidate, not a certified native provider. '
+              . 'Package-only links show indexed files without claiming an object export or loader match. '
             : '')
         . 'Scroll the table horizontally for more fields.</p>'
         . '<div class="examine-table-region examine-source-scroll" role="region" '
@@ -331,8 +356,11 @@ function examine_classic_full_source_table(
                 $path = (string)($row[$key] ?? '');
                 $targets = $exactExportPaths[$index] ?? [];
                 if ($path === '' || $targets === []) {
-                    $value = '<span class="mono examine-source-value">'
-                        . catalog_h($path) . '</span>';
+                    $root = trim((string)($row['root_package'] ?? ''));
+                    $value = examine_package_candidate_fallback(
+                        $path, $root, (int)$file['game_id'],
+                        $packageFiles[strtolower($root)] ?? []
+                    );
                 } elseif (count($targets) === 1) {
                     $match = $targets[0];
                     $value = '<a class="xref mono examine-matched-export" href="'

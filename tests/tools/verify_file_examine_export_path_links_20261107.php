@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/catalog/lib/CatalogSupport.php';
+require_once dirname(__DIR__, 2) . '/catalog/file-examine-source-rows.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassicImportExportPathLookup;
@@ -115,6 +116,26 @@ try {
     requires(empty($ue1Matches[24]),
         'UE1 root package Import #24 must not be misrepresented as an export');
 
+    // Package-level navigation remains available without pretending that
+    // native-only Core symbols or top-level Package imports are ExportMap hits.
+    $packageLink = examine_package_candidate_fallback(
+        'artifx2','artifx2',12,[1294173]
+    );
+    $nativeLink = examine_package_candidate_fallback(
+        'Core.Class','Core',12,[149430,149456,1214008,1214015,1214036,1390582]
+    );
+    $absent = examine_package_candidate_fallback(
+        'BoomDarts','BoomDarts',12,[]
+    );
+    requires(str_contains($packageLink,'file-info.php?id=1294173')
+        && str_contains($packageLink,'package only'),
+        'A real package must be navigable without claiming its import is resolved');
+    requires(str_contains($nativeLink,'file_filter=Core')
+        && str_contains($nativeLink,'6 files'),
+        'Multiple physical Core candidates must remain visible');
+    requires(!str_contains($absent,'href='),
+        'Missing physical packages must not acquire invented targets');
+
     $count = 0;
     foreach ($matches as $list) $count += count($list);
     $db->rollBack();
@@ -134,6 +155,7 @@ try {
         'numbered_fname_not_guessed' => true,
         'foreign_game_rejected' => true,
         'ue1_wide_page_artifx2_export_verified' => true,
+        'package_only_navigation_disclosed_without_resolution' => true,
         'source_export_path_verified' => true,
         'runtime_provider_selected' => false,
         'db_mutations' => 0
