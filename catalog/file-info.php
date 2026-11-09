@@ -68,6 +68,77 @@ function file_info_related_files_table(array $rows, string $empty): string {
     return $html.'</tbody></table>';
 }
 
+
+/**
+ * Same visual hierarchy as file-examine.php: hero, canonical catalogue
+ * metadata and bounded source-table navigation. Source identities are not
+ * reinterpreted or manufactured by the summary page.
+ *
+ * @param array<string,mixed> $file
+ * @param array<string,mixed> $zen
+ */
+function file_info_identity_card(array $file, array $zen = []): string
+{
+    $id=(int)$file['id'];
+    $isZen=strtolower((string)($file['extension']??''))==='zenpkg';
+    $gameHref='game-files.php?id='.(int)$file['game_id'];
+    $examineHref='file-examine.php?id='.$id;
+    $fields=[
+        'Game (catalogue)' => '<a href="'.catalog_h($gameHref).'">'
+            .catalog_h((string)$file['game_name']).'</a>',
+        'Package path (decoded)' => '<a href="'.catalog_h($examineHref).'">'
+            .catalog_h((string)$file['package_name']).'</a>',
+    ];
+    if ($isZen) {
+        $containerId=(int)($zen['container_id']??0);
+        $fields['Format (reader classification)']='UE5 Zen / IoStore';
+        $fields['FPackageId (IoStore index)']=catalog_h((string)($zen['package_id']??'Not indexed'));
+        $fields['Stored member filename (UnrealDB)']=catalog_h((string)$file['original_name']);
+        $fields['Source IoStore file']=$containerId>0
+            ? '<a href="iostore-info.php?id='.$containerId.'">'
+                .catalog_h((string)($zen['container_name']??'')).'</a>'
+            : '<span class="muted">Not recorded</span>';
+    } else {
+        $fields['File (catalogue)']=catalog_h((string)$file['original_name']);
+        $fields['GUID (catalogue)']=catalog_h((string)($file['package_guid']?:'-'));
+        $fields['Version (catalogue)']=catalog_h((string)($file['package_version']??'-'));
+        $fields['Licensee version (catalogue)']=catalog_h((string)($file['licensee_version']??'-'));
+    }
+    $html='<div class="card file-info-identity"><h2>Catalogue metadata &amp; package identity</h2>'
+        .'<p class="muted">The game, filename, size, status and table counts are catalogue records. '
+        .($isZen
+            ? 'FPackageId comes from the IoStore chunk index, not the Zen summary; .zenpkg is an internal storage filename.'
+            : 'GUID and package version are indexed source-header metadata.')
+        .'</p><div class="two-col"><table><tbody>';
+    foreach ($fields as $label=>$value) {
+        $html.='<tr><th>'.catalog_h((string)$label).'</th><td class="mono path">'.$value.'</td></tr>';
+    }
+    $html.='</tbody></table><table><tbody>';
+    foreach([
+        'Names' => (int)$file['name_count'],
+        'Imports' => (int)$file['import_count'],
+        'Exports' => (int)$file['export_count'],
+        ($isZen ? 'Reconstructed member bytes' : 'File size')
+            => catalog_bytes((int)$file['file_size']),
+        'Scan status (catalogue)' => (string)$file['scan_status'],
+    ] as $label=>$value){
+        $html.='<tr><th>'.catalog_h((string)$label).'</th><td class="mono path">'
+            .catalog_h((string)$value).'</td></tr>';
+    }
+    if (!$isZen) {
+        $html.='<tr><th>MD5</th><td class="mono path">'
+            .catalog_h((string)($file['md5']??'-')).'</td></tr>';
+        $html.='<tr><th>SHA1</th><td class="mono path">'
+            .catalog_h((string)($file['sha1']??'-')).'</td></tr>';
+        $html.='<tr><th>Compression</th><td class="mono path">'
+            .((int)($file['is_compressed']??0)===1?'compressed':'uncompressed')
+            .' (flags 0x'
+            .strtoupper(str_pad(dechex((int)($file['compression_flags']??0)),8,'0',STR_PAD_LEFT))
+            .')</td></tr>';
+    }
+    return $html.'</tbody></table></div></div>';
+}
+
 try{
 $config=catalog_config();
 $db=catalog_db($config);
@@ -206,53 +277,56 @@ if(!$isZen){
     ))));
     $packageFiles=\UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::packageFiles($db,(int)$file['game_id'],$rootNames);
 }
-catalog_head('File info');echo <<<'CSS'
+catalog_head('Package details — ' . (string)$file['package_name']);
+echo <<<'CSS'
 <style>
-.file-info-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.file-info-title h1{margin:0}.file-info-context{margin:8px 0}.file-imports-scroll{overflow-x:auto}.file-imports-table{width:100%}.file-imports-table th:nth-child(1){width:9%}.file-imports-table th:nth-child(2){width:22%}.file-imports-table th:nth-child(3){width:32%}.file-imports-table th:nth-child(4){width:9%}.file-imports-table th:nth-child(5){width:28%}.file-map-nav{display:flex;gap:10px;flex-wrap:wrap}.file-map-nav a{display:flex;gap:12px;align-items:center;border:1px solid var(--border,#2b3950);border-radius:8px;padding:12px;text-decoration:none}.file-relations-map{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.file-map-node{flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border,#2b3950);padding:14px;border-radius:10px}.file-map-node strong{overflow-wrap:anywhere}.file-map-current{border-color:var(--blue,#76a9ff)}.file-map-arrow{font-size:24px}[data-sortable-table] th{cursor:pointer;user-select:none}[data-sortable-table] th::after{content:'↕';display:inline-block;margin-left:7px;color:var(--muted);font-size:11px;opacity:.7}[data-sortable-table] th.is-sort-ascending::after{content:'▲';color:var(--blue);opacity:1}[data-sortable-table] th.is-sort-descending::after{content:'▼';color:var(--blue);opacity:1}
+.file-imports-scroll{overflow-x:auto}
+.file-imports-table{width:100%}
+.file-imports-table th:nth-child(1){width:9%}
+.file-imports-table th:nth-child(2){width:22%}
+.file-imports-table th:nth-child(3){width:32%}
+.file-imports-table th:nth-child(4){width:9%}
+.file-imports-table th:nth-child(5){width:28%}
+.file-relations-map{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.file-map-node{flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--line2);padding:14px;border-radius:10px}
+.file-map-node strong{overflow-wrap:anywhere}
+.file-map-current{border-color:var(--blue)}
+.file-map-arrow{font-size:24px}
+.file-info-identity table th{text-align:left;white-space:nowrap}
+.file-info-identity table td{overflow-wrap:anywhere}
+.file-info-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.file-info-tabs a{display:inline-flex;gap:6px;align-items:center;min-height:34px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);background:rgba(255,255,255,.035);font-weight:650;text-decoration:none}
+.file-info-tabs a:hover{border-color:var(--blue);color:var(--blue)}
 </style>
 CSS;
+$gameHref='game-files.php?id='.(int)$file['game_id'];
+$examineHref='file-examine.php?id='.$id;
+echo '<div class="card hero" id="top"><h1>Package details — '
+    .catalog_h((string)$file['package_name']).'</h1>'
+    .'<p class="muted">Catalogue identity, source package tables and dependency relationships for '
+    .catalog_h((string)$file['original_name']).'.</p>'
+    .'<p><a class="button" href="'.catalog_h($gameHref).'">Back to files</a> '
+    .'<a class="button" href="'.catalog_h($examineHref).'">Examine tables</a> '
+    .'<a class="button" href="download-info.php?id='.$id.'">Download options</a> '
+    .'<a class="button" href="package-coverage.php?file_id='.$id.'">Send to Package Coverage</a></p></div>';
 $isZen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
 echo catalog_file_feedback_form_html($id);
+$zen=[];
 if ($isZen) {
-    $zen = catalog_one($db,
+    $zen=catalog_one($db,
         'SELECT HEX(p.package_id) AS package_id,p.container_id,c.name container_name '
         . 'FROM ue_iostore_packages p JOIN ue_iostore_containers c ON c.id=p.container_id '
-        . 'WHERE p.file_id=? AND p.chunk_index=0 ORDER BY p.id LIMIT 1', [$id]);
-    $zenId = (string)($zen['package_id'] ?? '');
-    $containerId = (int)($zen['container_id'] ?? 0);
-    $packageHref = 'file-examine.php?id=' . $id;
-    $gameHref = 'game-files.php?id=' . (int)$file['game_id'];
-    echo '<div class="card"><div class="file-info-title"><h1>'
-        . catalog_h((string)$file['package_name'])
-        . '</h1><span class="dep file-type-pill type-package">Zen / IoStore</span></div>'
-        . '<p class="file-info-context"><a href="' . $gameHref . '">'
-        . catalog_h((string)$file['game_name']) . '</a> · Cooked UE5 package</p>'
-        . '<p><a class="button" href="download-info.php?id=' . $id . '">Download options</a> '
-        . '<a class="button secondary" href="' . $packageHref . '">Examine file</a></p>'
-        . '<table><tbody>'
-        . '<tr><th>FPackageId</th><td class="mono">'
-        . ($zenId !== '' ? catalog_h($zenId) : 'Not indexed') . '</td></tr>'
-        . '<tr><th>Package name</th><td class="mono path">' . catalog_h((string)$file['package_name']) . '</td></tr>'
-        . '<tr><th>Source</th><td>'
-        . ($containerId > 0 ? '<a href="iostore-info.php?id=' . $containerId . '">'
-            . catalog_h((string)($zen['container_name'] ?? '')) . '</a>' : 'IoStore member')
-        . '</td></tr>'
-        . '<tr><th>Tables</th><td><a href="' . $packageHref . '">'
-        . (int)$file['name_count'] . ' names / ' . (int)$file['import_count']
-        . ' imports / ' . (int)$file['export_count'] . ' exports</a></td></tr>'
-        . '</tbody></table><p class="muted">'
-        . 'Zen package headers do not contain a classic package GUID. '
-        . 'The internal .zenpkg filename is a storage identifier, not an original UE5 filename.'
-        . '</p></div>';
-} else {
-$compressed=(int)($file['is_compressed']??0)===1;[$fileType,$fileTypeClass]=file_info_type_from_extension((string)($file['extension']??''));$packageHref='file-examine.php?id='.$id;$gameHref='game-files.php?id='.(int)$file['game_id'];
-echo'<div class="card"><div class="file-info-title"><h1>'.catalog_h($file['package_name']).'</h1><span class="dep file-type-pill '.catalog_h($fileTypeClass).'">'.catalog_h($fileType).'</span></div><p class="file-info-context"><a href="'.$packageHref.'">'.catalog_h($file['original_name']).'</a> / <a href="'.$gameHref.'">'.catalog_h($file['game_name']).'</a></p><p><a class="button" href="download-info.php?id='.$id.'">Download options</a> <a class="button secondary" href="'.$packageHref.'">Examine file</a></p><p><span class="dep '.($compressed?'compressed':'uncompressed').'">'.($compressed?'compressed':'uncompressed').'</span> <span class="mono small">flags 0x'.strtoupper(str_pad(dechex((int)($file['compression_flags']??0)),8,'0',STR_PAD_LEFT)).'</span></p><table><tr><th>MD5</th><td class="mono">'.catalog_h($file['md5']).'</td></tr><tr><th>SHA1</th><td class="mono">'.catalog_h($file['sha1']).'</td></tr><tr><th>GUID</th><td class="mono">'.catalog_h($file['package_guid']).'</td></tr><tr><th>Tables</th><td><a href="'.$packageHref.'">'.(int)$file['name_count'].' names / '.(int)$file['import_count'].' imports / '.(int)$file['export_count'].' exports</a></td></tr></table></div>';
+        . 'WHERE p.file_id=? AND p.chunk_index=0 ORDER BY p.id LIMIT 1', [$id]) ?: [];
 }
-echo '<div class="card"><h2>Inside this file</h2><nav class="file-map-nav">'
-    . '<a href="file-examine.php?id='.$id.'&tab=names">Names <strong>'.(int)$file['name_count'].'</strong></a>'
-    . '<a href="file-examine.php?id='.$id.'&tab=imports">Imports <strong>'.(int)$file['import_count'].'</strong></a>'
-    . '<a href="file-examine.php?id='.$id.'&tab=exports">Exports <strong>'.(int)$file['export_count'].'</strong></a>'
-    . '</nav><p class="muted">Names are stored strings. Imports refer to objects outside or within the package hierarchy. Exports are objects defined by this package. Select a section to examine the original indexed entries and their references.</p></div>';
+echo file_info_identity_card($file,$zen);
+echo '<div class="card"><h2>Package tables</h2><nav class="file-info-tabs" aria-label="Package tables">'
+    . '<a href="file-examine.php?id='.$id.'&amp;tab=names">Names <span>'.(int)$file['name_count'].'</span></a>'
+    . '<a href="file-examine.php?id='.$id.'&amp;tab=imports">Imports <span>'.(int)$file['import_count'].'</span></a>'
+    . '<a href="file-examine.php?id='.$id.'&amp;tab=exports">Exports <span>'.(int)$file['export_count'].'</span></a>'
+    . '<a href="file-examine.php?id='.$id.'&amp;tab=uses">Uses</a>'
+    . '<a href="file-examine.php?id='.$id.'&amp;tab=used-by">Used By</a>'
+    . '</nav><p class="muted">Select a table to examine the original indexed entries '
+    . 'or the independently published package relationships.</p></div>';
 if ($dependencyProjectionError !== null) {
     echo '<div class="card"><h2>Dependency publication unavailable</h2><p>'
         . catalog_h($dependencyProjectionError) . '</p></div>';
