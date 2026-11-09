@@ -1,6 +1,6 @@
 {
   "date": "2026-11-09",
-  "result": "DEV_PASS_PENDING_DEPLOYMENT",
+  "result": "DEV_PRD_DEPLOYED_PASS",
   "scope": "Failed-source maintenance and cancelled mirror/federation job history cleanup",
   "prd_source_at_test": {
     "failed_records": 102,
@@ -182,5 +182,41 @@
   "production_job_or_failed_file_deletions_during_tests": 0,
   "prd_original_package_bytes_changed": 0,
   "uedb5_storage_changed": false,
-  "direct_authenticated_prd_apache_browser_tested": false
+  "direct_authenticated_prd_apache_browser_tested": false,
+  "deployment": {
+    "source_commit": "01972a642f608ebead13741e535ff8b1837a9853",
+    "files_changed": 13,
+    "dev_and_prd_sha256_verified_file_copies": 26,
+    "product_code_dev_prd_sha256_matches": {
+      "catalog/dashboard-detail.php": "f00e4b1e121879fd81f4af15d2bf28942490e59f3c884a20f1f014d09b8c0e5a",
+      "catalog/file-info.php": "37ba58a07898ccb2d57e6f60063a01cf3bd0ddab16303b17fe95ffd5697eb337",
+      "catalog/federation/queue.php": "f5ea6f842a422efc96093e00a0fcb5072635b7ccbf097c9b845fa85aba959a13",
+      "catalog/mirror-queue.php": "496e745b09c49218cd1af806ce930f26d485d8734f6363bedfa62009574a8046",
+      "catalog/src/Infrastructure/Federation/CatalogFederationTransferService.php": "f771377dbd6e9d85ffbee68740db51c56947e5e81af30d70ec5731af176fcb50",
+      "catalog/src/Infrastructure/Maintenance/CatalogExternalMirrorAdminService.php": "fb3dbe7b01aeed5d7f512a4a8a0be7a322adb5076dd99cadb92624116ccee375",
+      "catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php": "99667d07cc9aeee2557664fe9edd25424e1af94fe5a7f58b4b06300481df6864",
+      "catalog/src/Infrastructure/Maintenance/CatalogFailedFileRecheckService.php": "00acfdad3f4a24e33e7a9ac345dfb09606649a1a6c87ecf78b24e526e5661439",
+      "tests/tools/verify_dashboard_queue_bulk_mysql_fixture_20261109.php": "7126adabb8aa875be5c2bde0fb40a1fed27273d43d91f22bd07425fd06ee0490",
+      "tests/tools/verify_failed_management_readonly_20261109.php": "4fa3d07a24ec7a9f7e65ff9e6405010bf22f39f274efd24724027a05e167c211"
+    },
+    "actual_deployed_prd_php_http_via_DEV_disposable_server": {
+      "pass": true,
+      "all_failed_file_links": 102,
+      "invalid_examine_redirect": 302,
+      "mirror_waiting": 0,
+      "mirror_cancelled": 707,
+      "mirror_cancelled_pages": 8,
+      "queued_federation": 0,
+      "federation_cancelled": 19,
+      "purge_controls_present": true,
+      "failed_selected_cleanup_ui": true,
+      "file_delete_guard_400": true,
+      "invalid_csrf_403": true,
+      "mutations": 0,
+      "synthetic_admin_session_on_DEV_only": true
+    },
+    "live_authenticated_prd_apache_browser_verified": false,
+    "original_sources_and_uedb5_storage_unchanged": true,
+    "production_records_changed_by_us": 0
+  }
 }
