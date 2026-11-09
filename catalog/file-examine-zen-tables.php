@@ -44,19 +44,50 @@ function zen_exam_hex(string $raw,int $maxDigits=16):string
     return '<span class="mono">0x'.catalog_h($text).'</span>';
 }
 
+/**
+ * Preserve the complete serialized Zen NameMap row without making every
+ * byte/hash encoding field a full-width table column.
+ */
+function zen_exam_name_format(array $row): string
+{
+    $labels=[
+        'hash_version'=>'Hash version (uint64)',
+        'hash'=>'Name hash (uint64)',
+        'is_utf16'=>'UTF-16 flag',
+        'length'=>'Serialized name length (uint15)',
+        'raw'=>'Original name bytes (hex)',
+        'text'=>'Decoded source text',
+    ];
+    $parts=[];
+    $raw=(array)($row['__serialized_source_fields']??$row);
+    foreach($raw as $key=>$value){
+        if($key==='index') continue;
+        $display=is_bool($value)?($value?'true':'false')
+            :(is_scalar($value)?(string)$value:json_encode($value,
+                JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR));
+        $parts[]='<div data-source-field="'.catalog_h((string)$key)
+            .'" title="'.catalog_h($labels[$key]??(string)$key).'"><strong>'
+            .catalog_h($labels[$key]??(string)$key).':</strong> '
+            .catalog_h($display).'</div>';
+    }
+    return '<details class="examine-source-composite examine-zen-name-format">'
+        .'<summary class="mono">'.count($parts).' fields</summary>'
+        .'<div class="mono">'.implode('',$parts).'</div></details>';
+}
+
 /** @param list<array<string,mixed>> $rows @param array<int,array{count:int,indices:list<int>}> $reverse */
 function zen_exam_names(array $rows,array $reverse,?int $headerNameIndex,int $fileId,int $size,string $target):void
 {
-    echo '<h2>Names — serialized Zen NameMap</h2>'
-        .'<p class="muted">The hash-version word belongs to the NameMap batch. '
-        .'Only an ExportMap FMappedName containing a real local name index creates a '
-        .'NameMap reference; the ImportMap has no direct local NameMap indices.</p>'
-        .'<div class="examine-table-region"><table class="examine-zen-names" data-catalog-identity-skip="1">'
-        .'<thead><tr><th colspan="7">Serialized NameMap data</th>'
-        .'<th>Cross-references (derived)</th></tr>'
-        .'<tr><th>Index</th><th>HashVersion (uint64)</th><th>NameHash (uint64)</th>'
-        .'<th>IsUTF16 (bool)</th><th>Length (uint15)</th><th>NameBytes (hex)</th>'
-        .'<th>Decoded text</th><th>ExportMap.ObjectName</th></tr></thead><tbody>';
+    echo '<h2>Names — Zen NameMap</h2>'
+        .'<p class="muted">Decoded names are shown first. Hash and export references '
+        .'are displayed alongside the original NameMap index. The Format '
+        .'disclosure preserves the complete serialized hash version, encoding, '
+        .'length and original bytes for each row. ImportMap references in Zen '
+        .'do not contain a direct local NameMap index.</p>'
+        .'<div class="examine-table-region"><table class="examine-zen-names" '
+        .'data-catalog-identity-skip="1">'
+        .'<thead><tr><th>Index</th><th>Name</th><th>Hash</th>'
+        .'<th>Export refs</th><th>Format</th></tr></thead><tbody>';
     foreach($rows as $row){
         $index=(int)$row['name_index'];
         $id='name-'.$index;
@@ -70,7 +101,7 @@ function zen_exam_names(array $rows,array $reverse,?int $headerNameIndex,int $fi
         if($headerNameIndex===$index){
             $links[]='<a class="xref" href="#zen-raw-header-name">FZenPackageSummary.Name</a>';
         }
-        $linked=$links!==[]?implode(', ',$links):'<span class="muted">No serialized table references</span>';
+        $linked=$links!==[]?implode(', ',$links):'<span class="muted" title="No local serialized export references">-</span>';
         $remaining=(int)$related['count']-count($links);
         if($remaining>0){
             $all='file-examine.php?'.http_build_query([
@@ -80,14 +111,13 @@ function zen_exam_names(array $rows,array $reverse,?int $headerNameIndex,int $fi
                 .(int)$related['count'].' ExportMap references</a>';
         }
         echo '<tr id="'.$id.'"'.($target===$id?' class="is-reference-target"':'').'>'
-            .'<td class="mono">'.$index.'</td>'
-            .'<td>'.zen_exam_hex((string)($row['hash_version']??'')).'</td>'
+            .'<td><a class="xref mono examine-name-self-ref" href="'
+            .catalog_h(examine_href($fileId,$id,$size))
+            .'" title="Local Zen NameMap index '.$index.'">'.$index.'</a></td>'
+            .'<td class="mono path">'.catalog_h((string)($row['name_text']??$row['text']??'')).'</td>'
             .'<td>'.zen_exam_hex((string)($row['hash']??'')).'</td>'
-            .'<td class="mono">'.(!empty($row['is_utf16'])?'1 (UTF-16LE)':'0 (8-bit)').'</td>'
-            .'<td class="mono">'.(int)($row['length']??0).'</td>'
-            .'<td class="mono path"><code>'.catalog_h((string)($row['raw']??'')).'</code></td>'
-            .'<td class="mono path">'.catalog_h((string)($row['name_text']??'')).'</td>'
-            .'<td>'.$linked.'</td></tr>';
+            .'<td>'.$linked.'</td>'
+            .'<td>'.zen_exam_name_format($row).'</td></tr>';
     }
     echo '</tbody></table></div>';
 }

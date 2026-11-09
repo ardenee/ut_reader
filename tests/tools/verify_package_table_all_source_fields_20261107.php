@@ -96,6 +96,8 @@ try{
                 && str_contains($html,$source['engine'].' source fields'),
                 $source['game_name'].' '.$table.': original columns modified by browser');
             foreach($displayed as $field) {
+                if($table === 'names' && $field === 'flags_serialized_width_bits'
+                    && in_array('flags',$displayed,true)) continue;
                 if($table === 'imports' && $field === 'outer_index_serialized_width_bits'
                     && in_array('outer_index',$displayed,true)) {
                     requireTrue(str_contains($html,'data-outer-width-bits="32"')
@@ -113,6 +115,16 @@ try{
                 }
                 requireTrue(str_contains($html,examine_source_label($field)),
                     $source['game_name'].' '.$table.': heading missing '.$field);
+            }
+            if ($table === 'names') {
+                requireTrue(str_contains($html, 'examine-name-self-ref')
+                    && str_contains($html, 'examine-name-usage-search'),
+                    $source['game_name'] . ': name navigation missing');
+                if (in_array('flags_serialized_width_bits',$displayed,true)) {
+                    requireTrue(str_contains($html,'serialized width: 32 bits')
+                        || str_contains($html,'serialized width: 64 bits'),
+                        $source['game_name'] . ': name flags width tooltip missing');
+                }
             }
             if ($table === 'exports') {
                 requireTrue(str_contains($html, '>Local path</th>')
@@ -174,9 +186,18 @@ try{
         $originalKeys=[];
         foreach($original as $row) foreach(array_keys($row) as $key) $originalKeys[$key]=true;
         if($table==='names') {
-            foreach(['HashVersion','NameHash','IsUTF16','Length','NameBytes','Decoded text'] as $heading){
-                requireTrue(str_contains($html,$heading),'Zen NameMap missing '.$heading);
+            requireTrue(str_contains($html,'>Name</th>')
+                && str_contains($html,'>Hash</th>')
+                && str_contains($html,'>Export refs</th>')
+                && str_contains($html,'>Format</th>'),
+                'Zen NameMap compact headings missing');
+            foreach(array_keys($originalKeys) as $field){
+                if($field==='index') continue;
+                requireTrue(str_contains($html,'data-source-field="'.$field.'"'),
+                    'Zen NameMap missing serialized source field '.$field);
             }
+            requireTrue(str_contains($html,'examine-name-self-ref'),
+                'Zen NameMap index self-link missing');
         }elseif($table==='imports') {
             $sourceBase=['index','raw_type_and_id','type_tag','value_u62','type'];
             foreach(array_keys($originalKeys) as $field){

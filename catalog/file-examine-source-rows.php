@@ -50,10 +50,11 @@ function examine_source_label(string $field): string
         'serial_offset' => 'Data offset',
         'local_path' => 'Local path',
         'full_path' => 'Full path',
-        'flags' => 'Name flags',
+        'flags' => 'Flags',
+        'flags_serialized_width_bits' => 'Flags width',
+        'non_case_hash' => 'Hash (folded)',
+        'case_hash' => 'Hash (case)',
         'package_guid' => 'Package GUID',
-        'serial_size' => 'Serial size',
-        'serial_offset' => 'Serial offset',
         'component_map' => 'Component map',
         'generation_net_object_count' => 'Generation counts',
         'preload' => 'Preload dependencies',
@@ -80,6 +81,10 @@ function examine_source_description(string $field, string $table): string
         'serial_size_encoding' => 'The source-version integer encoding used for SerialSize, such as UE1 CompactIndex.',
         'serial_offset_present' => 'Whether the source ExportMap serialized a SerialOffset. This depends on the engine/version and size gate.',
         'serial_offset_encoding' => 'Integer encoding used for SerialOffset, when serialized.',
+        'flags' => 'Original name entry flags, displayed in the source hexadecimal representation; hover for serialized bit width.',
+        'flags_serialized_width_bits' => 'Number of bits occupied by original name flags in the source package.',
+        'non_case_hash' => 'UE4 serialized case-insensitive name hash (not a resolved object reference).',
+        'case_hash' => 'UE4 serialized case-sensitive name hash (not a resolved object reference).',
         default => 'Source-record field: ' . $field,
     };
     return 'Source key: ' . $field . '. ' . $detail;
@@ -206,6 +211,31 @@ function examine_package_candidate_fallback(string $path, string $root, int $gam
  * from the pointed-to ImportMap or ExportMap row in this same physical file.
  */
 /** Compact source-format fields hidden from the wide ExportMap table. */
+/** Width metadata is preserved in each NameMap Flags cell, not a separate wide column. */
+function examine_source_name_flags(string $flags, array $raw): string
+{
+    $bits = $raw['flags_serialized_width_bits'] ?? null;
+    return '<span class="mono examine-source-value" title="Original NameMap flags: '
+        . catalog_h($flags)
+        . ($bits !== null ? '; serialized width: ' . (int)$bits . ' bits' : '')
+        . '">' . catalog_h($flags) . '</span>';
+}
+
+/** Search indexed uses without treating a matching name string as an exact FName-index reference. */
+function examine_name_usage_search(string $name, int $gameId): string
+{
+    if ($name === '' || $gameId < 1 || mb_strlen($name,'UTF-8') < 3)
+        return '<span class="mono">'
+        . catalog_h($name) . '</span>';
+    return '<a class="xref mono examine-name-usage-search" href="'
+        . catalog_h('index.php?' . http_build_query([
+            'page'=>'search','q'=>$name,'game_id'=>$gameId,
+            'scope'=>['imports','exports']
+        ])) . '" title="Search same-game indexed imports and exports containing this name; '
+        . 'not a proof of the exact local FName index being referenced">'
+        . catalog_h($name) . '</a>';
+}
+
 function examine_export_format_fields(): array
 {
     return [
@@ -298,6 +328,16 @@ function examine_classic_full_source_table(
         throw new RuntimeException('Invalid source table.');
     }
     $sourceKeys = examine_source_columns($rows);
+    if ($table === 'names') {
+        // Readability only: preserve source keys/values, but show the decoded
+        // name before byte offsets and short integer/hash metadata.
+        $preferred=['index','text','flags','non_case_hash','case_hash',
+            'serialized_offset','flags_serialized_width_bits'];
+        $sourceKeys=array_values(array_unique(array_merge(
+            array_values(array_intersect($preferred,$sourceKeys)),
+            $sourceKeys
+        )));
+    }
     $derived = match ($table) {
         'imports' => ['root_package' => 'Root (derived)',
             'outer_name' => 'Outer',
@@ -313,6 +353,11 @@ function examine_classic_full_source_table(
     $columns = [];
     $placedDerived = [];
     foreach ($sourceKeys as $key) {
+        if ($table === 'names' && $key === 'flags_serialized_width_bits'
+            && in_array('flags',$sourceKeys,true)) {
+            // The stored bit width remains available on the Flags tooltip.
+            continue;
+        }
         if ($table === 'exports'
             && in_array($key, examine_export_format_fields(), true)) {
             // These are important source metadata, available on the related
@@ -351,8 +396,13 @@ function examine_classic_full_source_table(
         . '<p class="muted">Every indexed source field is retained. '
         . 'FName cells show the original text; hover for its name index and '
         . 'number, or click to open the Name table. '
-        . 'Root, Outer and Full path are reconstructed by following serialized '
-        . 'OuterIndex references; they are not separate serialized fields. '
+        . ($table === 'names'
+            ? 'Index is the original zero-based NameMap position. '
+              . 'Name links search for import/export uses in this game; '
+              . 'text matches do not prove an exact FName index reference. '
+              . 'Original flags width is shown on hover. '
+            : 'Root, Outer and Full path are reconstructed by following serialized '
+              . 'OuterIndex references; they are not separate serialized fields. ')
         . ($table === 'exports'
             ? 'Ref links to this export record and highlights it. Class, Super and Outer display pointed-to object names; '
               . 'hover for the exact original signed reference. Flags, serial '
@@ -414,7 +464,20 @@ function examine_classic_full_source_table(
                 $value = examine_export_format_disclosure($raw);
             } elseif ($column['kind'] === 'source') {
                 $present = array_key_exists($key, $raw);
-                if ($table === 'imports' && $key === 'package_index' && $present) {
+                if ($table === 'names' && $key === 'flags' && $present) {
+                    $value = examine_source_name_flags((string)$raw[$key],$raw);
+                } elseif ($table === 'names' && $key === 'text' && $present) {
+                    $value = examine_name_usage_search((string)$raw[$key],
+                        (int)$file['game_id']);
+                } elseif ($table === 'names' && $key === 'index' && $present) {
+                    // Unlike signed package references, this is the zero-based
+                    // local NameMap position; preserve it exactly.
+                    $value = '<a class="xref mono examine-name-self-ref" href="'
+                        . catalog_h(examine_href($fileId,$rowId,$pageSize))
+                        . '" title="NameMap index ' . $index
+                        . '; click to highlight this exact local name row">'
+                        . $index . '</a>';
+                } elseif ($table === 'imports' && $key === 'package_index' && $present) {
                     // Ref is a signed *local ImportMap index*, not a file or
                     // dependency provider. Make it navigable to its own exact
                     // row without inventing an external package target.

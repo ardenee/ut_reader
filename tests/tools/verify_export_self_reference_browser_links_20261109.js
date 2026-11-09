@@ -24,11 +24,13 @@ function mock(classes, target, row) {
 }
 const exportRef=mock(['xref','mono','examine-export-self-ref'],'export-0','export-0');
 const importRef=mock(['xref','mono','examine-import-self-ref'],'import-0','import-0');
+const nameRef=mock(['xref','mono','examine-name-self-ref'],'name-0','name-0');
 const genericSelf=mock(['xref','mono'],'export-0','export-0');
 const unrelated=mock(['xref','mono'],'export-1','export-0');
-const links=[exportRef,importRef,genericSelf,unrelated];
+const links=[exportRef,importRef,nameRef,genericSelf,unrelated];
 context.removeSelfReferenceLinks({querySelectorAll:()=>links});
-if(exportRef.replaced || importRef.replaced) throw new Error('Import/Export Ref must remain clickable');
+if(exportRef.replaced || importRef.replaced || nameRef.replaced)
+  throw new Error('Import/Export/NameMap Ref must remain clickable');
 if(!genericSelf.replaced) throw new Error('Generic self-reference should still be unwrapped');
 if(unrelated.replaced) throw new Error('External reference must remain clickable');
-console.log('PASS: Export Ref remains anchor after browser init; import Ref and normal links unaffected');
+console.log('PASS: Export, Import, and NameMap self links remain anchors after browser init; other links unaffected');
