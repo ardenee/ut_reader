@@ -66,7 +66,9 @@ function examine_source_description(string $field, string $table): string
 {
     $detail = match ($field) {
         'index' => 'Zero-based position in this ' . $table . ' table (index metadata).',
-        'package_index' => 'Signed reference identifying this ImportMap row: row 0 is -1, row 1 is -2, etc. Click to highlight this row. This is not a direct pointer to an external package or file.',
+        'package_index' => $table === 'exports'
+            ? 'Positive FPackageIndex identifying this ExportMap row: export row 0 is reference 1, row 1 is reference 2, etc. Click to highlight the original export record; this is not an external dependency.'
+            : 'Negative FPackageIndex identifying this ImportMap row: import row 0 is reference -1, row 1 is reference -2, etc. Click to highlight the original import record; this is not an external dependency.',
         'serialized_offset' => 'Original byte position of the table entry in the package file (provenance).',
         'class_package' => 'FName of the package defining the imported object class; click the text to open the exact Name-table entry.',
         'class_name' => 'FName of the imported object type; click to open its original Name-table entry.',
@@ -423,6 +425,16 @@ function examine_classic_full_source_table(
                         . ' identifies this ImportMap row ' . $index
                         . '; this is not an external file link">'
                         . $ref . '</a>';
+                } elseif ($table === 'exports' && $key === 'package_index' && $present) {
+                    // A positive FPackageIndex is this ExportMap entry's own identity.
+                    // The source's Index field is zero-based; the positive reference is +1.
+                    $ref = (int)$raw[$key];
+                    $value = '<a class="xref mono examine-export-self-ref" href="'
+                        . catalog_h(examine_href($fileId, $rowId, $pageSize))
+                        . '" title="Export Ref ' . $ref
+                        . ' identifies ExportMap row ' . $index
+                        . ' in this file; click to highlight the referenced export, '
+                        . 'not an external dependency">' . $ref . '</a>';
                 } elseif ($table === 'imports' && $key === 'outer_index' && $present) {
                     // Display the signed serialized reference byte-for-byte as
                     // a number. Field width must *only* appear in tooltip/data,

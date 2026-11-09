@@ -121,6 +121,9 @@ try{
                     $source['game_name'] . ': compact export headings/disclosure missing');
                 requireTrue(str_contains($html, 'examine-export-reference'),
                     $source['game_name'] . ': export reference name links missing');
+                requireTrue(str_contains($html, 'examine-export-self-ref')
+                    && str_contains($html, '#export-0'),
+                    $source['game_name'] . ': export Ref must link to own ExportMap row');
                 requireTrue(str_contains($html, 'signed reference: 0 (null)">-</span>'),
                     $source['game_name'] . ': null export reference must display a dash');
             }
