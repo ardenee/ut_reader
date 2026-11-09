@@ -8,6 +8,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5ProviderKeyPublisher;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
@@ -46,6 +47,37 @@ final class CatalogEngineDependencyUpdateJobHandler implements JobHandler
         try{
             $service=new Uedb5GameDependencyPassService($this->db,$this->config);
             $before=$service->preflight($id);
+            // Pass 2 depends on provider-key projections that may be absent
+            // after new UEDB5 registrations. Rebuild only verified, staged
+            // registrations lacking a primary key, before publishing edges.
+            // Never invent an identity or bypass missing/invalid staging.
+            if ((int)($before['missing_primary_provider_count']??0)>0
+                && (int)($before['missing_staged_count']??0)===0
+                && (int)($before['invalid_staged_count']??0)===0) {
+                $missing=$this->db->prepare(
+                    'SELECT f.id FROM ue_files f '
+                    .'JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
+                    .'LEFT JOIN ue_uedb5_provider_keys p ON p.file_id=f.id '
+                    .'AND p.source_kind=1 AND p.source_id=f.id '
+                    .'WHERE f.game_id=? AND f.scan_status="verified" '
+                    .'AND v.format_version=5 AND v.package_key_kind>0 '
+                    .'AND v.package_key IS NOT NULL AND p.file_id IS NULL '
+                    .'ORDER BY f.id'
+                );
+                $missing->execute([$id]);
+                $publisher=new PdoUedb5ProviderKeyPublisher($this->db);
+                $repaired=0;
+                while(($file=$missing->fetch(PDO::FETCH_ASSOC))!==false) {
+                    $fileId=(int)$file['id'];
+                    $publisher->publish($fileId);
+                    $repaired++;
+                    $context->heartbeatIfDue([
+                        'stage'=>'repair_primary_provider_keys',
+                        'game_id'=>$id,'provider_keys_repaired'=>$repaired,
+                    ]);
+                }
+                $before=$service->preflight($id);
+            }
             if(empty($before['pass2_ready'])){
                 throw new RuntimeException('Game #'.$id.' Pass 2 preflight failed: '
                     .(int)($before['missing_staged_count']??0).' unstaged, '

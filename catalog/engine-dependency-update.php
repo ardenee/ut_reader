@@ -69,6 +69,18 @@ try{
         ]);
         $staleFiles=$staleQuery->fetchAll(PDO::FETCH_ASSOC)?:[];
     }
+    $latestRepairJob=null;
+    if($inspectedGame!==null){
+        $recent=$db->prepare(
+            'SELECT id,status,display_status,last_error,updated_at '
+            .'FROM ue_background_jobs WHERE id>='
+            .'(SELECT GREATEST(0,MAX(id)-10000) FROM ue_background_jobs) '
+            .'AND job_type=? AND CAST(JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.game_id")) AS UNSIGNED)=? '
+            .'ORDER BY id DESC LIMIT 1'
+        );
+        $recent->execute([JobType::UPDATE_ENGINE_GAME_DEPENDENCIES,$inspectGameId]);
+        $latestRepairJob=$recent->fetch(PDO::FETCH_ASSOC)?:null;
+    }
     $success=[];$errors=[];$workerState=null;
     if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
         catalog_check_csrf('engine-dependency-update');
@@ -148,8 +160,8 @@ try{
             .catalog_h((string)$workerState['worker_error']).'</p></div>';
     }
     echo '<div class="card"><h2>Current source-policy state</h2>'
-        .'<p>“Current” requires every verified file to have the exact active engine policy and source payload hash. '
-        .'Updating statistics alone does not publish stale UE2–UE4 dependencies.</p>'
+        .'<p>â€œCurrentâ€ requires every verified file to have the exact active engine policy and source payload hash. '
+        .'Updating statistics alone does not publish stale UE2â€“UE4 dependencies.</p>'
         .'<div class="ui-table-region"><table><thead><tr>'
         .'<th>Game</th><th>Engine</th><th>Verified files</th>'
         .'<th>Dependency publication</th><th>Statistics</th></tr></thead><tbody>';
@@ -165,6 +177,16 @@ try{
     echo '</tbody></table></div></div>';
 
     if($inspectedGame!==null){
+        if(is_array($latestRepairJob)){
+            echo '<div class="card"><h2>Last repair job #'
+                .(int)$latestRepairJob['id'].'</h2><p>Status: '
+                .catalog_h((string)$latestRepairJob['display_status']).' ('
+                .catalog_h((string)$latestRepairJob['updated_at']).')</p>';
+            if((string)($latestRepairJob['last_error']??'')!==''){
+                echo '<p>Failure: '.catalog_h((string)$latestRepairJob['last_error']).'</p>';
+            }
+            echo '<p><a href="background-jobs.php">View background jobs</a></p></div>';
+        }
         echo '<div class="card"><h2>Dependency repair: '
             .catalog_h((string)$inspectedGame['name']).'</h2>';
         if($inspectedGame['policy_current']){
@@ -196,7 +218,7 @@ try{
     }
     echo '<div class="card"><h2>Queue current-policy dependency updates</h2>'
         .'<p>These are source-pinned, resumable Pass 2 jobs, not the legacy generic '
-        .'“Dependency Refresh”. Only stale games are queued. A game with current Pass 2 but '
+        .'â€œDependency Refreshâ€. Only stale games are queued. A game with current Pass 2 but '
         .'stale cached totals receives a statistics refresh. Each game is isolated.</p>'
         .'<form method="post" action="engine-dependency-update.php">'
         .'<input type="hidden" name="csrf" value="'.catalog_h(catalog_csrf('engine-dependency-update')).'">'
