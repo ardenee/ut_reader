@@ -11,6 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Federation;
 
 use PDO;
 use RuntimeException;
+use Throwable;
 
 final class CatalogFederationTransferService
 {
@@ -80,6 +81,53 @@ final class CatalogFederationTransferService
         }
 
         throw new RuntimeException('Unknown transfer action.');
+    }
+
+    /**
+     * Cancel policy-visible queued transfers in one transactional admin
+     * operation, with a log event per cancelled job. Never delete rows,
+     * cancel an active worker or alter a downloaded/imported transfer.
+     */
+    public function cancelQueuedBulk(int $expected): int
+    {
+        if ($expected < 1 || $expected > 2000) {
+            throw new RuntimeException('Refusing an invalid bulk federation cancellation count.');
+        }
+        $visible = \federation_visible_transfer_job_sql($this->db, 'j');
+        $this->db->beginTransaction();
+        try {
+            $jobs = $this->db->query(
+                'SELECT j.id,j.peer_id FROM ue_federation_transfer_jobs j '
+                . 'WHERE j.status="queued" AND ' . $visible
+                . ' ORDER BY j.id FOR UPDATE'
+            )->fetchAll(PDO::FETCH_ASSOC);
+            if (count($jobs) !== $expected) {
+                throw new RuntimeException(
+                    'Federation queue changed since confirmation. Refresh before cancelling.'
+                );
+            }
+            $stmt = $this->db->prepare(
+                'UPDATE ue_federation_transfer_jobs '
+                . 'SET status="cancelled",finished_at=NOW(),last_error="Cancelled by administrator (dashboard bulk)." '
+                . 'WHERE id=? AND status="queued"'
+            );
+            foreach ($jobs as $job) {
+                $id = (int)$job['id'];
+                $stmt->execute([$id]);
+                if ($stmt->rowCount() !== 1) {
+                    throw new RuntimeException('Concurrent federation job change; rolled back.');
+                }
+                \fed_log(
+                    $this->db, (int)$job['peer_id'], $id, 'INFO',
+                    'JOB_CANCEL', 'Transfer cancelled by administrator (dashboard bulk).'
+                );
+            }
+            $this->db->commit();
+            return count($jobs);
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $error;
+        }
     }
 
     /** @return array{active:int,waiting:int,failed:int,completed:int,cancelled:int} */

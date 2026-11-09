@@ -6,6 +6,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/FederationBaseGamePolicy.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDashboardStatsQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDashboardDetailPageQuery;
@@ -14,6 +15,82 @@ catalog_start_session();
 if (!catalog_require_admin_page('Dashboard details')) {
     exit;
 }
+
+// These are explicit administrator-only maintenance actions; viewing the
+// dashboard and opening its links remain read-only. A counted confirmation,
+// CSRF and status-qualified transaction protect each bulk cancellation.
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $metric = (string)($_POST['metric'] ?? '');
+    if (!in_array($metric, ['mirrorWaiting','fedQueued'], true)) {
+        http_response_code(400);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Unsupported dashboard queue action.';
+        exit;
+    }
+    try {
+        catalog_check_csrf('dashboard_queue_actions');
+    } catch (Throwable $error) {
+        http_response_code(403);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Invalid administrator request.';
+        exit;
+    }
+    $action = (string)($_POST['action'] ?? '');
+    $id = (int)($_POST['job_id'] ?? 0);
+    $expected = (int)($_POST['expected_count'] ?? 0);
+    $page = max(1, min(100000, (int)($_POST['page'] ?? 1)));
+    $pageSize = (int)($_POST['page_size'] ?? 50);
+    if (!in_array($pageSize, [50,100], true)) $pageSize = 50;
+    try {
+        $config = catalog_config();
+        $db = catalog_db($config);
+        if ($metric === 'mirrorWaiting') {
+            $service = new \UnrealDb\Catalog\Infrastructure\Maintenance\CatalogExternalMirrorAdminService($db, $config);
+            if ($action === 'cancel_one') {
+                if ($id < 1) throw new RuntimeException('A valid mirror job ID is required.');
+                $job = $service->job($id);
+                if (!in_array((string)$job['status'], ['queued','waiting_admin'], true)) {
+                    throw new RuntimeException('Only queued/waiting-admin mirror jobs can be cancelled.');
+                }
+                $message = $service->handleQueueAction('cancel', $id);
+            } elseif ($action === 'cancel_all') {
+                if ((string)($_POST['confirm_phrase'] ?? '') !== 'CANCEL') {
+                    throw new RuntimeException('Type CANCEL to confirm the bulk operation.');
+                }
+                $count = $service->cancelPendingBulk($expected);
+                $message = 'Cancelled ' . $count . ' queued/waiting-admin mirror jobs. '
+                    . 'Historical records, files and active mirror links were kept.';
+            } else {
+                throw new RuntimeException('Unsupported mirror queue action.');
+            }
+        } else {
+            $service = new \UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferService($db);
+            if ($action === 'cancel_one') {
+                if ($id < 1) throw new RuntimeException('A valid federation job ID is required.');
+                $outcome = $service->handle($id, 'cancel', 'active');
+                $message = (string)$outcome['flash'];
+            } elseif ($action === 'cancel_all') {
+                if ((string)($_POST['confirm_phrase'] ?? '') !== 'CANCEL') {
+                    throw new RuntimeException('Type CANCEL to confirm the bulk operation.');
+                }
+                $count = $service->cancelQueuedBulk($expected);
+                $message = 'Cancelled ' . $count . ' queued federation transfers. '
+                    . 'A cancellation event was logged per job; no history was deleted.';
+            } else {
+                throw new RuntimeException('Unsupported federation queue action.');
+            }
+        }
+        $_SESSION['dashboard_queue_flash'] = $message;
+    } catch (Throwable $error) {
+        error_log('[UnrealDB dashboard queue action] ' . $error->getMessage());
+        $_SESSION['dashboard_queue_flash'] = 'Queue action was not applied: ' . $error->getMessage();
+    }
+    header('Location: ' . dashboard_detail_url($metric, $page, $pageSize) . '#queue-controls', true, 303);
+    exit;
+}
+$queueFlash = $_SESSION['dashboard_queue_flash'] ?? null;
+unset($_SESSION['dashboard_queue_flash']);
+$dashboardQueueCsrf = catalog_csrf('dashboard_queue_actions');
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();
 }
@@ -126,9 +203,25 @@ function dashboard_detail_trim(mixed $value, int $limit = 240): string
 }
 
 /**
+ * A deliberate POST-only, CSRF-protected action. Browsing remains read-only.
+ */
+function dashboard_detail_single_cancel_form(
+    string $metric, int $id, string $csrf, int $page, int $pageSize
+): string {
+    return '<form method="post" onsubmit="return confirm(\'Cancel this queued job? The record will remain in history.\')">'
+        . '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">'
+        . '<input type="hidden" name="metric" value="' . catalog_h($metric) . '">'
+        . '<input type="hidden" name="job_id" value="' . $id . '">'
+        . '<input type="hidden" name="page" value="' . $page . '">'
+        . '<input type="hidden" name="page_size" value="' . $pageSize . '">'
+        . '<button class="danger" type="submit" name="action" value="cancel_one">Cancel</button>'
+        . '</form>';
+}
+
+/**
  * @param list<array<string,mixed>> $rows
  */
-function dashboard_detail_table(string $metric, array $rows): void
+function dashboard_detail_table(string $metric, array $rows, string $csrf, int $page, int $pageSize): void
 {
     if ($rows === []) {
         echo '<p class="muted">No matching records for this status on the selected page.</p>';
@@ -142,8 +235,9 @@ function dashboard_detail_table(string $metric, array $rows): void
         echo '<th>File ID</th><th>Game</th><th>Package / filename</th><th>Type</th><th>Scan status</th><th>Diagnostic</th><th>Open</th>';
     } elseif ($federation) {
         echo '<th>Job ID</th><th>Peer</th><th>Direction</th><th>Status</th><th>Remote / local file</th><th>Attempts</th><th>Last error</th><th>Created</th>';
+        if ($metric === 'fedQueued') echo '<th>Action</th>';
     } elseif ($metric === 'mirrorWaiting') {
-        echo '<th>Mirror job</th><th>Game</th><th>Package / filename</th><th>Status</th><th>Attempts</th><th>Error</th><th>Created</th>';
+        echo '<th>Mirror job</th><th>Game</th><th>Package / filename</th><th>Status</th><th>Attempts</th><th>Error</th><th>Created</th><th>Action</th>';
     } elseif ($metric === 'mirrorActive') {
         echo '<th>Link ID</th><th>File</th><th>Provider ID</th><th>Status</th><th>Expires</th><th>Requests</th><th>Manage</th>';
     } elseif ($metric === 'joinPending') {
@@ -166,7 +260,9 @@ function dashboard_detail_table(string $metric, array $rows): void
                 . '<td>' . dashboard_detail_trim($row['extension'], 20) . '</td>'
                 . '<td>' . catalog_h((string)$row['scan_status']) . '</td>'
                 . '<td class="path">' . dashboard_detail_trim($reason) . '</td>'
-                . '<td><a href="file-examine.php?id=' . $id . '">Examine</a></td>';
+                . '<td>' . ($metric === 'failed'
+                    ? '<a href="file-info.php?id=' . $id . '#scan-status">Review failure</a>'
+                    : '<a href="file-examine.php?id=' . $id . '">Examine</a>') . '</td>';
         } elseif ($federation) {
             $localFileId = (int)($row['local_file_id'] ?? 0);
             echo '<td class="mono">#' . $id . '</td>'
@@ -180,6 +276,9 @@ function dashboard_detail_table(string $metric, array $rows): void
                 . '<td>' . (int)$row['attempts'] . '</td>'
                 . '<td class="path">' . dashboard_detail_trim($row['last_error']) . '</td>'
                 . '<td class="nowrap">' . dashboard_detail_trim($row['created_at'], 40) . '</td>';
+            if ($metric === 'fedQueued') {
+                echo '<td>' . dashboard_detail_single_cancel_form($metric, $id, $csrf, $page, $pageSize) . '</td>';
+            }
         } elseif ($metric === 'mirrorWaiting') {
             $fileId = (int)($row['file_id'] ?? 0);
             $fileHref = $fileId > 0 ? 'file-info.php?id=' . $fileId : '';
@@ -194,6 +293,9 @@ function dashboard_detail_table(string $metric, array $rows): void
                 . '<td>' . (int)$row['attempts'] . '</td>'
                 . '<td class="path">' . dashboard_detail_trim($row['last_error']) . '</td>'
                 . '<td class="nowrap">' . dashboard_detail_trim($row['created_at'], 40) . '</td>';
+            echo '<td>' . (in_array((string)$row['status'], ['queued','waiting_admin'], true)
+                ? dashboard_detail_single_cancel_form($metric, $id, $csrf, $page, $pageSize)
+                : 'Uploading: cancel unavailable') . '</td>';
         } elseif ($metric === 'mirrorActive') {
             $fileId = (int)$row['file_id'];
             echo '<td class="mono">#' . $id . '</td>'
@@ -245,6 +347,7 @@ try {
     $rows = (new PdoDashboardDetailPageQuery($db))->page($metric, $page, $pageSize);
 
     catalog_head($spec['title']);
+    if (is_string($queueFlash) && $queueFlash !== '') catalog_flash($queueFlash);
     catalog_page_header(
         $spec['title'],
         $spec['description'],
@@ -261,7 +364,45 @@ try {
         . '<a class="button secondary" href="'
         . catalog_h(dashboard_detail_url($metric,1,100)) . '">100 per page</a></p>'
         . dashboard_detail_pagination($metric, $page, $pageCount, $pageSize);
-    dashboard_detail_table($metric, $rows);
+
+    if (in_array($metric, ['mirrorWaiting','fedQueued'], true)) {
+        if ($metric === 'mirrorWaiting') {
+            $cancelableCount = (int)$db->query(
+                'SELECT COUNT(*) FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin")'
+            )->fetchColumn();
+            $additional = 'Jobs already uploading are not cancelled automatically.';
+        } else {
+            $visible = federation_visible_transfer_job_sql($db, 'j');
+            $cancelableCount = (int)$db->query(
+                'SELECT COUNT(*) FROM ue_federation_transfer_jobs j '
+                . 'WHERE j.status="queued" AND ' . $visible
+            )->fetchColumn();
+            $additional = 'Running, downloaded and completed transfers are never included.';
+        }
+        echo '<section class="card" id="queue-controls">'
+            . '<h3>Manage waiting jobs</h3><p>'
+            . number_format($cancelableCount)
+            . ' currently cancellable job(s). Cancelling removes jobs from the waiting counter, '
+            . 'but preserves their historical records. ' . catalog_h($additional) . '</p>';
+        if ($cancelableCount > 0) {
+            echo '<form method="post" onsubmit="return confirm(\'Cancel ALL '
+                . $cancelableCount . ' eligible jobs? This cannot be undone without requeueing each job.\')">'
+                . '<input type="hidden" name="csrf" value="' . catalog_h($dashboardQueueCsrf) . '">'
+                . '<input type="hidden" name="metric" value="' . catalog_h($metric) . '">'
+                . '<input type="hidden" name="action" value="cancel_all">'
+                . '<input type="hidden" name="expected_count" value="' . $cancelableCount . '">'
+                . '<input type="hidden" name="page_size" value="' . $pageSize . '">'
+                . '<p><label>Type <strong>CANCEL</strong> to confirm clearing '
+                . number_format($cancelableCount) . ' pending jobs: '
+                . '<input type="text" name="confirm_phrase" required pattern="CANCEL" autocomplete="off" '
+                . 'aria-label="Type CANCEL to confirm all waiting jobs"></label> '
+                . '<button class="danger" type="submit">Cancel all ' . $cancelableCount
+                . ' pending jobs</button></p></form>';
+        }
+        echo '</section>';
+    }
+
+    dashboard_detail_table($metric, $rows, $dashboardQueueCsrf, $page, $pageSize);
     echo dashboard_detail_pagination($metric, $page, $pageCount, $pageSize)
         . '</div>';
 

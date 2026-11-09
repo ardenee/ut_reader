@@ -1,0 +1,382 @@
+{
+  "date": "2026-11-09",
+  "result": "DEV_PASS_AWAITING_DEPLOY",
+  "problem": "Original dashboard counts were accurate, but failed-file links tried to decode invalid packages; 707 mirror jobs exceeded the 500-row cap; an August 2026 refactor removed the federation SQL policy helpers still required by the queue.",
+  "failed_records": {
+    "count": 102,
+    "confirmed_invalid_unreal_files": 100,
+    "other_invalid_with_detailed_policy_notes": 2,
+    "fixed": "All 102 have safe file-info scan diagnostics (HTTP 200), and unsupported Examine links redirect HTTP 302 to the diagnosis."
+  },
+  "mirror_jobs": {
+    "count": 707,
+    "status": "queued",
+    "provider_class": "ManualProvider",
+    "operational_queue": "Now all 707 across eight 100-row pages, plus single and explicit admin bulk cancellation."
+  },
+  "federation": {
+    "count": 19,
+    "peer": "UTDB-DSM",
+    "direction": "parent_pull_from_child",
+    "restored_original_sql_policy_from_git_parent_of": "6286f56f",
+    "policy_tail_sha256": "ec95ed961711a2f26444c0ea2d1d25c0e634d2f2511b2c0b45a8ae8602d036a1",
+    "operational_queue": "Restored seven original SQL policy helpers. Active transfer queue now lists 19 queued records."
+  },
+  "bulk_cancel_safety": "Admin-only CSRF-protected POST, typed CANCEL plus browser confirmation for all, status-qualified transaction with expected rowcount, historical records retained and federation logs per job, no running/downloaded/imported or uploading mirror jobs changed.",
+  "production_job_changes": 0,
+  "testing": {
+    "readonly_source_counts": {
+      "pass": true,
+      "read_only": true,
+      "mirror_waiting": 707,
+      "mirror_operation_pages": 8,
+      "mirror_unique_rows_reached": 707,
+      "queued_federation": 19,
+      "federation_operational_active": 19,
+      "federation_original_policy_helpers_restored": true,
+      "failed_file_count": 102,
+      "failed_files_with_diagnosis": 102,
+      "no_production_mutations": true
+    },
+    "session_local_mysql_temporary_fixture": {
+      "pass": true,
+      "mysql_real_transaction_logic": true,
+      "only_session_temporary_tables": true,
+      "original_mirror_jobs_changed": 0,
+      "original_federation_jobs_changed": 0,
+      "temp_mirror_bulk_cancelled": 2,
+      "temp_mirror_uploading_preserved": true,
+      "temp_federation_bulk_cancelled": 3,
+      "temp_federation_running_downloaded_preserved": true,
+      "temp_federation_logs": 4,
+      "single_cancel_both_types": true,
+      "stale_confirmations_rejected": true
+    },
+    "actual_php_http_102_failed_and_queue_routes": {
+      "pass": true,
+      "all_failed_file_links": 102,
+      "invalid_examine_redirect": 302,
+      "mirror_waiting": 707,
+      "mirror_operational_pages": 8,
+      "queued_federation": 19,
+      "bulk_controls_present": true,
+      "federation_queue_restored": true,
+      "anonymous_rejected": true,
+      "invalid_csrf_403": true,
+      "mutations": 0,
+      "synthetic_admin_session_on_DEV_only": true
+    },
+    "actual_chrome_page_interactions_no_cancel_post": {
+      "linked_cards": 12,
+      "failed_file_first_page": {
+        "header": "Failed files",
+        "rowCount": 50,
+        "firstFileHref": "file-info.php?id=1362983",
+        "pagination": "1 2 3 Next Last",
+        "pageWidth": 1366,
+        "viewportWidth": 1366,
+        "tableOverflow": 1288
+      },
+      "mirror_bulk_confirmation": {
+        "countLabel": "Manage waiting jobs707 currently cancellable job(s). Cancelling removes jobs from the waiting counter, but preserves their historical records. Jobs already uploading are not cancelled automatically.Type CANCEL to confirm clearing 707 pending jobs:  Cancel all 707 pending jobs",
+        "confirmInput": "CANCEL",
+        "expectedCount": "707",
+        "csrfPresent": true,
+        "action": "cancel_all",
+        "cancelButtons": 50,
+        "overflow": 0
+      },
+      "federation_bulk_confirmation": {
+        "expectedCount": "19",
+        "action": "cancel_all",
+        "csrfPresent": true,
+        "cancelButtons": 19,
+        "overflow": 0
+      },
+      "mirror_operational_last_page": {
+        "jobRows": 7,
+        "lastJob": true,
+        "page8": true,
+        "cancelButtons": 7,
+        "overflow": 0
+      }
+    },
+    "regression_passes": {
+      "dashboard-drilldown": true,
+      "file-examine-ui": true,
+      "classic-source-fields": true,
+      "exact-source-exports": true
+    },
+    "cross_engine_http_28": {
+      "pass": true,
+      "routes_checked": 28,
+      "failed_routes": 0,
+      "original_file_sample_count": 8,
+      "verified_export_target_count": 3,
+      "entries": [
+        {
+          "game": "UT99",
+          "file_id": 113253,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 34132,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT99",
+          "file_id": 113253,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 31229,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT99",
+          "file_id": 113253,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 29887,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal",
+          "file_id": 110902,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 34116,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal",
+          "file_id": 110902,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 29455,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal",
+          "file_id": 110902,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 30392,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 1253000,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 138727,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 1253000,
+          "tab": "imports",
+          "page_size": 250,
+          "http_status": 200,
+          "html_bytes": 611635,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 1253000,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 503067,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2003",
+          "file_id": 148919,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 113069,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2003",
+          "file_id": 148919,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 110524,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2003",
+          "file_id": 148919,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 256468,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2004",
+          "file_id": 111460,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 26980,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2004",
+          "file_id": 111460,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 27875,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT2004",
+          "file_id": 111460,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 25029,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT3",
+          "file_id": 112300,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 33410,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT3",
+          "file_id": 112300,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 29671,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT3",
+          "file_id": 112300,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 35744,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT4",
+          "file_id": 113526,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 29114,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT4",
+          "file_id": 113526,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 26277,
+          "source_table_rendered": true
+        },
+        {
+          "game": "UT4",
+          "file_id": 113526,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 26779,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Satisfactory",
+          "file_id": 1390232,
+          "tab": "names",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 44767,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Satisfactory",
+          "file_id": 1390232,
+          "tab": "imports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 30122,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Satisfactory",
+          "file_id": 1390232,
+          "tab": "exports",
+          "page_size": 20,
+          "http_status": 200,
+          "html_bytes": 21915,
+          "source_table_rendered": true
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 1253000,
+          "tab": "imports",
+          "target": "import-41",
+          "http_status": 200,
+          "selected_rows": 1
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 111140,
+          "tab": "exports",
+          "target": "export-425",
+          "http_status": 200,
+          "source_export_path": "AtlantisT.Floor"
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 111198,
+          "tab": "exports",
+          "target": "export-6548",
+          "http_status": 200,
+          "source_export_path": "Engine.StaticMeshActor"
+        },
+        {
+          "game": "Unreal2",
+          "file_id": 149518,
+          "tab": "exports",
+          "target": "export-10183",
+          "http_status": 200,
+          "source_export_path": "Engine.StaticMeshActor"
+        }
+      ]
+    }
+  },
+  "source_sha256": {
+    "catalog/dashboard-detail.php": "f6ed60cf66deef548f5f3c113ff07d2129bcc3f6272b5aafcfc7401ce47e5a7a",
+    "catalog/file-info.php": "7e8e29bd5386be5240f848561c7441d7891022a146d7450c8eab9c62c600b94c",
+    "catalog/file-examine.php": "81368277e9507dd0c9c7563e703345de0403619d8dd8da8da87e560b57baec08",
+    "catalog/mirror-queue.php": "21a2658d087b9b1825f66659f47c737638b7a69cc57cd4d8e1769e398a3616d5",
+    "catalog/lib/FederationBaseGamePolicy.php": "8a6450d7bb48665ff0564b4dbd7a9cb49e6330074f3a634436ea90fb390709e7",
+    "catalog/src/Infrastructure/Maintenance/CatalogExternalMirrorAdminService.php": "5bd00c2a765647ef1ed5de01fd647d7b27f0c112b092234ae41cabb08c427e78",
+    "catalog/src/Infrastructure/Federation/CatalogFederationTransferService.php": "61e1f110390d08d707fb0a53164634b647847076952342b975236616f96f7d28",
+    "tests/tools/verify_dashboard_queue_source_pages_20261109.php": "c4f417b3b18c191d669369c3804280c2494302e4ca32bda228772d725811db14",
+    "tests/tools/verify_dashboard_queue_bulk_mysql_fixture_20261109.php": "38c8d209747add7c5ab87efc3a11ef44b532f6eba71a69ff0f9c8f685e0128f0"
+  },
+  "direct_live_protected_prd_apache_browser_verified": false,
+  "original_packages_modified": false,
+  "uedb5_snapshots_modified": false
+}

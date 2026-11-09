@@ -205,6 +205,12 @@ try {
         header('Location: unverified-file-details.php?id=' . $id, true, 302);
         exit;
     }
+    if ($row && (string)$row['scan_status'] === 'failed') {
+        // An invalid source file has no original package tables to examine.
+        // Direct old/external links to the genuine scan diagnosis instead.
+        header('Location: file-info.php?id=' . $id . '#scan-status', true, 302);
+        exit;
+    }
     if ($row) {
         if ($isAdmin && (string)$row['scan_status'] === 'verified') {
             $flash = is_array($_SESSION['file_examine_rename_flash'][$id] ?? null)

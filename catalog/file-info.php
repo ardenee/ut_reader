@@ -71,10 +71,43 @@ function file_info_related_files_table(array $rows, string $empty): string {
 try{
 $config=catalog_config();
 $db=catalog_db($config);
-catalog_dependency_schema_ensure($db);
 $id=(int)($_GET['id']??0);
 $file=catalog_one($db,'SELECT f.*,g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?',[$id]);
 if(!$file)throw new RuntimeException('File not found');
+
+// Failed/invalid packages have no trustworthy source tables or UEDB5
+// snapshot to decode. Show the original catalogue scan diagnosis directly,
+// without invoking the classic package-table reader or dependencies.
+if ((string)($file['scan_status'] ?? '') === 'failed') {
+    catalog_head('Failed file #' . $id);
+    catalog_page_header(
+        'Failed file #' . $id,
+        'This catalogue record exists, but it failed format validation. The names, imports and exports of an invalid package must not be invented.',
+        ['Dashboard failed files'=>'dashboard-detail.php?metric=failed',
+         'Game files'=>'game-files.php?id=' . (int)$file['game_id']]
+    );
+    echo '<div class="card" id="scan-status"><h2>Original scan result: failed</h2>'
+        . '<p>The record is valid catalogue data, but the source file was not accepted as a valid Unreal package. '
+        . 'A normal package examination is unavailable.</p><table><tbody>';
+    foreach ([
+        'File ID' => '#' . $id,
+        'Game' => (string)$file['game_name'],
+        'Original filename' => (string)$file['original_name'],
+        'Package name' => (string)$file['package_name'],
+        'Extension' => (string)($file['extension'] ?? ''),
+        'Scan status' => (string)$file['scan_status'],
+        'Scan diagnostic' => (string)($file['scan_notes'] ?? ''),
+        'Detection notes' => (string)($file['detection_notes'] ?? ''),
+        'Metadata error' => (string)($file['metadata_error'] ?? ''),
+    ] as $label => $value) {
+        echo '<tr><th>' . catalog_h($label) . '</th><td class="mono path">'
+            . catalog_h($value !== '' ? $value : 'Not recorded') . '</td></tr>';
+    }
+    echo '</tbody></table><p><a href="dashboard-detail.php?metric=failed">Back to failed files</a></p></div>';
+    catalog_foot();
+    return;
+}
+catalog_dependency_schema_ensure($db);
 $isZen=strtolower((string)($file['extension']??''))==='zenpkg';
 $dependencyProjectionError=null;
 $deps=[];$dependencyByIndex=[];$importPage=['rows'=>[]];$packageFiles=[];

@@ -1,5 +1,12 @@
 
 
+## Failed-file link and mirror/federation queue repairs - 9 November 2026
+
+Run php tests/tools/verify_dashboard_queue_source_pages_20261109.php against the read-only catalogue connection to cross-check source status counts, mirror pagination uniqueness, restored federation SQL policy and failed-file diagnostics. Run php tests/tools/verify_dashboard_queue_bulk_mysql_fixture_20261109.php to test real MySQL single/bulk transactional cancels using ONLY connection-local TEMPORARY TABLES (never production queue rows). The DEV HTTP/Chrome harness retained in D:/Temp/UnrealDB covers all 102 failed-file links, failed Examine redirects, 707 paginated mirror jobs, 19 federation jobs, anonymous and invalid-CSRF rejection, confirm forms and Chrome layout. Source/UI regressions and 28 UE1-UE5 HTTP routes PASS. Nothing cancelled on production. Evidence: tests/evidence/dashboard-failed-file-and-job-queue-repair-20261109.json.
+
+---
+
+
 ## Dashboard statistic drilldowns — 9 November 2026
 
 Run php tests/tools/verify_dashboard_card_drilldown_20261109.php with the original read-only catalogue configuration. It cross-checks nine administrator dashboard detail status predicates against the same underlying counts, and exhaustively fetches all 102 failed files, 707 waiting mirror jobs and 19 queued federation jobs with no duplicate/omitted IDs. The PHP-rendered browser acceptance uses a disposable DEV-only synthetic admin session; no actual admin credentials or PRD sessions. It verifies all 12 cards have correct links, 15 mirror pages of 50, the final seven jobs, all 19 federation queued records, the three-page failed-file list, anonymous access blocking and zero document horizontal overflow. Evidence: tests/evidence/dashboard-stat-drilldown-20261109.json. Post-deployment HTTP acceptance also passed using the actual PRD PHP files mounted read-only through DEV; no production account credentials were used.

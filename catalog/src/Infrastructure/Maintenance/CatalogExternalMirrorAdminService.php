@@ -58,6 +58,46 @@ final class CatalogExternalMirrorAdminService
         );
     }
 
+    /**
+     * Paginate the full external mirror job queue; the old recentJobs(500)
+     * view hid older pending manual jobs from the administrator.
+     *
+     * @return array{rows:list<array<string,mixed>>,total:int,page:int,page_count:int}
+     */
+    public function pageJobs(int $page, int $pageSize, string $status): array
+    {
+        $where = match ($status) {
+            'waiting' => ' WHERE j.status IN ("queued","waiting_admin","uploading")',
+            'failed' => ' WHERE j.status="failed"',
+            'cancelled' => ' WHERE j.status="cancelled"',
+            'active' => ' WHERE j.status="active"',
+            'all' => '',
+            default => throw new RuntimeException('Invalid mirror job filter.'),
+        };
+        if (!in_array($pageSize, [50,100], true)) {
+            throw new RuntimeException('Invalid mirror job page size.');
+        }
+        $total = (int)(\catalog_one(
+            $this->db,
+            'SELECT COUNT(*) c FROM ue_external_mirror_jobs j '
+            . 'JOIN ue_files f ON f.id=j.file_id' . $where
+        )['c'] ?? 0);
+        $pages = max(1, (int)ceil($total / $pageSize));
+        $page = max(1, min($pages, $page));
+        $offset = ($page - 1) * $pageSize;
+        $rows = \catalog_all(
+            $this->db,
+            'SELECT j.*,p.provider_name,p.provider_class, '
+            . 'f.package_name,f.original_name,f.file_size,f.md5 '
+            . 'FROM ue_external_mirror_jobs j '
+            . 'LEFT JOIN ue_external_download_providers p ON p.id=j.provider_id '
+            . 'JOIN ue_files f ON f.id=j.file_id' . $where
+            . ' ORDER BY FIELD(j.status,"waiting_admin","queued","uploading","failed","active","cancelled","expired"),'
+            . 'j.created_at DESC,j.id DESC LIMIT ' . $pageSize . ' OFFSET ' . $offset
+        );
+        return ['rows'=>$rows,'total'=>$total,'page'=>$page,'page_count'=>$pages];
+    }
+
     /** @return array<string,string> */
     public function settings(): array
     {
@@ -187,6 +227,44 @@ final class CatalogExternalMirrorAdminService
             return 'Expired ' . \external_expire_old_links($this->db) . ' old active mirror link(s).';
         }
         return '';
+    }
+
+    /**
+     * Cancel queued/waiting-admin mirror jobs without deleting job history,
+     * files, existing external links or in-flight uploads. The count is a
+     * deliberate admin-confirmed snapshot to prevent accidental mass changes.
+     */
+    public function cancelPendingBulk(int $expected): int
+    {
+        if ($expected < 1 || $expected > 10000) {
+            throw new RuntimeException('Refusing an invalid bulk mirror cancellation count.');
+        }
+        $this->db->beginTransaction();
+        try {
+            $rows = $this->db->query(
+                'SELECT id FROM ue_external_mirror_jobs '
+                . 'WHERE status IN ("queued","waiting_admin") ORDER BY id FOR UPDATE'
+            )->fetchAll(PDO::FETCH_COLUMN);
+            if (count($rows) !== $expected) {
+                throw new RuntimeException(
+                    'Mirror queue changed since the confirmation page. Refresh before cancelling.'
+                );
+            }
+            $stmt = $this->db->prepare(
+                'UPDATE ue_external_mirror_jobs '
+                . 'SET status="cancelled", finished_at=NOW(), last_error="Cancelled by admin (dashboard bulk)." '
+                . 'WHERE status IN ("queued","waiting_admin")'
+            );
+            $stmt->execute();
+            if ($stmt->rowCount() !== $expected) {
+                throw new RuntimeException('Concurrent mirror job change; cancellation was rolled back.');
+            }
+            $this->db->commit();
+            return $expected;
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $error;
+        }
     }
 
     /** @param array<string,mixed> $input */

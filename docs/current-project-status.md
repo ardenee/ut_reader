@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## 9 November 2026 - Fix failed-file drilldowns and actionable mirror/federation queues
+
+Production dashboard counts are accurate: 102 file records have scan_status failed, of which 100 carry invalid_ue_file confirmed-invalid notes and two have detailed invalid source-policy notes. Previous dashboard incorrectly offered File Examine links despite these files having no valid original package tables. File Info now renders the genuine stored scan diagnosis without invoking a UEDB5 reader; Failed file Examine links redirect to that safe record. The Failed dashboard uses Review failure instead of Examine. Actual DEV HTTP tests against the real read-only PRD database fetched ALL 102 file-info pages successfully.
+
+All 707 mirror jobs are queued against the active manual external-link provider, not the background jobs queue. mirror-queue.php previously showed only 500 recent jobs: it now filters and paginates ALL 707 (8 pages of 100), with single-job cancellation and bulk cancellation linked from Mirror Queue. Federation had 19 queued parent_pull_from_child transfers for UTDB-DSM, but its operational queue called missing federation_visible_transfer_job_sql and related helpers. Seven SQL policy helpers were restored verbatim from Git immediately before commit 6286f56f, which accidentally removed them; original base-game policy semantics preserved. The federation operational queue now shows all 19.
+
+Dashboard-detail.php now offers per-row Cancel and explicitly confirmed bulk Cancel actions for Waiting Mirror and Queued Federation metrics. Bulk requires valid administrator CSRF, typed CANCEL and browser confirmation, then verifies expected count in a transaction. Cancelling preserves history and files and records federation job audit logs. No uploading mirrors or running/downloaded federation jobs are cancelled. NO real production jobs were cancelled in tests: only later deliberate admin POSTs can mutate their status. Isolated real MySQL transaction testing created only connection-local TEMPORARY TABLES shadowing queue tables. It proved both single and bulk cancellations, logging, rollback for stale counts, and protection of in-flight jobs without touching actual queue records.
+
+Acceptance: live PRD source counts across nine metrics; 102/102 failed-file HTTP 200 detail pages, invalid-file Examine redirect 302, 707 mirror queue across 8 pages, 19 operational federation queue records, anonymous block and invalid-CSRF HTTP 403. Chrome verified 12 dashboard cards, both bulk confirmation forms, 50 mirror/19 federation single actions and final mirror page without body overflow. Four source/UI regressions and 28/28 UE1-UE5 examination HTTP routes PASS. Evidence: tests/evidence/dashboard-failed-file-and-job-queue-repair-20261109.json. Original packages and UEDB5 files unchanged.
+
+---
+
+
+
 ## 9 November 2026 — Administrator dashboard statistic cards now open exact source rows
 
 All 12 counters in catalog/dashboard.php now link to their corresponding current catalogue view. Games goes to games.php; Missing/Resolved dependency counts open the existing source-current missing.php; nine concrete record categories open new administrator-only dashboard-detail.php?metric=<name>. The shared catalog_stat_card() accepts a fifth, optional hyperlink only; legacy cards elsewhere remain noninteractive. The new read-only PdoDashboardDetailPageQuery has strictly allowlisted status predicates corresponding exactly to PdoDashboardStatsQuery counts and bounded 50/100 page sizes, source row IDs, and action links. Mirror jobs now expose ALL 707 waiting rows through 15 pages of 50 (the existing mirror-queue.php is limited to 500 recent jobs), including the oldest mirror job #7. All 102 failed files are reachable across 3 pages; 19 queued federation records show their peer/status and a link to queue management.
