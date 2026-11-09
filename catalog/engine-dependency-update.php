@@ -37,6 +37,38 @@ try{
     }
     unset($game);
 
+    // Deep-link from Games: select the affected game, show exact stale files,
+    // and retain the existing CSRF/backup/explicit-confirmation job workflow.
+    $inspectGameId=(int)($_GET['game_id']??0);
+    if($inspectGameId<0)$inspectGameId=0;
+    $inspectedGame=null;
+    foreach($games as $candidate){
+        if((int)$candidate['id']===$inspectGameId){$inspectedGame=$candidate;break;}
+    }
+    $staleFiles=[];
+    if($inspectedGame!==null && $inspectedGame['supported']
+        && !$inspectedGame['policy_current']){
+        $staleQuery=$db->prepare(
+            'SELECT f.id,f.original_name,'
+            .'CASE WHEN v.file_id IS NULL THEN "UEDB5 snapshot missing" '
+            .'WHEN v.format_version<>5 OR v.payload_sha256 IS NULL THEN "UEDB5 snapshot invalid" '
+            .'WHEN ms.dependency_completed_at IS NULL THEN "Dependency publication missing" '
+            .'WHEN ms.dependency_policy IS NULL OR ms.dependency_policy<>? THEN "Dependency policy outdated" '
+            .'ELSE "Dependency payload changed" END reason '
+            .'FROM ue_files f '
+            .'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
+            .'LEFT JOIN ue_uedb5_migration_status ms ON ms.file_id=f.id AND ms.game_id=f.game_id '
+            .'WHERE f.game_id=? AND f.scan_status="verified" AND ('
+            .'v.file_id IS NULL OR v.format_version<>5 OR v.payload_sha256 IS NULL '
+            .'OR ms.dependency_completed_at IS NULL OR ms.dependency_policy IS NULL '
+            .'OR ms.dependency_policy<>? OR ms.dependency_payload_sha256 IS NULL '
+            .'OR ms.dependency_payload_sha256<>v.payload_sha256) ORDER BY f.id LIMIT 101'
+        );
+        $staleQuery->execute([
+            (string)$inspectedGame['policy'],$inspectGameId,(string)$inspectedGame['policy']
+        ]);
+        $staleFiles=$staleQuery->fetchAll(PDO::FETCH_ASSOC)?:[];
+    }
     $success=[];$errors=[];$workerState=null;
     if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
         catalog_check_csrf('engine-dependency-update');
@@ -132,6 +164,36 @@ try{
     }
     echo '</tbody></table></div></div>';
 
+    if($inspectedGame!==null){
+        echo '<div class="card"><h2>Dependency repair: '
+            .catalog_h((string)$inspectedGame['name']).'</h2>';
+        if($inspectedGame['policy_current']){
+            echo '<p>All verified files have current dependency publications. '
+                .($inspectedGame['stats_current']
+                    ? 'Statistics are current; no repair is required.'
+                    : 'The statistics cache requires rebuilding.')
+                .'</p>';
+        }elseif($staleFiles===[]){
+            echo '<p>Stale publications detected, but no file details were returned. '
+                .'Review the game profile and migration status before proceeding.</p>';
+        }else{
+            $more=count($staleFiles)>100;
+            echo '<p>Files requiring publication: '
+                .($more?'more than 100':number_format(count($staleFiles)))
+                .'. The existing background worker processes only outstanding '
+                .'publications and then refreshes the game statistics.</p>'
+                .'<div class="ui-table-region"><table><thead><tr>'
+                .'<th>File</th><th>Reason</th></tr></thead><tbody>';
+            foreach(array_slice($staleFiles,0,100) as $file){
+                echo '<tr><td><a href="file-examine.php?id='.(int)$file['id'].'">'
+                    .catalog_h((string)$file['original_name']).'</a></td><td>'
+                    .catalog_h((string)$file['reason']).'</td></tr>';
+            }
+            echo '</tbody></table></div>';
+            if($more)echo '<p>First 100 shown; the repair worker covers every remaining file.</p>';
+        }
+        echo '</div>';
+    }
     echo '<div class="card"><h2>Queue current-policy dependency updates</h2>'
         .'<p>These are source-pinned, resumable Pass 2 jobs, not the legacy generic '
         .'“Dependency Refresh”. Only stale games are queued. A game with current Pass 2 but '
@@ -141,7 +203,9 @@ try{
         .'<label>Games <select name="game_id"><option value="0">All configured games needing an update</option>';
     foreach($games as $game){
         if(!$game['supported'])continue;
-        echo '<option value="'.(int)$game['id'].'">'.catalog_h((string)$game['name']).'</option>';
+        echo '<option value="'.(int)$game['id'].'"'
+            .($inspectGameId===(int)$game['id']?' selected':'').'>'
+            .catalog_h((string)$game['name']).'</option>';
     }
     echo '</select></label>'
         .'<p><label><input type="checkbox" name="backup_confirmed" value="yes" required> '

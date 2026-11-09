@@ -105,6 +105,15 @@ try {
             return '<td data-sort-value="' . ($count ?? -1) . '">' . $content . '</td>';
         };
 
+        // A stale projection is a repairable admin state, not a dead-end badge.
+        if (!$current && catalog_support_is_admin()) {
+            $repairUrl = 'engine-dependency-update.php?game_id=' . $gameId;
+            $repairLink = '<a href="' . catalog_h($repairUrl)
+                . '" title="Inspect stale dependency publications and queue the existing repair worker">'
+                . 'Unavailable - inspect / repair</a>';
+        } else {
+            $repairLink = null;
+        }
         $unresolvedBadge = $badge($unresolved, 'warning');
         $unresolvedFileBadge = $badge($unresolvedFiles, 'warning');
         $resolvedBadge = $badge($resolved);
@@ -138,7 +147,7 @@ try {
                 ? '<a href="' . catalog_h($unresolvedUrl)
                     . '" title="Required dependency packages missing from this game&#039;s indexed catalogue; may exist in other games or installations">'
                     . $unresolvedBadge . '</a>'
-                : $unresolvedBadge
+                : ($repairLink ?? $unresolvedBadge)
         );
         $rows .= $numberCell(
             $unresolvedFiles,
@@ -146,7 +155,7 @@ try {
                 ? '<a href="' . catalog_h($unresolvedUrl)
                     . '" title="Files with one or more missing dependency packages in this game&#039;s catalogue">'
                     . $unresolvedFileBadge . '</a>'
-                : $unresolvedFileBadge
+                : ($repairLink ?? $unresolvedFileBadge)
         );
 
 
@@ -182,7 +191,12 @@ try {
             'href' => 'game-files.php?id=' . $gameId,
             'variant' => 'secondary',
             'size' => 'sm',
-        ]) . '</td>';
+        ]) . (!$current && catalog_support_is_admin()
+            ? ' ' . CatalogUi::button('Repair status', [
+                'href' => 'engine-dependency-update.php?game_id=' . $gameId,
+                'variant' => 'secondary',
+                'size' => 'sm',
+            ]) : '') . '</td>';
         $rows .= '</tr>';
     }
 
