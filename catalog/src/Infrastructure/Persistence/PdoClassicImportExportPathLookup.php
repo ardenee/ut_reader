@@ -18,8 +18,9 @@ final class PdoClassicImportExportPathLookup
 {
     private const MAX_PROVIDER_FILES = 1200;
     private const MAX_SQL_CANDIDATES = 2500;
-    private const QUERY_LEAVES_PER_BATCH = 120;
+    private const QUERY_LEAVES_PER_BATCH = 24;
     private const MAX_MATCHES_PER_IMPORT = 24;
+    private const MAX_TOTAL_CANDIDATES = 25000;
 
     /**
      * @param list<array<string,mixed>> $imports Original source-normalized import rows
@@ -49,7 +50,8 @@ final class PdoClassicImportExportPathLookup
     {
         $providerRootById = [];
         $requestMap = [];
-        $md5Keys = [];
+        $md5KeysByRoot = [];
+        $fileIdsByRoot = [];
         $importsByIndex = [];
 
         foreach ($imports as $row) {
@@ -68,12 +70,13 @@ final class PdoClassicImportExportPathLookup
             $key = CatalogUnrealIdentityHash::nameKey($leaf);
             if ($key === '') continue;
             $sha = hash('sha256', $key);
-            $md5Keys[md5($key)] = hex2bin(md5($key));
+            $md5KeysByRoot[strtolower($root)][md5($key)] = hex2bin(md5($key));
             $importsByIndex[$index] = $row;
             foreach ($fileIds as $id) {
                 $id = (int)$id;
                 if ($id < 1) continue;
                 $providerRootById[$id] = $root;
+                $fileIdsByRoot[strtolower($root)][$id] = $id;
                 $requestMap[$id][$sha][$index] = true;
             }
         }
@@ -81,34 +84,44 @@ final class PdoClassicImportExportPathLookup
         if ($requestMap === [] || count($providerRootById) > self::MAX_PROVIDER_FILES) {
             return [];
         }
-        $providerIds = array_keys($providerRootById);
         $parts = [];
         $totalCandidates = 0;
-        foreach (array_chunk($providerIds, 240) as $fileChunk) {
-            foreach (array_chunk(array_values($md5Keys), self::QUERY_LEAVES_PER_BATCH) as $nameChunk) {
-                $fileSql = implode(',', array_fill(0, count($fileChunk), '?'));
-                $nameSql = implode(',', array_fill(0, count($nameChunk), '?'));
-                $stmt = $db->prepare(
-                    'SELECT o.file_id,o.object_index,HEX(d.name_key_fingerprint) fingerprint '
-                    . 'FROM ue_uedb5_compact_name_dictionary d '
-                    . 'JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id '
-                    . 'JOIN ue_files f ON f.id=o.file_id AND f.game_id=? '
-                    . 'AND f.scan_status="verified" '
-                    . 'WHERE o.object_kind=1 AND o.file_id IN ('.$fileSql.') '
-                    . 'AND d.name_key_hash IN ('.$nameSql.') '
-                    . 'ORDER BY o.file_id,o.object_index LIMIT '.(self::MAX_SQL_CANDIDATES + 1)
-                );
-                $stmt->execute(array_merge([$gameId], $fileChunk, $nameChunk));
-                while (($hit = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
-                    $fileId = (int)$hit['file_id'];
-                    $index = (int)$hit['object_index'];
-                    $fingerprint = strtolower((string)$hit['fingerprint']);
-                    if (!isset($requestMap[$fileId][$fingerprint])) continue;
-                    if (!isset($parts[$fileId][$index])) ++$totalCandidates;
-                    $parts[$fileId][$index] = $fingerprint;
-                    if ($totalCandidates > self::MAX_SQL_CANDIDATES) return [];
+        // Scope candidate names to the package root requesting them.
+        // The former all-files x all-names SQL cross-product hit LIMIT 2501
+        // before later file IDs, silently dropping valid ExportMap links.
+        foreach ($fileIdsByRoot as $rootKey => $ids) {
+            $nameKeys = array_values($md5KeysByRoot[$rootKey] ?? []);
+            foreach (array_chunk(array_values($ids), 1) as $fileChunk) {
+                foreach (array_chunk($nameKeys, self::QUERY_LEAVES_PER_BATCH) as $nameChunk) {
+                    $fileSql = implode(',', array_fill(0, count($fileChunk), '?'));
+                    $nameSql = implode(',', array_fill(0, count($nameChunk), '?'));
+                    $stmt = $db->prepare(
+                        'SELECT o.file_id,o.object_index,HEX(d.name_key_fingerprint) fingerprint '
+                        . 'FROM ue_uedb5_compact_name_dictionary d '
+                        . 'JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id '
+                        . 'JOIN ue_files f ON f.id=o.file_id AND f.game_id=? '
+                        . 'AND f.scan_status="verified" '
+                        . 'WHERE o.object_kind=1 AND o.file_id IN ('.$fileSql.') '
+                        . 'AND d.name_key_hash IN ('.$nameSql.') '
+                        . 'ORDER BY o.file_id,o.object_index LIMIT '.(self::MAX_SQL_CANDIDATES + 1)
+                    );
+                    $stmt->execute(array_merge([$gameId], $fileChunk, $nameChunk));
+                    $rawCount = 0;
+                    while (($hit = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
+                        $rawCount++;
+                        if ($rawCount > self::MAX_SQL_CANDIDATES) {
+                            // A bounded lookup must never present truncated results as complete.
+                            return [];
+                        }
+                        $fileId = (int)$hit['file_id'];
+                        $index = (int)$hit['object_index'];
+                        $fingerprint = strtolower((string)$hit['fingerprint']);
+                        if (!isset($requestMap[$fileId][$fingerprint])) continue;
+                        if (!isset($parts[$fileId][$index])) ++$totalCandidates;
+                        $parts[$fileId][$index] = $fingerprint;
+                        if ($totalCandidates > self::MAX_TOTAL_CANDIDATES) return [];
+                    }
                 }
-                if (count($parts) > self::MAX_PROVIDER_FILES) return [];
             }
         }
         if ($parts === []) return [];

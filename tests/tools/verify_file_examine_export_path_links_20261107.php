@@ -89,6 +89,32 @@ try {
         'Export #425 does not serialize the AtlantisT.Floor path');
     requires(($exactProvider[14]['full_path']??'')==='AtlantisT.Floor.MetlFloor_U00W703v3',
         'Export #14 does not serialize the original nested path');
+    // Genuine UE1 wide-page regression: the old SQL all-names cross-product
+    // stopped at 2501 candidate rows and silently lost artifx2.artistalp.
+    $ue1Statement = $db->prepare(
+        'SELECT id,game_id,package_name,original_name,import_count,export_count,extension '
+        . 'FROM ue_files WHERE id=? AND game_id=12 AND scan_status="verified"'
+    );
+    $ue1Statement->execute([1250197]);
+    $ue1File = $ue1Statement->fetch(PDO::FETCH_ASSOC);
+    requires(is_array($ue1File), 'Genuine Unreal map #1250197 unavailable');
+    $ue1Page = PdoPackageTablePageQuery::fetchPage($db, $ue1File, 'imports', 1, 250);
+    $ue1Roots = array_values(array_unique(array_filter(array_map(
+        static fn(array $row): string => trim((string)($row['root_package'] ?? '')),
+        $ue1Page['rows']
+    ))));
+    $ue1Providers = PdoPackageTablePageQuery::packageFiles($db, 12, $ue1Roots);
+    $ue1Matches = PdoClassicImportExportPathLookup::match(
+        $db, 12, $ue1Page['rows'], $ue1Providers
+    );
+    requires(($ue1Matches[25] ?? []) === [[
+        'file_id' => 1294173,
+        'export_index' => 2,
+        'path' => 'artifx2.artistalp',
+    ]], 'UE1 Import #25 must link to the exact same-game artistalp export');
+    requires(empty($ue1Matches[24]),
+        'UE1 root package Import #24 must not be misrepresented as an export');
+
     $count = 0;
     foreach ($matches as $list) $count += count($list);
     $db->rollBack();
@@ -107,6 +133,7 @@ try {
         'wrong_outer_path_rejected' => true,
         'numbered_fname_not_guessed' => true,
         'foreign_game_rejected' => true,
+        'ue1_wide_page_artifx2_export_verified' => true,
         'source_export_path_verified' => true,
         'runtime_provider_selected' => false,
         'db_mutations' => 0
