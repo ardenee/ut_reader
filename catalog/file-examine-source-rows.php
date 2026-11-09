@@ -354,7 +354,7 @@ function examine_classic_full_source_table(
         . 'Root, Outer and Full path are reconstructed by following serialized '
         . 'OuterIndex references; they are not separate serialized fields. '
         . ($table === 'exports'
-            ? 'Class, Super and Outer display pointed-to object names; '
+            ? 'Ref links to this export record and highlights it. Class, Super and Outer display pointed-to object names; '
               . 'hover for the exact original signed reference. Flags, serial '
               . 'size and data offset retain original encoding details on hover. '
               . 'Local/Full path links search for potential importers, not '

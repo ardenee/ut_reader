@@ -725,6 +725,9 @@ try {
 #package-tables .examine-source-table .examine-export-options summary{cursor:pointer;color:var(--ui-info,#93c5fd);white-space:normal}
 #package-tables .examine-source-table .examine-export-options .examine-matched-export{display:block;white-space:nowrap;margin:5px 0}
 #package-tables .examine-source-table .examine-matched-export{overflow-wrap:anywhere}
+#package-tables .examine-source-table a.examine-export-self-ref{color:var(--blue)!important;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;cursor:pointer}
+#package-tables .examine-source-table a.examine-export-self-ref:hover,
+#package-tables .examine-source-table a.examine-export-self-ref:focus-visible{color:#c2dcff!important;text-decoration-thickness:2px}
 #package-tables .examine-source-table .examine-derived-col{background:rgba(130,165,220,.055)}
 /* Match fonts for original and derived fields throughout the same source
    table. Some global link/path rules previously rendered decoded paths bold
