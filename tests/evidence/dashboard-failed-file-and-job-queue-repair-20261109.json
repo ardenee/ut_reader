@@ -1,6 +1,6 @@
 {
   "date": "2026-11-09",
-  "result": "DEV_PASS_AWAITING_DEPLOY",
+  "result": "DEV_AND_PRD_DEPLOYED_PASS",
   "problem": "Original dashboard counts were accurate, but failed-file links tried to decode invalid packages; 707 mirror jobs exceeded the 500-row cap; an August 2026 refactor removed the federation SQL policy helpers still required by the queue.",
   "failed_records": {
     "count": 102,
@@ -378,5 +378,67 @@
   },
   "direct_live_protected_prd_apache_browser_verified": false,
   "original_packages_modified": false,
-  "uedb5_snapshots_modified": false
+  "uedb5_snapshots_modified": false,
+  "deployment": {
+    "implementation_commit": "df3dbdd086da7ca099b9da5095bd44842ef76d33",
+    "preflight_checked_files": 12,
+    "sha_verified_file_copies": 24,
+    "code_sha256_matches": {
+      "catalog/dashboard-detail.php": {
+        "dev": "f6ed60cf66deef548f5f3c113ff07d2129bcc3f6272b5aafcfc7401ce47e5a7a",
+        "prd": "f6ed60cf66deef548f5f3c113ff07d2129bcc3f6272b5aafcfc7401ce47e5a7a"
+      },
+      "catalog/file-info.php": {
+        "dev": "7e8e29bd5386be5240f848561c7441d7891022a146d7450c8eab9c62c600b94c",
+        "prd": "7e8e29bd5386be5240f848561c7441d7891022a146d7450c8eab9c62c600b94c"
+      },
+      "catalog/file-examine.php": {
+        "dev": "81368277e9507dd0c9c7563e703345de0403619d8dd8da8da87e560b57baec08",
+        "prd": "81368277e9507dd0c9c7563e703345de0403619d8dd8da8da87e560b57baec08"
+      },
+      "catalog/mirror-queue.php": {
+        "dev": "21a2658d087b9b1825f66659f47c737638b7a69cc57cd4d8e1769e398a3616d5",
+        "prd": "21a2658d087b9b1825f66659f47c737638b7a69cc57cd4d8e1769e398a3616d5"
+      },
+      "catalog/lib/FederationBaseGamePolicy.php": {
+        "dev": "8a6450d7bb48665ff0564b4dbd7a9cb49e6330074f3a634436ea90fb390709e7",
+        "prd": "8a6450d7bb48665ff0564b4dbd7a9cb49e6330074f3a634436ea90fb390709e7"
+      },
+      "catalog/src/Infrastructure/Federation/CatalogFederationTransferService.php": {
+        "dev": "61e1f110390d08d707fb0a53164634b647847076952342b975236616f96f7d28",
+        "prd": "61e1f110390d08d707fb0a53164634b647847076952342b975236616f96f7d28"
+      },
+      "catalog/src/Infrastructure/Maintenance/CatalogExternalMirrorAdminService.php": {
+        "dev": "5bd00c2a765647ef1ed5de01fd647d7b27f0c112b092234ae41cabb08c427e78",
+        "prd": "5bd00c2a765647ef1ed5de01fd647d7b27f0c112b092234ae41cabb08c427e78"
+      },
+      "tests/tools/verify_dashboard_queue_source_pages_20261109.php": {
+        "dev": "c4f417b3b18c191d669369c3804280c2494302e4ca32bda228772d725811db14",
+        "prd": "c4f417b3b18c191d669369c3804280c2494302e4ca32bda228772d725811db14"
+      },
+      "tests/tools/verify_dashboard_queue_bulk_mysql_fixture_20261109.php": {
+        "dev": "38c8d209747add7c5ab87efc3a11ef44b532f6eba71a69ff0f9c8f685e0128f0",
+        "prd": "38c8d209747add7c5ab87efc3a11ef44b532f6eba71a69ff0f9c8f685e0128f0"
+      }
+    },
+    "original_game_package_and_uedb5_storage_unchanged": true,
+    "protected_prd_config_unchanged": true,
+    "actual_deployed_prd_php_http": {
+      "pass": true,
+      "source": "PRD UNC deployed PHP executed via disposable DEV PHP server",
+      "failed_list": 102,
+      "failed_detail_links_tested": 3,
+      "redirect_http": 302,
+      "mirror_waiting": 707,
+      "mirror_operational_last_page": 8,
+      "queued_federation": 19,
+      "federation_queue_restored": true,
+      "invalid_csrf_403": true,
+      "anonymous_blocked": true,
+      "production_db_rows_changed": 0,
+      "production_admin_session_used": false
+    },
+    "production_jobs_cancelled_by_implementation": 0,
+    "live_authenticated_prd_apache_browser_verified": false
+  }
 }
