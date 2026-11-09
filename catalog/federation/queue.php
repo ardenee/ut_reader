@@ -86,7 +86,8 @@ try {
     foreach (['active' => 'Active', 'waiting' => 'Waiting for import', 'failed' => 'Failed', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $key => $label) {
         echo '<a class="button" href="queue.php?tab=' . $key . '">' . $label . ' (' . $counts[$key] . ')</a> ';
     }
-    echo '</p></div>';
+    echo '</p><p><a class="button secondary" href="../dashboard-detail.php?metric=fedQueued#queue-controls">'
+        . 'Cancel pending or purge cancelled transfer history</a></p></div>';
 
     $statuses = CatalogFederationTransferService::statusesForTab($tab);
     $quoted = implode(',', array_map([$db, 'quote'], $statuses));
@@ -120,6 +121,13 @@ try {
                 $action = '<form method="post" onsubmit="return confirm(\'Cancel this queued transfer?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_transfers')) . '"><input type="hidden" name="job_id" value="' . (int)$job['id'] . '"><input type="hidden" name="action" value="cancel"><button>Cancel</button></form>';
             } elseif (in_array((string)$job['status'], ['failed', 'cancelled'], true)) {
                 $action = '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_transfers')) . '"><input type="hidden" name="job_id" value="' . (int)$job['id'] . '"><input type="hidden" name="action" value="retry"><button>Retry</button></form>';
+                if ((string)$job['status'] === 'cancelled') {
+                    $action .= ' <form method="post" onsubmit="return confirm(\'Permanently remove this cancelled federation job? Historical audit messages will remain.\')">'
+                        . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_transfers')) . '">'
+                        . '<input type="hidden" name="job_id" value="' . (int)$job['id'] . '">'
+                        . '<input type="hidden" name="action" value="delete_cancelled">'
+                        . '<button class="danger" type="submit">Delete</button></form>';
+                }
             }
             echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td>' . catalog_h($job['status']) . '</td><td class="mono">' . catalog_h($job['remote_request_item_id']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td class="nowrap">' . catalog_h(catalog_bytes((int)$job['bytes_done']) . ' / ' . catalog_bytes((int)$job['bytes_total'])) . '</td><td>' . $local . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td class="nowrap">' . catalog_h($job['created_at']) . '</td><td>' . $action . '</td></tr>';
         }

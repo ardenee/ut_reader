@@ -79,6 +79,46 @@ if(!$file)throw new RuntimeException('File not found');
 // snapshot to decode. Show the original catalogue scan diagnosis directly,
 // without invoking the classic package-table reader or dependencies.
 if ((string)($file['scan_status'] ?? '') === 'failed') {
+    catalog_start_session();
+    $failedIsAdmin = catalog_support_is_admin();
+    $recheck = null;
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+        if (!$failedIsAdmin) {
+            http_response_code(403);
+            echo 'Administrator access required.';
+            exit;
+        }
+        try {
+            catalog_check_csrf('failed-file-recheck');
+        } catch (Throwable $error) {
+            http_response_code(403);
+            echo 'Invalid request token.';
+            exit;
+        }
+        if ((string)($_POST['operation'] ?? '') !== 'recheck_failed') {
+            http_response_code(400);
+            echo 'Unsupported failed-file action.';
+            exit;
+        }
+        try {
+            $db->exec('SET TRANSACTION READ ONLY');
+            $db->beginTransaction();
+            $recheck=(new \UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFailedFileRecheckService(
+                $db,$config
+            ))->recheck($id);
+        } catch (Throwable $error) {
+            $recheck=[
+                'ok'=>false,'source_available'=>false,'identity_ok'=>false,
+                'message'=>'Revalidation could not complete: '.$error->getMessage(),
+                'details'=>[],
+            ];
+        } finally {
+            if ($db->inTransaction()) $db->rollBack();
+        }
+    }
+    $recheckCsrf = $failedIsAdmin ? catalog_csrf('failed-file-recheck') : '';
+    $removeCsrf = $failedIsAdmin ? catalog_csrf('catalog-maintenance') : '';
+    if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
     catalog_head('Failed file #' . $id);
     catalog_page_header(
         'Failed file #' . $id,
@@ -104,6 +144,41 @@ if ((string)($file['scan_status'] ?? '') === 'failed') {
             . catalog_h($value !== '' ? $value : 'Not recorded') . '</td></tr>';
     }
     echo '</tbody></table><p><a href="dashboard-detail.php?metric=failed">Back to failed files</a></p></div>';
+    if ($failedIsAdmin) {
+        echo '<div class="card" id="failed-maintenance"><h2>Failed-file maintenance</h2>'
+            . '<p>Revalidate executes the current game-specific package reader against '
+            . 'the original stored bytes, checking the recorded size, MD5 and SHA-1 first. '
+            . 'It is read-only: the failed status and known-invalid byte fingerprint are preserved. '
+            . 'Only remove if this invalid source should no longer be retained.</p>';
+        if (is_array($recheck)) {
+            echo '<div class="ui-alert" role="status"><strong>'
+                . ($recheck['ok'] ? 'Revalidation accepted' : 'Revalidation not accepted')
+                . '</strong><p>' . catalog_h((string)$recheck['message']) . '</p>';
+            foreach ((array)($recheck['details']??[]) as $label=>$value) {
+                echo '<p><strong>' . catalog_h((string)$label) . ':</strong> '
+                    . catalog_h((string)$value) . '</p>';
+            }
+            echo '</div>';
+        }
+        echo '<div class="page-links">'
+            . '<form method="post" action="file-info.php?id=' . $id . '#failed-maintenance">'
+            . '<input type="hidden" name="csrf" value="' . catalog_h($recheckCsrf) . '">'
+            . '<input type="hidden" name="operation" value="recheck_failed">'
+            . '<button type="submit">Revalidate stored bytes</button></form>'
+            . '<form method="post" action="file-maintenance.php">'
+            . '<input type="hidden" name="csrf" value="' . catalog_h($removeCsrf) . '">'
+            . '<input type="hidden" name="operation" value="remove_failed">'
+            . '<input type="hidden" name="file_id" value="' . $id . '">'
+            . '<label>Type <strong>DELETE</strong> to remove '
+            . 'the stored source and catalogue record: '
+            . '<input name="confirm_phrase" autocomplete="off" required pattern="DELETE"'
+            . ' aria-label="Type DELETE to confirm permanent removal"></label> '
+            . '<button class="danger" type="submit">Remove failed file + stored bytes</button>'
+            . '</form></div><p class="muted">'
+            . 'Removing a failed file does not make its original bytes valid. '
+            . 'Re-uploading identical invalid bytes is still blocked by the known-invalid identity.'
+            . '</p></div>';
+    }
     catalog_foot();
     return;
 }

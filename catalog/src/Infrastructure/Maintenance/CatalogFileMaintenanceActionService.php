@@ -15,6 +15,7 @@ use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
 final class CatalogFileMaintenanceActionService
 {
@@ -111,6 +112,53 @@ final class CatalogFileMaintenanceActionService
                     ? 'Rebuilt ' . $result['original_name'] . ' from its preserved source path. ' . $result['message']
                     : $result['message'],
                 'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
+            ];
+        }
+
+        if ($operation === 'remove_failed') {
+            if (!hash_equals('DELETE', (string)($input['confirm_phrase'] ?? ''))) {
+                throw new RuntimeException('Type DELETE to confirm removing this failed package and its stored bytes.');
+            }
+            // Dashboard cleanup must not turn into a blind delete of a package
+            // which has meanwhile been verified by an independent worker.
+            $result = $this->withWriteLock(function () use ($fileId): array {
+                $file = \catalog_one(
+                    $this->db,
+                    'SELECT id,scan_status FROM ue_files WHERE id=?',[$fileId]
+                );
+                if (!$file || (string)$file['scan_status'] !== 'failed') {
+                    throw new RuntimeException(
+                        'Refusing removal: this file is no longer a failed catalogue record.'
+                    );
+                }
+                $outcome = \catalog_file_maintenance_remove(
+                    $this->db, $this->config, $fileId, $this->progress
+                );
+                // The Dashboard reads cached per-game stats. Rebuild only the
+                // affected game from authoritative source rows after removal;
+                // otherwise a deleted failure stays in the 102-card count.
+                try {
+                    $stats = (new PdoGameCatalogStats($this->db))->rebuildGame(
+                        (int)$outcome['game_id'],1
+                    );
+                    if ($stats === null) {
+                        $outcome['warning'] .= ' Catalogue statistics were not refreshed; '
+                            . 'retry the game stats rebuild if the dashboard count lags.';
+                    }
+                } catch (Throwable $statsError) {
+                    error_log('[UnrealDB failed cleanup stats] ' . $statsError->getMessage());
+                    $outcome['warning'] .= ' Catalogue statistics refresh failed after deletion; '
+                        . 'run the game stats rebuild.';
+                }
+                return $outcome;
+            });
+            return [
+                'ok'=>true,
+                'message'=>'Removed failed source ' . $result['original_name']
+                    . ' from managed storage and the catalogue. '
+                    . 'Known-invalid byte fingerprints remain retained.'
+                    . $result['warning'],
+                'return_url'=>'dashboard-detail.php?metric=failed',
             ];
         }
 

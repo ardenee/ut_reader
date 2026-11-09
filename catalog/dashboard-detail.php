@@ -60,6 +60,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 $count = $service->cancelPendingBulk($expected);
                 $message = 'Cancelled ' . $count . ' queued/waiting-admin mirror jobs. '
                     . 'Historical records, files and active mirror links were kept.';
+            } elseif ($action === 'purge_cancelled_all') {
+                if ((string)($_POST['confirm_phrase'] ?? '') !== 'PURGE') {
+                    throw new RuntimeException('Type PURGE to confirm permanent deletion.');
+                }
+                $count = $service->purgeCancelledBulk($expected);
+                $message = 'Permanently removed ' . $count . ' cancelled mirror job records. '
+                    . 'Original packages and external download links were preserved.';
             } else {
                 throw new RuntimeException('Unsupported mirror queue action.');
             }
@@ -76,6 +83,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 $count = $service->cancelQueuedBulk($expected);
                 $message = 'Cancelled ' . $count . ' queued federation transfers. '
                     . 'A cancellation event was logged per job; no history was deleted.';
+            } elseif ($action === 'purge_cancelled_all') {
+                if ((string)($_POST['confirm_phrase'] ?? '') !== 'PURGE') {
+                    throw new RuntimeException('Type PURGE to confirm permanent deletion.');
+                }
+                $count = $service->purgeCancelledBulk($expected);
+                $message = 'Permanently removed ' . $count . ' cancelled federation job records. '
+                    . 'The federation transfer log entries were retained.';
             } else {
                 throw new RuntimeException('Unsupported federation queue action.');
             }
@@ -91,6 +105,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 $queueFlash = $_SESSION['dashboard_queue_flash'] ?? null;
 unset($_SESSION['dashboard_queue_flash']);
 $dashboardQueueCsrf = catalog_csrf('dashboard_queue_actions');
+$fileMaintenanceCsrf = catalog_csrf('catalog-maintenance');
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();
 }
@@ -221,7 +236,7 @@ function dashboard_detail_single_cancel_form(
 /**
  * @param list<array<string,mixed>> $rows
  */
-function dashboard_detail_table(string $metric, array $rows, string $csrf, int $page, int $pageSize): void
+function dashboard_detail_table(string $metric, array $rows, string $csrf, int $page, int $pageSize, string $fileCsrf): void
 {
     if ($rows === []) {
         echo '<p class="muted">No matching records for this status on the selected page.</p>';
@@ -253,7 +268,12 @@ function dashboard_detail_table(string $metric, array $rows, string $csrf, int $
             $gameId = (int)$row['game_id'];
             $reason = trim((string)($row['metadata_error'] ?? ''));
             if ($reason === '') $reason = (string)($row['scan_notes'] ?? '');
-            echo '<td class="mono"><a href="' . $fileHref . '">#' . $id . '</a></td>'
+            echo '<td class="mono">'
+                . ($metric === 'failed'
+                    ? '<input class="failed-file-select" type="checkbox" data-file-id="' . $id
+                        . '" aria-label="Select failed file #' . $id . '"> '
+                    : '')
+                . '<a href="' . $fileHref . '">#' . $id . '</a></td>'
                 . '<td><a href="game-files.php?id=' . $gameId . '">' . catalog_h((string)$row['game_name']) . '</a></td>'
                 . '<td class="path"><strong>' . dashboard_detail_trim($row['package_name'], 120)
                 . '</strong><br><span class="muted small">' . dashboard_detail_trim($row['original_name'], 180) . '</span></td>'
@@ -261,7 +281,10 @@ function dashboard_detail_table(string $metric, array $rows, string $csrf, int $
                 . '<td>' . catalog_h((string)$row['scan_status']) . '</td>'
                 . '<td class="path">' . dashboard_detail_trim($reason) . '</td>'
                 . '<td>' . ($metric === 'failed'
-                    ? '<a href="file-info.php?id=' . $id . '#scan-status">Review failure</a>'
+                    ? '<a href="file-info.php?id=' . $id . '#scan-status">Review failure</a> '
+                      . '<a href="file-info.php?id=' . $id . '#failed-maintenance">Revalidate</a> '
+                      . '<a href="file-info.php?id=' . $id . '#failed-maintenance">'
+                      . 'Remove</a>'
                     : '<a href="file-examine.php?id=' . $id . '">Examine</a>') . '</td>';
         } elseif ($federation) {
             $localFileId = (int)($row['local_file_id'] ?? 0);
@@ -365,12 +388,28 @@ try {
         . catalog_h(dashboard_detail_url($metric,1,100)) . '">100 per page</a></p>'
         . dashboard_detail_pagination($metric, $page, $pageCount, $pageSize);
 
+    if ($metric === 'failed') {
+        echo '<section class="card" id="failed-cleanup-controls">'
+            . '<h3>Manage failed files</h3><p>Review or revalidate each stored source using '
+            . 'the current game-specific scanner. Revalidation does not silently change the '
+            . 'record or known-invalid byte fingerprint. '
+            . '<strong>Remove</strong> permanently deletes the selected managed bytes and catalogue '
+            . 'record using the existing file-maintenance cleanup, including dependency reconciliation.</p>'
+            . '<p><label><input type="checkbox" id="failed-select-page"> Select all failed files on this page</label> '
+            . '<button class="danger" type="button" id="failed-remove-selected">Remove selected failed files</button></p>'
+            . '<p id="failed-removal-progress" role="status" aria-live="polite" class="muted">'
+            . 'No failed files selected. Confirmed invalid-file hashes will remain blocked after removal.</p></section>';
+    }
     if (in_array($metric, ['mirrorWaiting','fedQueued'], true)) {
         if ($metric === 'mirrorWaiting') {
             $cancelableCount = (int)$db->query(
                 'SELECT COUNT(*) FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin")'
             )->fetchColumn();
             $additional = 'Jobs already uploading are not cancelled automatically.';
+            $purgeCount = (int)$db->query(
+                'SELECT COUNT(*) FROM ue_external_mirror_jobs WHERE status="cancelled"'
+            )->fetchColumn();
+            $historyHref = 'mirror-queue.php?status=cancelled';
         } else {
             $visible = federation_visible_transfer_job_sql($db, 'j');
             $cancelableCount = (int)$db->query(
@@ -378,6 +417,11 @@ try {
                 . 'WHERE j.status="queued" AND ' . $visible
             )->fetchColumn();
             $additional = 'Running, downloaded and completed transfers are never included.';
+            $purgeCount = (int)$db->query(
+                'SELECT COUNT(*) FROM ue_federation_transfer_jobs j '
+                . 'WHERE j.status="cancelled" AND ' . $visible
+            )->fetchColumn();
+            $historyHref = 'federation/queue.php?tab=cancelled';
         }
         echo '<section class="card" id="queue-controls">'
             . '<h3>Manage waiting jobs</h3><p>'
@@ -399,12 +443,66 @@ try {
                 . '<button class="danger" type="submit">Cancel all ' . $cancelableCount
                 . ' pending jobs</button></p></form>';
         }
+        echo '<h3>Clear cancelled history</h3><p><a href="'
+            . catalog_h($historyHref) . '">Browse cancelled jobs</a>. '
+            . number_format($purgeCount)
+            . ' cancelled job(s) currently eligible for permanent cleanup. '
+            . 'Purging only deletes cancelled job rows, never original file bytes or active/download links. '
+            . 'Federation transfer audit messages remain recorded.</p>';
+        if ($purgeCount > 0) {
+            echo '<form method="post" onsubmit="return confirm(\'Permanently delete ALL '
+                . $purgeCount . ' cancelled jobs?\')">'
+                . '<input type="hidden" name="csrf" value="' . catalog_h($dashboardQueueCsrf) . '">'
+                . '<input type="hidden" name="metric" value="' . catalog_h($metric) . '">'
+                . '<input type="hidden" name="action" value="purge_cancelled_all">'
+                . '<input type="hidden" name="expected_count" value="' . $purgeCount . '">'
+                . '<p><label>Type <strong>PURGE</strong> '
+                . '<input type="text" name="confirm_phrase" required pattern="PURGE" '
+                . 'autocomplete="off"></label> '
+                . '<button class="danger" type="submit">Permanently purge '
+                . number_format($purgeCount) . ' cancelled jobs</button></p></form>';
+        }
         echo '</section>';
     }
 
-    dashboard_detail_table($metric, $rows, $dashboardQueueCsrf, $page, $pageSize);
+    dashboard_detail_table($metric, $rows, $dashboardQueueCsrf, $page, $pageSize, $fileMaintenanceCsrf);
     echo dashboard_detail_pagination($metric, $page, $pageCount, $pageSize)
         . '</div>';
+
+    if ($metric === 'failed') {
+        $csrfJson = json_encode($fileMaintenanceCsrf, JSON_HEX_TAG | JSON_HEX_AMP
+            | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR);
+        echo '<script>(function(){\'use strict\';'
+            . 'const token=' . $csrfJson . ';'
+            . 'const checks=Array.from(document.querySelectorAll(".failed-file-select"));'
+            . 'const all=document.getElementById("failed-select-page");'
+            . 'const go=document.getElementById("failed-remove-selected");'
+            . 'const status=document.getElementById("failed-removal-progress");'
+            . 'if(!go||!status)return;'
+            . 'if(all)all.addEventListener("change",()=>{checks.forEach(c=>c.checked=all.checked);});'
+            . 'go.addEventListener("click",async()=>{'
+            . 'const selected=checks.filter(c=>c.checked).map(c=>c.dataset.fileId);'
+            . 'if(!selected.length){status.textContent="Select at least one failed file first.";return;}'
+            . 'if(prompt("Type DELETE to permanently delete "+selected.length+" selected failed files and their stored bytes:")!=="DELETE")return;'
+            . 'if(!confirm("Remove "+selected.length+" source files and catalogue records? This is irreversible."))return;'
+            . 'go.disabled=true;let done=0;const errors=[];'
+            . 'for(const id of selected){'
+            . 'status.textContent="Removing "+(done+1)+" of "+selected.length+" (file #"+id+")";'
+            . 'try{const data=new FormData();data.set("csrf",token);data.set("file_id",id);'
+            . 'data.set("operation","remove_failed");data.set("confirm_phrase","DELETE");'
+            . 'const response=await fetch("file-maintenance.php",{method:"POST",credentials:"same-origin",'
+            . 'headers:{"Accept":"application/json"},body:data});'
+            . 'const result=await response.json();'
+            . 'if(!response.ok||!result.ok)throw Error(result.error||"Maintenance rejected request");'
+            . 'done++;const box=checks.find(c=>c.dataset.fileId===id);'
+            . 'if(box){box.checked=false;const row=box.closest("tr");if(row)row.remove();}'
+            . '}catch(error){errors.push("#"+id+": "+error.message);break;}'
+            . '}go.disabled=false;'
+            . 'status.textContent="Removed "+done+" of "+selected.length+" selected failed files. "'
+            . '+(errors.length?errors.join("; "):"Refresh the page for updated counts.");'
+            . 'if(!errors.length&&done>0)window.location.reload();'
+            . '});})();</script>';
+    }
 
     catalog_foot();
 } catch (Throwable $error) {

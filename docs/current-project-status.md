@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## 9 November 2026 — Failed-file maintenance and cancelled queue cleanup
+
+The administrator dashboard details now offer actual maintenance operations. Of 102 failed source records, the real PRD storage still holds 100 source files; 2 are missing. All 102 source identities remain recorded as known-invalid bytes. Source revalidation checks exact size, MD5, SHA-1, and uses the existing game-specific engine reader in a read-only transaction; it never silently marks files verified or deletes their known-invalid identities. Its real service implementation passed an isolated source fixture with a valid source, an invalid source, and deliberately altered bytes.
+
+Failed File Info now provides Review, Revalidate stored bytes, and server-confirmed Remove failed file + stored bytes; the Dashboard failed-file list offers 50/100-row selection with serial bulk removal using the same native protected service. Removal is explicitly destructive, requires administrator CSRF and exact literal DELETE confirmation checked on the server and failed status under the global maintenance lock. It reuses the existing removal service, including storage and compact projection cleanup and dependency reconciliation; known-invalid byte fingerprints survive.
+
+The two waiting-job counters are now zero. The PRD database has 707 cancelled manual external-mirror jobs and 19 cancelled federation transfers. The existing operational Mirror Queue and Federation Queue pages now offer per-cancelled-job Delete, with typed PURGE of all cancelled history on the dashboard details. These purge operations are transactional and status-guarded: they do not affect queued, uploading, active, running or downloaded jobs, original package bytes or external links. Federation audit events remain via the real ON DELETE SET NULL foreign key. No real cancelled job records were purged during this work.
+
+Acceptance: all 102 failed-file HTTP diagnostic pages, actual admin revalidation POST/CSRF guards, native source revalidation with disposable source copy and session-temporary SQL fixture, transactional single/bulk cancel/purge fixture tests, Chromium 50-row selection and all maintenance controls with zero POSTs, six previous source/UI regression suites and 28/28 UE1–UE5 examination routes passed. Evidence: tests/evidence/dashboard-maintenance-actions-20261109.json. PRD source bytes, UEDB5 storage and original Epic source untouched.
+
+---
+
+
+
 ## 9 November 2026 - Fix failed-file drilldowns and actionable mirror/federation queues
 
 Production dashboard counts are accurate: 102 file records have scan_status failed, of which 100 carry invalid_ue_file confirmed-invalid notes and two have detailed invalid source-policy notes. Previous dashboard incorrectly offered File Examine links despite these files having no valid original package tables. File Info now renders the genuine stored scan diagnosis without invoking a UEDB5 reader; Failed file Examine links redirect to that safe record. The Failed dashboard uses Review failure instead of Examine. Actual DEV HTTP tests against the real read-only PRD database fetched ALL 102 file-info pages successfully.

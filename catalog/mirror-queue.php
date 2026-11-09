@@ -57,7 +57,8 @@ try {
         . '<p><a class="button" href="dashboard.php">Catalog Admin</a> '
         . '<a class="button" href="mirror-providers.php">Providers</a> '
         . '<a class="button" href="mirror-links.php">Mirror Links</a> '
-        . '<a class="button" href="dashboard-detail.php?metric=mirrorWaiting#queue-controls">Cancel pending in bulk</a></p>'
+        . '<a class="button" href="dashboard-detail.php?metric=mirrorWaiting#queue-controls">'
+        . 'Cancel pending / purge cancelled jobs</a></p>'
         . '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('mirror_queue')) . '">'
         . '<input type="hidden" name="status" value="' . catalog_h($status) . '">'
         . '<input type="hidden" name="page" value="' . $requestedPage . '">'
@@ -105,6 +106,10 @@ try {
             }
             if (in_array((string)$j['status'], ['failed','cancelled'], true)) {
                 $actions[] = '<button name="action" value="retry">Retry</button>';
+            }
+            if ((string)$j['status'] === 'cancelled') {
+                $actions[] = '<button class="danger" name="action" value="delete_cancelled">'
+                    . 'Delete cancelled job</button>';
             }
             $formButtons = array_filter($actions, static fn($a) => str_starts_with($a, '<button'));
             $links = array_filter($actions, static fn($a) => !str_starts_with($a, '<button'));

@@ -78,6 +78,40 @@ try {
     expect((int)$db->query('SELECT COUNT(*) FROM ue_federation_transfer_logs WHERE event="JOB_CANCEL"')->fetchColumn()===4,
         'Federation single cancel audit missing');
 
+    // Purge operates on terminal jobs only. It must never remove in-flight
+    // mirror uploads or running/downloaded federation jobs.
+    try {$mir->purgeCancelledBulk(100);throw new RuntimeException('Stale mirror purge accepted');}
+    catch (RuntimeException $e) {
+        expect(str_contains($e->getMessage(),'changed'),'Mirror stale purge was not rejected');
+    }
+    expect($mir->purgeCancelledBulk(4)===4,'Mirror terminal bulk purge count incorrect');
+    expect((int)$db->query('SELECT COUNT(*) FROM ue_external_mirror_jobs')->fetchColumn()===1,
+        'Mirror purge removed an uploading job or left cancelled jobs behind');
+    expect((string)$db->query('SELECT status FROM ue_external_mirror_jobs')->fetchColumn()==='uploading',
+        'Mirror purge changed in-flight upload status');
+    $db->exec('INSERT INTO ue_external_mirror_jobs VALUES (900006,"cancelled",NOW(),"Fixture")');
+    $purgedOne=$mir->handleQueueAction('delete_cancelled',900006);
+    expect(str_contains($purgedOne,'Permanently removed'),'Mirror single terminal delete missing');
+    expect((int)$db->query('SELECT COUNT(*) FROM ue_external_mirror_jobs')->fetchColumn()===1,
+        'Mirror single terminal delete failed');
+
+    try {$fed->purgeCancelledBulk(100);throw new RuntimeException('Stale federation purge accepted');}
+    catch (RuntimeException $e) {
+        expect(str_contains($e->getMessage(),'changed'),'Federation stale purge not rejected');
+    }
+    expect($fed->purgeCancelledBulk(4)===4,'Federation terminal bulk purge count incorrect');
+    expect((int)$db->query('SELECT COUNT(*) FROM ue_federation_transfer_jobs')->fetchColumn()===2,
+        'Federation purge removed an in-flight/downloaded transfer');
+    expect((int)$db->query('SELECT COUNT(*) FROM ue_federation_transfer_logs WHERE event="JOB_CANCEL"')->fetchColumn()===4,
+        'Federation purge removed historical audit events');
+    $db->exec('INSERT INTO ue_federation_transfer_jobs VALUES '
+        .'(900107,999999,"cancelled","fixture-deleted",NULL,NULL,NOW(),"Done")');
+    $out=$fed->handle(900107,'delete_cancelled','cancelled');
+    expect(str_contains($out['flash'],'Removed cancelled federation'),
+        'Federation single terminal delete not available');
+    expect((int)$db->query('SELECT COUNT(*) FROM ue_federation_transfer_jobs')->fetchColumn()===2,
+        'Federation single terminal delete failed');
+
     echo json_encode([
       'pass'=>true,
       'mysql_real_transaction_logic'=>true,
@@ -91,6 +125,13 @@ try {
       'temp_federation_logs'=>4,
       'single_cancel_both_types'=>true,
       'stale_confirmations_rejected'=>true,
+      'mirror_cancelled_bulk_purged'=>4,
+      'mirror_cancelled_single_purged'=>1,
+      'mirror_active_upload_preserved_on_purge'=>true,
+      'federation_cancelled_bulk_purged'=>4,
+      'federation_cancelled_single_purged'=>1,
+      'federation_running_and_downloaded_preserved_on_purge'=>true,
+      'federation_audit_log_rows_retained_after_purge'=>4,
     ],JSON_PRETTY_PRINT|JSON_THROW_ON_ERROR),PHP_EOL;
 } catch(Throwable $error) {
     if($db->inTransaction())$db->rollBack();

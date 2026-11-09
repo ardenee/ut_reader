@@ -1,5 +1,12 @@
 
 
+## Failed-file and cancelled-queue maintenance — 9 November 2026
+
+Use verify_failed_management_readonly_20261109.php with --source-storage=PATH for a read-only test of actual stored package bytes; the option is test-only and does not change site configuration. The existing verify_dashboard_queue_bulk_mysql_fixture_20261109.php now also tests single/bulk purge with real MySQL transaction semantics, using connection-local temporary SQL tables only and verifying transfer logs remain. A disposable DEV source fixture verified the new recheck service on accepted, invalid and byte-tampered source files. The D:/Temp/UnrealDB evidence harness tested actual PHP HTML forms, failed-file links, admin CSRF rejection, typed DELETE safeguards, cancelled job list controls, Chromium interactions without executing destructive actions, six regressions and 28/28 UE1–UE5 routes. No production rows or source packages changed. See tests/evidence/dashboard-maintenance-actions-20261109.json.
+
+---
+
+
 ## Failed-file link and mirror/federation queue repairs - 9 November 2026
 
 Run php tests/tools/verify_dashboard_queue_source_pages_20261109.php against the read-only catalogue connection to cross-check source status counts, mirror pagination uniqueness, restored federation SQL policy and failed-file diagnostics. Run php tests/tools/verify_dashboard_queue_bulk_mysql_fixture_20261109.php to test real MySQL single/bulk transactional cancels using ONLY connection-local TEMPORARY TABLES (never production queue rows). The DEV HTTP/Chrome harness retained in D:/Temp/UnrealDB covers all 102 failed-file links, failed Examine redirects, 707 paginated mirror jobs, 19 federation jobs, anonymous and invalid-CSRF rejection, confirm forms and Chrome layout. Source/UI regressions and 28 UE1-UE5 HTTP routes PASS. Nothing cancelled on production. Evidence: tests/evidence/dashboard-failed-file-and-job-queue-repair-20261109.json. Deployed PRD source files were also HTTP-tested from DEV; all page and security assertions passed and DEV/PRD code hashes match.

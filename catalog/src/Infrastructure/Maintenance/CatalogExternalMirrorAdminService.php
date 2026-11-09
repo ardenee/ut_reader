@@ -223,10 +223,55 @@ final class CatalogExternalMirrorAdminService
             )->execute([$id]);
             return 'Mirror job retried.';
         }
+        if ($action === 'delete_cancelled') {
+            if ($id < 1) throw new RuntimeException('A valid mirror job ID is required.');
+            $statement = $this->db->prepare(
+                'DELETE FROM ue_external_mirror_jobs WHERE id=? AND status="cancelled"'
+            );
+            $statement->execute([$id]);
+            if ($statement->rowCount() !== 1) {
+                throw new RuntimeException('Job is missing or no longer cancelled.');
+            }
+            return 'Permanently removed cancelled mirror job #' . $id
+                . '. The original package and external links were not deleted.';
+        }
         if ($action === 'expire_old') {
             return 'Expired ' . \external_expire_old_links($this->db) . ' old active mirror link(s).';
         }
         return '';
+    }
+
+    /**
+     * Permanently remove ONLY already-cancelled mirror job rows. This never
+     * removes the associated original package bytes or external links.
+     */
+    public function purgeCancelledBulk(int $expected): int
+    {
+        if ($expected < 1 || $expected > 20000) {
+            throw new RuntimeException('Invalid mirror purge count.');
+        }
+        $this->db->beginTransaction();
+        try {
+            $rows = $this->db->query(
+                'SELECT id FROM ue_external_mirror_jobs '
+                . 'WHERE status="cancelled" ORDER BY id FOR UPDATE'
+            )->fetchAll(PDO::FETCH_COLUMN);
+            if (count($rows) !== $expected) {
+                throw new RuntimeException('Cancelled mirror jobs changed. Refresh the page.');
+            }
+            $stmt = $this->db->prepare(
+                'DELETE FROM ue_external_mirror_jobs WHERE status="cancelled"'
+            );
+            $stmt->execute();
+            if ($stmt->rowCount() !== $expected) {
+                throw new RuntimeException('Mirror purge count changed; rolling back.');
+            }
+            $this->db->commit();
+            return $expected;
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $error;
+        }
     }
 
     /**

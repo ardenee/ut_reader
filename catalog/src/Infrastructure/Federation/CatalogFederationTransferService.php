@@ -49,6 +49,21 @@ final class CatalogFederationTransferService
         }
 
         $action = strtolower(trim($action));
+        if ($action === 'delete_cancelled') {
+            if ((string)$job['status'] !== 'cancelled') {
+                throw new RuntimeException('Only cancelled federation jobs can be permanently removed.');
+            }
+            $statement = $this->db->prepare(
+                'DELETE FROM ue_federation_transfer_jobs WHERE id=? AND status="cancelled"'
+            );
+            $statement->execute([$jobId]);
+            if ($statement->rowCount() !== 1) {
+                throw new RuntimeException('Federation job changed before deletion.');
+            }
+            // FK on transfer logs is ON DELETE SET NULL: audit messages remain.
+            return ['flash'=>'Removed cancelled federation job #' . $jobId
+                . '. Transfer audit log entries were retained.', 'tab'=>'cancelled'];
+        }
         if ($action === 'cancel') {
             if (!in_array((string)$job['status'], ['queued', 'failed'], true)) {
                 throw new RuntimeException('Only queued or failed transfers can be cancelled here.');
@@ -81,6 +96,46 @@ final class CatalogFederationTransferService
         }
 
         throw new RuntimeException('Unknown transfer action.');
+    }
+
+    /**
+     * Remove ONLY cancelled, currently policy-visible federation jobs.
+     * The existing ON DELETE SET NULL relationship keeps their audit logs.
+     */
+    public function purgeCancelledBulk(int $expected): int
+    {
+        if ($expected < 1 || $expected > 20000) {
+            throw new RuntimeException('Invalid federation purge count.');
+        }
+        $visible = \federation_visible_transfer_job_sql($this->db, 'j');
+        $this->db->beginTransaction();
+        try {
+            $jobs = $this->db->query(
+                'SELECT j.id FROM ue_federation_transfer_jobs j '
+                . 'WHERE j.status="cancelled" AND ' . $visible
+                . ' ORDER BY j.id FOR UPDATE'
+            )->fetchAll(PDO::FETCH_COLUMN);
+            if (count($jobs) !== $expected) {
+                throw new RuntimeException('Cancelled federation queue changed. Refresh the page.');
+            }
+            $ids = array_map('intval',$jobs);
+            foreach (array_chunk($ids, 500) as $chunk) {
+                $stmt = $this->db->prepare(
+                    'DELETE FROM ue_federation_transfer_jobs '
+                    . 'WHERE status="cancelled" AND id IN ('
+                    . implode(',',array_fill(0,count($chunk),'?')) . ')'
+                );
+                $stmt->execute($chunk);
+                if ($stmt->rowCount() !== count($chunk)) {
+                    throw new RuntimeException('Federation purge count changed; rolling back.');
+                }
+            }
+            $this->db->commit();
+            return $expected;
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $error;
+        }
     }
 
     /**
