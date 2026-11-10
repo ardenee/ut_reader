@@ -96,6 +96,61 @@ final class CatalogSiteBlocklist
         return max(0, $statement->rowCount());
     }
 
+    /**
+     * Bounded, read-only administrative preview: never refresh thousands of
+     * per-IP filesystem markers merely because a dashboard was opened.
+     *
+     * @return list<array{ip:string,note:string,created_by:int,created_at:string,updated_at:string}>
+     */
+    public function recent(int $limit = 50): array
+    {
+        if (!$this->db instanceof PDO) return [];
+        $limit = max(1, min(100, $limit));
+        $statement = $this->db->query(
+            'SELECT INET6_NTOA(ip_address) ip,note,COALESCE(created_by,0) created_by,created_at,updated_at '
+            . 'FROM ue_site_blocked_ips ORDER BY updated_at DESC,ip_address LIMIT ' . $limit
+        );
+        return array_values(array_filter($statement->fetchAll(PDO::FETCH_ASSOC) ?: [],
+            static fn(array $row): bool => trim((string)($row['ip'] ?? '')) !== ''));
+    }
+
+    public function count(): int
+    {
+        if (!$this->db instanceof PDO) return 0;
+        return (int)$this->db->query('SELECT COUNT(*) FROM ue_site_blocked_ips')->fetchColumn();
+    }
+
+    /**
+     * Match only IPs currently shown in this page's telemetry. Use the binary
+     * primary key rather than fetching and materializing the whole blocklist.
+     *
+     * @param list<string> $ips
+     * @return array<string,bool>
+     */
+    public function matchingIps(array $ips): array
+    {
+        if (!$this->db instanceof PDO) return [];
+        $packed = [];
+        foreach ($ips as $ip) {
+            $value = @inet_pton(trim((string)$ip));
+            if (is_string($value)) $packed[bin2hex($value)] = $value;
+        }
+        if ($packed === []) return [];
+        $matches = [];
+        foreach (array_chunk(array_values($packed), 250) as $batch) {
+            $statement = $this->db->prepare(
+                'SELECT INET6_NTOA(ip_address) ip FROM ue_site_blocked_ips '
+                . 'WHERE ip_address IN (' . implode(',', array_fill(0, count($batch), '?')) . ')'
+            );
+            foreach ($batch as $index => $ip) $statement->bindValue($index + 1, $ip, PDO::PARAM_LOB);
+            $statement->execute();
+            foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $ip) {
+                $matches[strtolower((string)$ip)] = true;
+            }
+        }
+        return $matches;
+    }
+
     /** @return list<array{ip:string,note:string,created_by:int,created_at:string,updated_at:string}> */
     public function all(): array
     {
@@ -123,7 +178,9 @@ final class CatalogSiteBlocklist
             try {
                 $packed = @inet_pton($ip);
                 if (is_string($packed)) {
-                    $this->writeMarker($packed, $ip, $note);
+                    if (!is_file(self::markerPath($this->config, $packed))) {
+                        $this->writeMarker($packed, $ip, $note);
+                    }
                 }
             } catch (\Throwable $error) {
                 error_log('[UnrealDB site blocklist] Could not refresh cached marker for ' . $ip . ': ' . $error->getMessage());

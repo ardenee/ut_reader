@@ -663,11 +663,19 @@ try {
         $rows[$index]['map_location'] = $geoIpResolver->resolve((string)($row['ip_text'] ?? ''));
     }
 
-    $blockedRows = $siteBlocklist instanceof CatalogSiteBlocklist ? $siteBlocklist->all() : [];
-    $blockedLookup = [];
-    foreach ($blockedRows as $blockedRow) {
-        $blockedLookup[strtolower((string)$blockedRow['ip'])] = true;
-    }
+    // A collapsed dashboard widget must not materialize and re-create every
+    // blocked-IP marker. Full blocklist search and management live at
+    // site-blacklist.php. Only the latest 50 are previewed here.
+    $blockedCount = $siteBlocklist instanceof CatalogSiteBlocklist
+        ? $siteBlocklist->count() : 0;
+    $blockedRows = $siteBlocklist instanceof CatalogSiteBlocklist
+        ? $siteBlocklist->recent(50) : [];
+    $visibleIps = array_merge(
+        array_column($rows, 'ip_text'),
+        array_column($topIps, 'ip')
+    );
+    $blockedLookup = $siteBlocklist instanceof CatalogSiteBlocklist
+        ? $siteBlocklist->matchingIps($visibleIps) : [];
     $feedbackRows = $feedbackAvailable
         ? catalog_all(
             $db,
@@ -918,6 +926,9 @@ try {
         if ($blockedRows === []) {
             echo '<p class="muted">No IP addresses are blocked from the full site.</p>';
         } else {
+            echo '<p class="muted">Showing the ' . count($blockedRows)
+                . ' most recently updated of ' . number_format($blockedCount)
+                . ' blocked IPs. <a href="site-blacklist.php">Search and manage all blocked IPs</a>.</p>';
             echo '<table><thead><tr><th>IP</th><th>Reason</th><th>Blocked</th><th></th></tr></thead><tbody>';
             foreach ($blockedRows as $blockedRow) {
                 echo '<tr><td class="mono">' . catalog_h((string)$blockedRow['ip']) . '</td><td>' . catalog_h((string)$blockedRow['note']) . '</td>'
