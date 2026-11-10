@@ -12,6 +12,7 @@ require_once __DIR__ . '/_bootstrap.php';
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogLegacyPakPackagePolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
@@ -66,10 +67,11 @@ function profiled_upload_batch_file_policy(array $batch, string $originalName): 
     $engine = strtoupper(trim((string)($batch['engine_key'] ?? '')));
 
     if ($isPak) {
-        $allowed = in_array($engine, ['UE4', 'UE5'], true);
+        $legacyPackage = CatalogLegacyPakPackagePolicy::isCandidate($engine, $originalName);
+        $allowed = $legacyPackage || in_array($engine, ['UE4', 'UE5'], true);
         return [
             'allowed' => $allowed,
-            'is_pak' => true,
+            'is_pak' => !$legacyPackage,
             'is_redirect' => false,
             'is_archive' => false,
             'extension' => $extension,
@@ -241,6 +243,11 @@ try {
             );
         }
 
+        if (CatalogLegacyPakPackagePolicy::isCandidate(
+            (string)($batch['engine_key'] ?? ''), $originalName
+        )) {
+            CatalogLegacyPakPackagePolicy::assertPackageHeader($temporaryPath);
+        }
         $incoming = new CatalogIncomingFileStore($config);
         $staged = $incoming->stageUploadedFile($temporaryPath, $originalName, false);
         try {

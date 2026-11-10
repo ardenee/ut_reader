@@ -185,7 +185,7 @@
 
     function loadCore() {
         const script = document.createElement('script');
-        script.src = 'assets/profiled-upload-jobs-core.js?v=20260826-1';
+        script.src = 'assets/profiled-upload-jobs-core.js?v=20261110-ue3pak';
         script.async = false;
         script.onerror = function () {
             if (currentLabel) currentLabel.textContent = 'The profiled upload client could not be loaded.';

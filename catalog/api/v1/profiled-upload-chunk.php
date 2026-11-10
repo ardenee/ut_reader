@@ -14,6 +14,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogLegacyPakPackagePolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreUploadRoutingPolicy;
@@ -70,10 +71,11 @@ function profiled_chunk_file_policy(string $originalName, string $engineKey, mix
     $isArchive = CatalogArchiveExtractor::isArchiveName($originalName);
     $engineKey = strtoupper(trim($engineKey));
     if ($isPak) {
-        $allowed = in_array($engineKey, ['UE4', 'UE5'], true);
+        $legacyPackage = CatalogLegacyPakPackagePolicy::isCandidate($engineKey, $originalName);
+        $allowed = $legacyPackage || in_array($engineKey, ['UE4', 'UE5'], true);
         return [
             'allowed' => $allowed,
-            'is_pak' => true,
+            'is_pak' => !$legacyPackage,
             'is_redirect' => false,
             'is_archive' => false,
             'reason' => $allowed ? '' : 'PAK container upload requires a UE4 or UE5 target game.',
@@ -251,6 +253,13 @@ try {
                 || (int)($batch['game_id'] ?? 0) !== (int)($state['game_id'] ?? 0)) {
                 JsonResponse::error('invalid_batch', 'Completed chunk does not match the active upload batch.', 409);
             }
+            if ($isPak && CatalogLegacyPakPackagePolicy::isCandidate(
+                (string)($batch['engine_key'] ?? ''), $originalName
+            )) {
+                $completed = $store->resolveCompletedFile($uploadId, $userId);
+                CatalogLegacyPakPackagePolicy::assertPackageHeader((string)$completed['path']);
+                $isPak = false;
+            }
             $item = $batchStore->append($userId, $batchId, [
                 // Archive type is inferred from original_name by the batch
                 // coordinator, preserving the established manifest kinds.
@@ -274,6 +283,21 @@ try {
         $db = catalog_db($config);
         $config = (new CatalogProgramSettingsStore($db, $config))->applyUploadLimits($config);
         $queue = new CatalogProfiledUploadQueue($db, $config);
+        if ($isPak) {
+            $game = \catalog_one(
+                $db,
+                'SELECT p.engine_key FROM ue_games g JOIN ue_game_profiles p '
+                . 'ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
+                [(int)$state['game_id']]
+            );
+            if (CatalogLegacyPakPackagePolicy::isCandidate(
+                (string)($game['engine_key'] ?? ''), $originalName
+            )) {
+                $completed = $store->resolveCompletedFile($uploadId, $userId);
+                CatalogLegacyPakPackagePolicy::assertPackageHeader((string)$completed['path']);
+                $isPak = false;
+            }
+        }
         if ($isPak) {
             $job = $queue->enqueueChunkedPak(
                 (int)$state['game_id'],

@@ -100,6 +100,12 @@
             return {allowed: false, reason: 'IoStore .utoc/.ucas files must be imported together using Import IoStore, not as individual packages. Open iostore-import.php for the selected UE5 game.'};
         }
         if (isPak(file)) {
+            if (batchEngineKey === 'UE3') {
+                if (normalUploadLimit > 0 && Number(file.size || 0) > normalUploadLimit) {
+                    return {allowed: false, reason: 'UE3 standalone package limit is ' + bytes(normalUploadLimit) + '.'};
+                }
+                return {allowed: Number(file.size || 0) > 0, reason: 'File is empty.'};
+            }
             if (!['UE4', 'UE5'].includes(batchEngineKey)) {
                 return {allowed: false, reason: 'PAK containers are only valid for UE4/UE5 target games.'};
             }
@@ -368,6 +374,24 @@
                 continue;
             }
 
+            if (isPak(file) && batchEngineKey === 'UE3') {
+                // A UE3 map sometimes arrives with a .pak suffix. Reject genuine
+                // UnrealPak/placeholder bytes before transferring large files.
+                let headerOk = false;
+                try {
+                    const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+                    headerOk = head.length === 4 && head[0] === 0xC1
+                        && head[1] === 0x83 && head[2] === 0x2A && head[3] === 0x9E;
+                } catch (error) {
+                    headerOk = false;
+                }
+                if (!headerOk) {
+                    filteredItemCount++;
+                    addLog({status: 'skipped', file: name,
+                        message: 'Skipped before upload: .pak does not contain the standard UE3 package header.'});
+                    continue;
+                }
+            }
             if (!preflightEligible(file)) {
                 plan.push({file: file, selectedIndex: index, hashKey: ''});
                 overallBar.value = Math.round((index * 100) / Math.max(1, files.length));
@@ -488,7 +512,7 @@
     async function chunkedUpload(item, uploadIndex, uploadTotal) {
         const file = item.file;
         const name = shownName(file);
-        const container = isPak(file) || isArchive(file);
+        const container = (isPak(file) && batchEngineKey !== 'UE3') || isArchive(file);
         if (!chunkCsrf) throw new Error('Chunked upload CSRF token is unavailable.');
         const effectiveLimit = container ? containerLimit : normalUploadLimit;
         if (effectiveLimit > 0 && file.size > effectiveLimit) {

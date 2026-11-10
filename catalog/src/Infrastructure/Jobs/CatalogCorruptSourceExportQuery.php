@@ -158,7 +158,17 @@ final class CatalogCorruptSourceExportQuery
         $invalidPackage = $forceInvalidPackage
             || $displayStatus === 'invalid_ue_package'
             || $resultStatus === 'invalid_ue_package';
-        if (!$invalidPackage && !JobFailureRetryPolicy::isCorruptContentText($jobType, $reason)) {
+        // A completed PAK worker may report a failed source even though it
+        // correctly rejected an unsupported container. Export these operator
+        // issues, but never mislabel a valid Unreal package as corrupt.
+        $lowerReason = strtolower($reason);
+        $pakFormatIssue = $jobType === JobType::IMPORT_STAGED_PAK
+            && (str_contains($lowerReason, 'pak file is too small')
+                || str_contains($lowerReason, 'unsupported pak file: no unreal pak footer was found')
+                || str_contains($lowerReason, 'unsupported pak file: no unreal pak magic footer was found')
+                || str_contains($lowerReason, 'unreal package header detected: not an unrealpak archive'));
+        if (!$invalidPackage && !$pakFormatIssue
+            && !JobFailureRetryPolicy::isCorruptContentText($jobType, $reason)) {
             return null;
         }
 
@@ -230,13 +240,20 @@ final class CatalogCorruptSourceExportQuery
             $pathKind = 'archive_member_only';
         }
 
+        $isStandaloneUnreal = $pakFormatIssue && $jobFullPath !== ''
+            && @file_get_contents($jobFullPath, false, null, 0, 4) === "\xC1\x83\x2A\x9E";
         $classification = $invalidPackage
             ? 'invalid_unreal_package'
-            : (in_array($jobType, [JobType::PROCESS_BUCKET_ARCHIVE, JobType::IMPORT_STAGED_ARCHIVE], true)
-                ? 'corrupt_archive'
-                : (preg_match('/\\b(?:uz|uz2|uz3)\\b/i', $reason) === 1
-                    ? 'corrupt_redirect'
-                    : 'corrupt_package'));
+            : ($pakFormatIssue
+                ? ($isStandaloneUnreal ? 'misrouted_unreal_package'
+                    : (str_contains($lowerReason, 'too small')
+                        ? 'invalid_pak_container' : 'unsupported_pak_format'))
+                : (in_array($jobType, [JobType::PROCESS_BUCKET_ARCHIVE, JobType::IMPORT_STAGED_ARCHIVE], true)
+                    ? 'corrupt_archive'
+                    : (preg_match('/\\b(?:uz|uz2|uz3)\\b/i', $reason) === 1
+                        ? 'corrupt_redirect'
+                        : 'corrupt_package')));
+
 
         $destinationRelative = str_replace('\\', '/', trim($sourceRelative, " /\\"));
         if ($destinationRelative === '') {
