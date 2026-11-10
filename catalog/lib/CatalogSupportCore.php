@@ -518,6 +518,37 @@ function catalog_require_admin_page(string $title = 'Admin required'): bool
     return false;
 }
 
+/**
+ * Admin-only TLS expiry status. Read the certificate Apache actually serves on
+ * PRD, not a cached ACME renewal schedule. No network request or DB query.
+ *
+ * @return array{expiry:string,days:int,fingerprint:string}|null
+ */
+function catalog_admin_tls_expiry_notice(
+    ?string $certificatePath = null,
+    ?int $now = null
+): ?array {
+    $certificatePath ??= 'C:/Apache24/conf/ssl/renewed/unrealdb.com-crt.pem';
+    if (!function_exists('openssl_x509_parse') || !is_file($certificatePath)) {
+        return null;
+    }
+    $bytes = @file_get_contents($certificatePath);
+    if (!is_string($bytes) || $bytes === '') return null;
+    $cert = @openssl_x509_parse($bytes);
+    if (!is_array($cert) || !isset($cert['validTo_time_t'])) return null;
+    $expiry = (int)$cert['validTo_time_t'];
+    if ($expiry <= 0) return null;
+    $now ??= time();
+    $remaining = $expiry - $now;
+    if ($remaining > 3 * 86400) return null;
+    $days = $remaining <= 0 ? 0 : (int)ceil($remaining / 86400);
+    return [
+        'expiry' => gmdate('Y-m-d H:i', $expiry) . ' UTC',
+        'days' => $remaining <= 0 ? -1 : $days,
+        'fingerprint' => hash('sha256', $bytes),
+    ];
+}
+
 function catalog_head(string $title): void
 {
     catalog_support_is_admin();
@@ -541,6 +572,18 @@ function catalog_head(string $title): void
     echo '<link rel="stylesheet" href="'
         . catalog_h($root . 'assets/catalog-ui.css?v=' . $uiStylesheetVersion) . '">';
     echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js?v=' . $uiScriptVersion) . '" defer></script>';
+    if (($_SESSION['user']['role'] ?? '') === 'admin') {
+        $tlsNotice = catalog_admin_tls_expiry_notice();
+        if ($tlsNotice !== null) {
+            $tlsPath = __DIR__ . '/../assets/catalog-tls-expiry-notice.js';
+            $tlsVersion = is_file($tlsPath) ? (string)filemtime($tlsPath) : '1';
+            echo '<script src="' . catalog_h($root . 'assets/catalog-tls-expiry-notice.js?v=' . $tlsVersion) . '" defer></script>';
+            echo '<meta name="catalog-admin-tls-expiry" data-days="' . $tlsNotice['days']
+                . '" data-expires="' . catalog_h($tlsNotice['expiry'])
+                . '" data-cert="' . catalog_h($tlsNotice['fingerprint'])
+                . '" data-admin="' . (int)($_SESSION['user']['id'] ?? 0) . '">';
+        }
+    }
     if ($scriptName === 'unverified-files.php') {
         $timeoutRecoveryPath = __DIR__ . '/../assets/unverified-import-timeout-recovery.js';
         $timeoutRecoveryVersion = is_file($timeoutRecoveryPath) ? (string)filemtime($timeoutRecoveryPath) : '1';
