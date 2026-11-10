@@ -528,8 +528,21 @@ function catalog_admin_tls_expiry_notice(
     ?string $certificatePath = null,
     ?int $now = null
 ): ?array {
-    $certificatePath ??= 'C:/Apache24/conf/ssl/renewed/unrealdb.com-crt.pem';
-    if (!function_exists('openssl_x509_parse') || !is_file($certificatePath)) {
+    if ($certificatePath === null) {
+        // DEV and PRD have different Apache installation roots. Select only
+        // the installed local certificate; never request another host's key.
+        foreach ([
+            'C:/Apache24/conf/ssl/renewed/unrealdb.com-crt.pem',
+            'D:/Apache24/conf/ssl/renewed/unrealdb.com-crt.pem',
+        ] as $candidate) {
+            if (is_file($candidate)) {
+                $certificatePath = $candidate;
+                break;
+            }
+        }
+    }
+    if (!function_exists('openssl_x509_parse') || $certificatePath === null
+        || !is_file($certificatePath)) {
         return null;
     }
     $bytes = @file_get_contents($certificatePath);
