@@ -307,7 +307,7 @@ try {
     echo '<p><label>Target game<br><select name="game_id" required>';
     foreach ($games as $game) {
         $selected = (int)$game['id'] === $selectedGameId ? ' selected' : '';
-        echo '<option value="' . (int)$game['id'] . '"' . $selected . '>'
+        echo '<option value="' . (int)$game['id'] . '" data-engine="' . catalog_h(strtoupper((string)($game['profile_engine'] ?? ''))) . '"' . $selected . '>'
             . catalog_h((string)$game['name'] . ' / ' . ((string)($game['profile_engine'] ?: 'no active profile'))) . '</option>';
     }
     echo '</select></label></p>';
@@ -352,6 +352,7 @@ try {
     $uploadClientVersion = is_file($uploadClient) ? (string)filemtime($uploadClient) : '1';
     $diagnosticClient = __DIR__ . '/assets/profiled-upload-diagnostics.js';
     $diagnosticClientVersion = is_file($diagnosticClient) ? (string)filemtime($diagnosticClient) : '1';
+    echo '<script src="assets/profiled-upload-pak-detection.js?v=20261111-1"></script>';
     echo '<script src="assets/profiled-upload-jobs.js?v=' . catalog_h($uploadClientVersion) . '"></script>';
     echo '<script src="assets/profiled-upload-diagnostics.js?v=' . catalog_h($diagnosticClientVersion) . '"></script>';
     catalog_foot();

@@ -33,9 +33,9 @@ try {
 }
 $root=dirname(__DIR__,2);
 $checks = [
-    'catalog/api/v1/profiled-upload-batch.php' => ['CatalogLegacyPakPackagePolicy::assertPackageHeader($temporaryPath)','is_pak\' => !$legacyPackage'],
-    'catalog/api/v1/profiled-upload-chunk.php' => ['CatalogLegacyPakPackagePolicy::assertPackageHeader((string)$completed[\'path\'])','is_pak\' => !$legacyPackage'],
-    'catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php' => ['CatalogLegacyPakPackagePolicy::assertPackageHeader($source)','JobType::IMPORT_STAGED_PACKAGE'],
+    'catalog/api/v1/profiled-upload-batch.php' => ['CatalogLegacyPakPackagePolicy::assertTarget(','is_pak\' => !$legacyPackage'],
+    'catalog/api/v1/profiled-upload-chunk.php' => ['CatalogLegacyPakPackagePolicy::assertTarget(', 'is_pak\' => !$legacyPackage'],
+    'catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php' => ['CatalogLegacyPakPackagePolicy::assertTarget(','JobType::IMPORT_STAGED_PACKAGE'],
     'catalog/assets/profiled-upload-jobs-core.js' => ['file.slice(0, 4).arrayBuffer()', 'batchEngineKey === \'UE3\''],
 ];
 foreach($checks as $path=>$needles){

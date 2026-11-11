@@ -42,6 +42,7 @@
     let filteredItemCount = 0;
     let stagedItemCount = 0;
     let failedItemCount = 0;
+    let pakRoutingPreflight = false;
 
     function installStatusStyles() {
         const style = document.createElement('style');
@@ -62,6 +63,96 @@
 
     function selectedFiles() {
         return Array.from(fileInput.files || []).concat(folderInput ? Array.from(folderInput.files || []) : []);
+    }
+
+    /**
+     * Browser-safe format routing for .pak-named content. A UE3 version-512
+     * package has a unique active target (UT3), but an UnrealPak footer proves
+     * only the container format. Require confirmation when assigning a UE4
+     * candidate; do not silently infer game identity from a filename.
+     *
+     * One durable upload batch is always scoped to exactly one game. Mixed
+     * selections become separate sequential batches, never cross-game items
+     * within one manifest.
+     */
+    async function planPakGameGroups(files) {
+        const gameSelect = form.querySelector('[name="game_id"]');
+        const chosen = gameSelect.options[gameSelect.selectedIndex];
+        const selectedId = String(gameSelect.value || '');
+        const selectedEngine = String((chosen && chosen.dataset.engine) || '').toUpperCase();
+        const options = Array.from(gameSelect.options);
+        const candidates = function (engine) {
+            return options.filter(function (o) {
+                return String(o.dataset.engine || '').toUpperCase() === engine;
+            });
+        };
+        const detect = window.CatalogPakDetection;
+        const groups = new Map();
+        const changes = [];
+        for (const file of files) {
+            let gameId = selectedId;
+            if (isPak(file)) {
+                if (!detect || typeof detect.inspect !== 'function') {
+                    window.alert('PAK content detector is unavailable. Reload the page before uploading.');
+                    return null;
+                }
+                const result = await detect.inspect(file);
+                if (result.kind === 'ut3_package') {
+                    const ue3 = candidates('UE3');
+                    if (ue3.length !== 1) {
+                        window.alert('UE3 package version 512 detected, but the target game is ambiguous. No files were uploaded.');
+                        return null;
+                    }
+                    gameId = String(ue3[0].value);
+                    if (gameId !== selectedId) {
+                        changes.push({file: file.name, target: ue3[0].textContent.trim(),
+                            reason: 'UE3 package version 512'});
+                    }
+                } else if (result.kind === 'unrealpak') {
+                    if (selectedEngine === 'UE3') {
+                        const ue4 = candidates('UE4');
+                        if (ue4.length !== 1) {
+                            window.alert('UnrealPak footer detected, but it does not identify a particular UE4/UE5 game. Choose the target explicitly; no files were uploaded.');
+                            return null;
+                        }
+                        gameId = String(ue4[0].value);
+                        changes.push({file: file.name, target: ue4[0].textContent.trim(),
+                            reason: 'UnrealPak (target game not proven)'});
+                    }
+                } else if (result.kind === 'legacy_unreal_package' && selectedEngine !== 'UE3') {
+                    window.alert(file.name + ' contains an older Unreal package header (version '
+                        + result.version + '), not an UnrealPak footer. Select the appropriate legacy game manually. No files were uploaded.');
+                    return null;
+                } else if (result.kind === 'unknown' && selectedEngine === 'UE3') {
+                    window.alert('Cannot identify the format of ' + file.name
+                        + '. It is not a standard UT3 package. No files were uploaded.');
+                    return null;
+                }
+            }
+            if (!groups.has(gameId)) groups.set(gameId, []);
+            groups.get(gameId).push(file);
+        }
+        if (changes.length) {
+            const lines = changes.slice(0, 8).map(function (c) {
+                return '• ' + c.file + ' → ' + c.target + ' (' + c.reason + ')';
+            });
+            const extra = changes.length > lines.length
+                ? '\n... and ' + (changes.length - lines.length) + ' more file(s).' : '';
+            const warning = '\nA container footer or package version identifies the file format, not definitive game ownership. Verify the source before confirming.';
+            if (!window.confirm(changes.length + ' .pak file(s) do not match the selected game '
+                + chosen.textContent.trim() + '.\n\n'
+                + lines.join('\n') + extra + warning
+                + '\n\nAutomatically create separate game-specific upload batches for these files?')) {
+                return null;
+            }
+        }
+        const planned = Array.from(groups.entries()).map(function (entry) {
+            return {gameId: entry[0], files: entry[1]};
+        });
+        if (planned.length === 1 && planned[0].gameId !== selectedId) {
+            gameSelect.value = planned[0].gameId;
+        }
+        return planned;
     }
 
     function shownName(file) {
@@ -701,11 +792,30 @@
             dedicated.requestSubmit();
             return;
         }
-        batchGameId = String(form.querySelector('[name="game_id"]').value || '');
+        if (pakRoutingPreflight || submitButton.disabled) return;
+        pakRoutingPreflight = true;
+        submitButton.disabled = true;
+        let gameGroups;
+        try {
+            gameGroups = await planPakGameGroups(files);
+        } catch (error) {
+            window.alert('Could not inspect selected .pak files: ' + (error.message || String(error)) + '. No files were uploaded.');
+            return;
+        } finally {
+            pakRoutingPreflight = false;
+            submitButton.disabled = false;
+        }
+        if (!gameGroups || !gameGroups.length) return;
+        const aggregate = {staged: 0, duplicates: 0, skipped: 0, failed: 0};
+        log.textContent = '';
+        for (const gameGroup of gameGroups) {
+        const files = gameGroup.files;
+        batchGameId = String(gameGroup.gameId);
+        addLog({status: 'uploading', message: 'Routing ' + files.length
+            + ' file(s) to game #' + batchGameId + ' in an isolated upload batch.'});
         batchStrictProfile = String(form.querySelector('[name="strict_profile"]').value || '1');
         submitButton.disabled = true;
         progress.hidden = false;
-        log.textContent = '';
         cancelButton.hidden = false;
         cancelRequested = false;
         batchCancelled = false;
@@ -734,7 +844,7 @@
             addLog({status: 'failed', message: error.message || 'Could not initialize upload batch.'});
             submitButton.disabled = false;
             cancelButton.hidden = true;
-            return;
+            continue;
         }
 
         const plan = await buildUploadPlan(
@@ -806,13 +916,26 @@
                 + ' duplicate(s); ' + filteredItemCount + ' unsupported/oversized skipped';
         }
 
-        submitButton.disabled = false;
-        cancelButton.hidden = true;
-        cancelRequested = false;
+        const interrupted = cancelRequested;
+        aggregate.staged += stagedItemCount;
+        aggregate.duplicates += preflightDuplicates;
+        aggregate.skipped += filteredItemCount;
+        aggregate.failed += failedItemCount;
         batchGameId = '';
         batchStrictProfile = '1';
         batchEngineKey = '';
         activeBatchId = '';
+        if (interrupted) break;
+        }
+        submitButton.disabled = false;
+        cancelButton.hidden = true;
+        cancelRequested = false;
+        if (gameGroups.length > 1) {
+            overallCount.textContent = aggregate.staged + ' staged; ' + aggregate.duplicates
+                + ' duplicate(s); ' + aggregate.skipped + ' skipped; '
+                + aggregate.failed + ' failed across ' + gameGroups.length + ' game batches';
+            currentLabel.textContent = 'Game-specific batch processing completed. See Background Jobs for each game.';
+        }
     });
 
     installStatusStyles();

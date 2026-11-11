@@ -54,14 +54,16 @@ final class CatalogProfiledUploadQueue
         $size = (int)($staged['size'] ?? 0);
         $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
         $isPak = $extension === 'pak';
-        if ($isPak && CatalogLegacyPakPackagePolicy::isCandidate(
-            (string)($game['profile_engine'] ?? ''), $originalName
-        )) {
+        if ($isPak) {
             $source = (new CatalogIncomingFileStore($this->config))->resolve(
                 (string)($staged['relative_path'] ?? '')
             );
-            CatalogLegacyPakPackagePolicy::assertPackageHeader($source);
-            $isPak = false; // Route the original .pak bytes through the UE3 package reader.
+            CatalogLegacyPakPackagePolicy::assertTarget(
+                $source, $originalName, (string)($game['profile_engine'] ?? '')
+            );
+            $isPak = !CatalogLegacyPakPackagePolicy::isCandidate(
+                (string)($game['profile_engine'] ?? ''), $originalName
+            );
         }
         $isArchive = CatalogArchiveExtractor::isArchiveName($originalName);
         $limit = ($isPak || $isArchive)

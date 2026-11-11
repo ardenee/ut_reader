@@ -253,12 +253,14 @@ try {
                 || (int)($batch['game_id'] ?? 0) !== (int)($state['game_id'] ?? 0)) {
                 JsonResponse::error('invalid_batch', 'Completed chunk does not match the active upload batch.', 409);
             }
-            if ($isPak && CatalogLegacyPakPackagePolicy::isCandidate(
-                (string)($batch['engine_key'] ?? ''), $originalName
-            )) {
+            if ($isPak) {
                 $completed = $store->resolveCompletedFile($uploadId, $userId);
-                CatalogLegacyPakPackagePolicy::assertPackageHeader((string)$completed['path']);
-                $isPak = false;
+                CatalogLegacyPakPackagePolicy::assertTarget(
+                    (string)$completed['path'], $originalName, (string)($batch['engine_key'] ?? '')
+                );
+                $isPak = !CatalogLegacyPakPackagePolicy::isCandidate(
+                    (string)($batch['engine_key'] ?? ''), $originalName
+                );
             }
             $item = $batchStore->append($userId, $batchId, [
                 // Archive type is inferred from original_name by the batch
@@ -290,13 +292,13 @@ try {
                 . 'ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
                 [(int)$state['game_id']]
             );
-            if (CatalogLegacyPakPackagePolicy::isCandidate(
+            $completed = $store->resolveCompletedFile($uploadId, $userId);
+            CatalogLegacyPakPackagePolicy::assertTarget(
+                (string)$completed['path'], $originalName, (string)($game['engine_key'] ?? '')
+            );
+            $isPak = !CatalogLegacyPakPackagePolicy::isCandidate(
                 (string)($game['engine_key'] ?? ''), $originalName
-            )) {
-                $completed = $store->resolveCompletedFile($uploadId, $userId);
-                CatalogLegacyPakPackagePolicy::assertPackageHeader((string)$completed['path']);
-                $isPak = false;
-            }
+            );
         }
         if ($isPak) {
             $job = $queue->enqueueChunkedPak(

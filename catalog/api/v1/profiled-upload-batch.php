@@ -243,10 +243,10 @@ try {
             );
         }
 
-        if (CatalogLegacyPakPackagePolicy::isCandidate(
-            (string)($batch['engine_key'] ?? ''), $originalName
-        )) {
-            CatalogLegacyPakPackagePolicy::assertPackageHeader($temporaryPath);
+        if (strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak') {
+            CatalogLegacyPakPackagePolicy::assertTarget(
+                $temporaryPath, $originalName, (string)($batch['engine_key'] ?? '')
+            );
         }
         $incoming = new CatalogIncomingFileStore($config);
         $staged = $incoming->stageUploadedFile($temporaryPath, $originalName, false);
