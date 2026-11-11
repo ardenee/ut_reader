@@ -28,14 +28,9 @@ try {
         : ($_GET['return_to'] ?? ($_SERVER['HTTP_REFERER'] ?? ''));
     $returnTo = catalog_public_safe_return_path($returnCandidate);
 
-    if (!$settings['feedback_enabled']) {
-        http_response_code(503);
-        catalog_head('Feedback unavailable');
-        echo '<div class="card hero"><h1>Feedback is temporarily unavailable</h1><p class="muted">The public feedback form is currently disabled.</p><p><a class="button" href="' . catalog_h($returnTo) . '">Return to UnrealDB</a></p></div>';
-        catalog_foot();
-        exit;
-    }
-
+    // Public feedback is reachable through the main-site navigation, not
+    // as a standalone crawler entry point. The existing POST diagnostic and
+    // feedback submission paths are not part of this GET/HEAD entry policy.
     $diagnosticSessionKey = 'catalog_feedback_diagnostic_attachment';
     $preparedDiagnostic = $_SESSION[$diagnosticSessionKey] ?? null;
     if (is_array($preparedDiagnostic)
@@ -43,6 +38,22 @@ try {
         && time() - (int)$preparedDiagnostic['created_at'] > 1800) {
         unset($_SESSION[$diagnosticSessionKey]);
         $preparedDiagnostic = null;
+    }
+    \UnrealDb\Catalog\Infrastructure\Security\CatalogFeedbackEntryGuard::enforce(
+        $db,
+        $config,
+        (string)($_GET['diagnostic'] ?? '') === '1'
+            && is_array($preparedDiagnostic)
+            && is_string($preparedDiagnostic['content'] ?? null)
+            && (string)$preparedDiagnostic['content'] !== ''
+    );
+
+    if (!$settings['feedback_enabled']) {
+        http_response_code(503);
+        catalog_head('Feedback unavailable');
+        echo '<div class="card hero"><h1>Feedback is temporarily unavailable</h1><p class="muted">The public feedback form is currently disabled.</p><p><a class="button" href="' . catalog_h($returnTo) . '">Return to UnrealDB</a></p></div>';
+        catalog_foot();
+        exit;
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
