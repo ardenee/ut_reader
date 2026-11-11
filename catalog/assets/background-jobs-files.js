@@ -461,6 +461,16 @@
             });
             controlCell.appendChild(retryChildren);
         }
+        if (depth === 0 && file.can_recover_ue3_pak) {
+            const recoverPak = create('button', 'ui-icon-action ui-icon-action--secondary ui-icon-action--sm jobs-file-recover-ue3', 'UE3');
+            recoverPak.type = 'button';
+            recoverPak.setAttribute('aria-label', 'Recover misrouted PAK as a UE3 package');
+            recoverPak.title = 'Inspect retained bytes with the selected UE3 game reader. Resolve an already verified duplicate, or enqueue a separate correct-engine package job without re-uploading.';
+            recoverPak.addEventListener('click', function () {
+                recoverMisroutedPak(file, recoverPak);
+            });
+            controlCell.appendChild(recoverPak);
+        }
         if (depth === 0 && file.can_revalidate) {
             const revalidate = create('button', 'ui-icon-action ui-icon-action--secondary ui-icon-action--sm jobs-file-revalidate', '↻');
             revalidate.type = 'button';
@@ -505,6 +515,40 @@
             );
         } catch (error) {
             setNotice(error.message || 'Could not retry failed child jobs.', 10000);
+        } finally {
+            if (button) button.disabled = false;
+            await refresh();
+        }
+    }
+
+    async function recoverMisroutedPak(file, button) {
+        const jobId = Number(file && file.id || 0);
+        if (!jobId) return;
+        if (!window.confirm('Recover failed PAK job #' + jobId
+            + ' using the retained original file? It will be inspected by the matching UE3 reader. '
+            + 'If those bytes already exist as a verified file, the issue is marked resolved without reimporting. '
+            + 'Otherwise a new corrected game-specific job is queued. The previous failure remains in the audit record.')) return;
+        if (button) button.disabled = true;
+        try {
+            const payload = await postJson(actionUrl, {
+                action: 'recover_misrouted_pak',
+                queue: queue,
+                job_id: jobId
+            });
+            const data = payload && payload.data ? payload.data : {};
+            const fileId = Number(data.file_id || 0);
+            const newJobId = Number(data.new_job_id || 0);
+            const target = String(data.target_game_name || 'UE3 game');
+            if (fileId > 0) {
+                setNotice('Job #' + jobId + ' resolved: original bytes are already verified for '
+                    + target + ' as file #' + fileId + '. No new upload or duplicate created.', 12000);
+            } else {
+                setNotice('Job #' + jobId + ' rerouted to ' + target
+                    + ' as new package job #' + newJobId + '. Original failed PAK job retained for audit.'
+                    + (data.worker_error ? ' Worker: ' + data.worker_error : ''), 12000);
+            }
+        } catch (error) {
+            setNotice(error.message || 'Could not safely recover misrouted PAK job.', 12000);
         } finally {
             if (button) button.disabled = false;
             await refresh();
@@ -775,8 +819,14 @@
             const affected = Math.max(0, Number(data.affected || 0));
             const blocked = Math.max(0, Number(data.retry_blocked || 0));
             const skipped = Math.max(0, Number(data.skipped || 0));
+            const recovered = Math.max(0, Number(data.pak_recovered_duplicates || 0));
+            const rerouted = Math.max(0, Number(data.pak_rerouted_jobs || 0));
+            const recoveryFailed = Math.max(0, Number(data.pak_recovery_failed || 0));
             setNotice(
-                'Retry selected: ' + affected + ' restarted'
+                'Retry selected: ' + (affected - recovered - rerouted) + ' restarted'
+                + (recovered ? ', ' + recovered + ' duplicate(s) already verified under UE3' : '')
+                + (rerouted ? ', ' + rerouted + ' routed to the correct UE3 reader' : '')
+                + (recoveryFailed ? ', ' + recoveryFailed + ' PAK recovery failure(s)' : '')
                 + (blocked ? ', ' + blocked + ' blocked as non-retryable' : '')
                 + (skipped > blocked ? ', ' + (skipped - blocked) + ' skipped' : '') + '.',
                 8000
@@ -819,11 +869,23 @@
             const blocked = Math.max(0, Number(data.retry_blocked || 0));
             const skipped = Math.max(0, Number(data.skipped || 0));
             const limited = Boolean(data.limited);
-            let text = 'Retry all matching: ' + affected + ' restarted'
+            const recovered = Math.max(0, Number(data.pak_recovered_duplicates || 0));
+            const rerouted = Math.max(0, Number(data.pak_rerouted_jobs || 0));
+            const recoveryFailed = Math.max(0, Number(data.pak_recovery_failed || 0));
+            let text = 'Retry all matching: ' + (affected - recovered - rerouted) + ' restarted'
+                + (recovered ? ', ' + recovered + ' duplicate(s) already verified under UE3' : '')
+                + (rerouted ? ', ' + rerouted + ' routed to the correct UE3 reader' : '')
+                + (recoveryFailed ? ', ' + recoveryFailed + ' PAK recovery failure(s)' : '')
                 + (blocked ? ', ' + blocked + ' blocked as non-retryable' : '')
                 + (skipped > blocked ? ', ' + (skipped - blocked) + ' skipped' : '') + '.';
             if (limited) {
                 text += ' The 10,000-source safety limit was reached; run Retry all matching again for the remainder.';
+            }
+            if (data.pak_recovery_limited) {
+                text += ' UE3 PAK recovery is bounded to five files per action; repeat to handle remaining sources.';
+            }
+            if (Array.isArray(data.pak_recovery_errors) && data.pak_recovery_errors.length) {
+                text += ' ' + data.pak_recovery_errors[0];
             }
             setNotice(text, limited ? 12000 : 9000);
             state.selected.clear();

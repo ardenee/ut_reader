@@ -222,6 +222,17 @@ final class PdoBackgroundJobBulkAction
                 }
                 $jobType = (string)($row['job_type'] ?? '');
                 $failureText = self::persistedFailureText($row);
+                // An immutable .pak with no UnrealPak footer cannot improve by
+                // rerunning its original container handler. The explicit
+                // recover_misrouted_pak path selects the correct UE3 reader,
+                // while malformed placeholders remain non-retryable.
+                $pakFailure = strtolower($failureText);
+                if ($jobType === JobType::IMPORT_STAGED_PAK
+                    && (str_contains($pakFailure, 'no unreal pak footer was found')
+                        || str_contains($pakFailure, 'no unreal pak magic footer was found')
+                        || str_contains($pakFailure, 'pak file is too small'))) {
+                    continue;
+                }
                 if (JobFailureRetryPolicy::isDeterministicFailureText($jobType, $failureText)) {
                     // Automatic/background retry must not burn attempts on the
                     // same immutable bytes. An administrator clicking Retry,

@@ -86,6 +86,10 @@ final class CatalogBackgroundJobFileTreeProjector
                     max(0, (int)($result['file_id'] ?? 0)) > 0
                     || !empty($result['source_retained'])
                 );
+            $row['can_recover_ue3_pak'] = $queueStatus === 'completed'
+                && $displayStatus === 'failed'
+                && (string)($row['job_type'] ?? '') === JobType::IMPORT_STAGED_PAK
+                && str_contains(strtolower((string)($result['message'] ?? '')), 'no unreal pak footer was found');
             $row['revalidate_file_id'] = max(0, (int)($result['file_id'] ?? 0));
             $row['revalidate_source_retained'] = !empty($result['source_retained']);
         }
@@ -396,6 +400,7 @@ final class CatalogBackgroundJobFileTreeProjector
         $status = strtolower(trim((string)($result['status'] ?? $displayStatus)));
         return match ($status) {
             'duplicate' => 'Duplicate',
+            'redirected' => 'Requeued with correct reader',
             'skipped' => 'Skipped',
             'bucketed' => 'Bucketed',
             'imported', 'verified' => 'Imported',

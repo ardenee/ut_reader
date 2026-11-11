@@ -14,6 +14,7 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobHistoryCleanupQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogManualJobRecovery;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogMisroutedPakRecovery;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
@@ -64,6 +65,26 @@ try {
                 'worker_pid' => (int)($result['pid'] ?? 0),
             ],
         ]);
+    }
+
+    if ($action === 'recover_misrouted_pak') {
+        $jobId = (int)($payload['job_id'] ?? 0);
+        if ($jobId < 1 || $userId === null || $userId < 1) {
+            JsonResponse::error('invalid_job', 'An administrator and positive source job_id are required.', 400);
+        }
+        try {
+            $result = (new CatalogMisroutedPakRecovery($application->db, $application->config))
+                ->recover($jobId, $queueName, $userId);
+        } catch (\RuntimeException $error) {
+            JsonResponse::error('pak_recovery_not_safe', $error->getMessage(), 409);
+        }
+        if ((int)($result['new_job_id'] ?? 0) > 0) {
+            $workerState = (new CatalogQueueWorkerStarter($application->db, $application->config))
+                ->start($queueName, true, $userId);
+            $result['worker'] = $workerState['worker'];
+            $result['worker_error'] = $workerState['worker_error'];
+        }
+        JsonResponse::send(['data' => $result], (int)($result['new_job_id'] ?? 0) > 0 ? 202 : 200);
     }
 
     if ($action === 'retry') {
@@ -553,7 +574,7 @@ try {
 
     JsonResponse::error(
         'invalid_action',
-        'Supported actions are cancel, retry, retry_children, revalidate, delete, delete_selected, delete_matching, cleanup, cleanup_storage, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
+        'Supported actions are cancel, retry, retry_children, recover_misrouted_pak, revalidate, delete, delete_selected, delete_matching, cleanup, cleanup_storage, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
         400
     );
 } catch (Throwable $exception) {

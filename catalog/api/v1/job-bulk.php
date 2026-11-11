@@ -11,6 +11,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogMisroutedPakRecovery;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoAffectedDependencyRetrySelection;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
@@ -103,6 +104,49 @@ try {
 
     $sourceSelection = in_array($scope, ['selected', 'file_matching'], true);
     $selectedSourceJobs = count($jobIds);
+    // Recover format-mismatched .pak sources before the generic retry loop.
+    // One wrong-game import is a new UE3 job, not a retry of the old UT4
+    // UnrealPak handler. Keep work bounded; invalid files stay as issues.
+    $pakRecoveries = ['resolved_duplicates' => 0, 'rerouted_jobs' => 0,
+        'failed' => 0, 'errors' => [], 'limited' => false];
+    if ($action === 'restart' && $sourceSelection && $jobIds !== [] && $userId !== null) {
+        $candidateRows = [];
+        foreach (array_chunk($jobIds, 300) as $idBatch) {
+            $params = array_merge([$queueName], $idBatch);
+            $sql = 'SELECT id FROM ue_background_jobs WHERE queue_name=? '
+                . 'AND id IN (' . implode(',', array_fill(0, count($idBatch), '?')) . ') '
+                . 'AND job_type="catalog.import_staged_pak" AND status="completed" '
+                . 'AND display_status="failed" AND ('
+                . 'LOWER(IF(JSON_VALID(result_json),JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.message")),"")) LIKE "%no unreal pak footer was found%" '
+                . 'OR LOWER(IF(JSON_VALID(result_json),JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.message")),"")) LIKE "%no unreal pak magic footer was found%") '
+                . 'ORDER BY id LIMIT 6';
+            $st = $application->db->prepare($sql);
+            $st->execute($params);
+            array_push($candidateRows, ...array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN) ?: []));
+            if (count($candidateRows) > 5) break;
+        }
+        $pakRecoveries['limited'] = count($candidateRows) > 5;
+        foreach (array_slice($candidateRows, 0, 5) as $candidateId) {
+            try {
+                $recovered = (new CatalogMisroutedPakRecovery($application->db, $application->config))
+                    ->recover($candidateId, $queueName, $userId);
+                if ((int)($recovered['file_id'] ?? 0) > 0) {
+                    $pakRecoveries['resolved_duplicates']++;
+                } else {
+                    $pakRecoveries['rerouted_jobs']++;
+                }
+            } catch (Throwable $error) {
+                $pakRecoveries['failed']++;
+                $pakRecoveries['errors'][] = 'Job #' . $candidateId . ': ' . $error->getMessage();
+            }
+        }
+        // Generic retry still filters old malformed PAK jobs server-side.
+        // Hide processed rows from it to keep the resulting counters accurate.
+        if ($candidateRows !== []) {
+            $candidateLookup = array_fill_keys(array_slice($candidateRows, 0, 5), true);
+            $jobIds = array_values(array_filter($jobIds, static fn(int $id): bool => !isset($candidateLookup[$id])));
+        }
+    }
     $affectedRecovery = [
         'handled_root_ids' => [],
         'requested' => 0,
@@ -224,6 +268,21 @@ try {
     }
 
     $result['scope'] = $scope;
+    if ($pakRecoveries['resolved_duplicates'] > 0 || $pakRecoveries['rerouted_jobs'] > 0
+        || $pakRecoveries['failed'] > 0 || $pakRecoveries['limited']) {
+        $result['pak_recovered_duplicates'] = $pakRecoveries['resolved_duplicates'];
+        $result['pak_rerouted_jobs'] = $pakRecoveries['rerouted_jobs'];
+        $result['pak_recovery_failed'] = $pakRecoveries['failed'];
+        $result['pak_recovery_errors'] = array_slice($pakRecoveries['errors'], 0, 3);
+        $result['pak_recovery_limited'] = $pakRecoveries['limited'];
+        $result['affected'] = max(0, (int)($result['affected'] ?? 0))
+            + $pakRecoveries['resolved_duplicates'] + $pakRecoveries['rerouted_jobs'];
+        $result['requested'] = max(0, (int)($result['requested'] ?? 0))
+            + $pakRecoveries['resolved_duplicates'] + $pakRecoveries['rerouted_jobs'] + $pakRecoveries['failed'];
+        $result['skipped'] = max(0, (int)($result['skipped'] ?? 0)) + $pakRecoveries['failed'];
+        $result['worker_start_required'] = !empty($result['worker_start_required'])
+            || $pakRecoveries['rerouted_jobs'] > 0;
+    }
     if ($scope === 'file_matching') {
         $result['matching_source_jobs'] = $matchingSourceTotal;
         $result['selected_source_jobs'] = $selectedSourceJobs;
