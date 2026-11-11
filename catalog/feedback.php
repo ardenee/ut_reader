@@ -159,6 +159,28 @@ try {
     $preparedPageUrl = is_array($preparedDiagnostic)
         ? (string)($preparedDiagnostic['page_url'] ?? '')
         : substr(trim((string)($_GET['page_url'] ?? '')), 0, 1000);
+    // Navigation provides return_to for the Cancel link, not page_url.
+    // Populate the related-page field from that already-validated local path
+    // unless a diagnostic attachment or explicit page_url supplied a value.
+    if ($preparedPageUrl === '' && trim((string)$returnCandidate) !== '') {
+        $requestHost = strtolower(trim((string)($_SERVER['HTTP_HOST'] ?? '')));
+        // Never place an arbitrary Host header into an HTML input: prevent
+        // spoofed links and keep local DEV/PRD URLs pointing at their origin.
+        if (preg_match(
+            '/\\A(?:unrealdb\\.com|www\\.unrealdb\\.com|192\\.168\\.0\\.55|192\\.168\\.0\\.51|127\\.0\\.0\\.1|localhost)(?::[0-9]{1,5})?\\z/D',
+            $requestHost
+        ) !== 1) {
+            $requestHost = 'unrealdb.com';
+        }
+        $secureRequest = (
+            !empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off'
+        ) || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443;
+        $preparedPageUrl = substr(
+            ($secureRequest ? 'https://' : 'http://') . $requestHost . '/catalog/' . $returnTo,
+            0,
+            1000
+        );
+    }
     $preparedMessage = is_array($preparedDiagnostic)
         ? (string)($preparedDiagnostic['message'] ?? '')
         : '';
