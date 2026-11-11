@@ -756,12 +756,13 @@ try {
     }
 
     echo '<div class="grid access-matrix-stats">';
-    catalog_stat_card('Page activity', $summary['page_activity'], 'Browser-confirmed + server-only page requests');
-    catalog_stat_card('Unique IPs', $summary['unique_ips'], 'IPs with page activity');
-    catalog_stat_card('Sessions', $summary['sessions'], 'Sessions with page activity');
+    catalog_stat_card('Page activity', $summary['page_activity'], 'Server-side page requests, including cache hits');
+    catalog_stat_card('Unique IPs', $summary['unique_ips'], 'Distinct IP addresses, not individual people');
+    catalog_stat_card('Sessions', $summary['sessions'], 'Known PHP sessions; cached requests may be anonymous');
     catalog_stat_card('Sections viewed', $summary['sections']);
     catalog_stat_card('Interactions', $summary['interactions']);
     echo '</div>';
+    echo '<p class="muted small">Only essential server-side page activity is recorded. Optional browser interaction and section tracking remain disabled. Administrator sessions and explicitly ignored IPs are excluded according to Logging Settings.</p>';
 
     echo '<form class="access-matrix-filter" method="get">'
         . '<label>Window <select name="days">';
@@ -769,7 +770,7 @@ try {
         echo '<option value="' . $value . '"' . ($days === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label><label>Activity log <select name="event">';
-    foreach (['page_activity' => 'Page activity', 'page_view' => 'Browser-confirmed page loads', 'server_page' => 'Server-only page requests', 'all' => 'All telemetry', 'section' => 'Sections', 'interaction' => 'Interactions'] as $value => $label) {
+    foreach (['page_activity' => 'Page activity', 'page_view' => 'Browser-confirmed page loads (retired)', 'server_page' => 'Server-recorded page requests', 'all' => 'All telemetry', 'section' => 'Sections', 'interaction' => 'Interactions'] as $value => $label) {
         echo '<option value="' . $value . '"' . ($eventType === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>'
@@ -784,7 +785,7 @@ try {
     echo '</select></label><button type="submit">Apply</button></form>';
 
     echo '<div class="access-matrix-grid">';
-    echo '<details class="ui-section access-matrix-collapsible" open><summary><div class="ui-section__header"><div>' . access_matrix_summary_heading('Busiest pages', 'pages') . '<p>Browser-confirmed and server-only page requests.</p></div></div></summary><div class="ui-section__body">';
+    echo '<details class="ui-section access-matrix-collapsible" open><summary><div class="ui-section__header"><div>' . access_matrix_summary_heading('Busiest pages', 'pages') . '<p>Server-recorded requests, including cached pages.</p></div></div></summary><div class="ui-section__body">';
     if ($topPages === []) echo '<p class="muted">No page activity.</p>';
     else {
         echo '<table><thead><tr><th>Page</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';

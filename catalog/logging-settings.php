@@ -56,7 +56,7 @@ try {
         . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('logging_settings')) . '">';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Site activity logging</h2>'
-        . '<p>These controls affect Access Matrix page views, server renders, sections and interactions.</p></div></div>'
+        . '<p>These controls govern server-side page access records. Optional browser interaction and section analytics remain disabled.</p></div></div>'
         . '<div class="ui-section__body"><table>';
     echo '<tr><th>Logging</th><td><label><input type="checkbox" name="logging_enabled" value="1"'
         . ($settings['enabled'] ? ' checked' : '') . '> Record site activity events</label></td></tr>';

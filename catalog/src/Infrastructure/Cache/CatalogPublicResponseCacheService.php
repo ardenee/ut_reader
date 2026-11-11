@@ -503,6 +503,9 @@ final class CatalogPublicResponseCacheService
             return false;
         }
 
+        // A cache hit bypasses the PHP renderer. Preserve security/operational
+        // visitor visibility without re-enabling optional browser analytics.
+        \UnrealDb\Catalog\Infrastructure\Telemetry\CatalogOperationalAccessLogger::record();
         self::sendCacheHeaders($meta, $status, $ttl, $staleSeconds);
         fpassthru($stream);
         fclose($stream);

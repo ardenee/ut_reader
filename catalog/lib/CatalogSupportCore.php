@@ -566,8 +566,9 @@ function catalog_head(string $title): void
 {
     catalog_support_is_admin();
 
-    // Public pages do not collect optional per-visitor analytics.
-    // Apache/CrowdSec security logging is separate from this page renderer.
+    // Essential server-side access logs (not optional browser analytics).
+    // Cached page hits bypass this renderer and are logged by the cache service.
+    \UnrealDb\Catalog\Infrastructure\Telemetry\CatalogOperationalAccessLogger::record();
 
     $root = catalog_support_root_prefix();
     $uiScriptPath = __DIR__ . '/../assets/catalog-ui.js';
